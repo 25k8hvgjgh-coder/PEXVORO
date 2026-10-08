@@ -24,8 +24,10 @@ export default async function handler(req, res) {
     const name = field("name", 120);
     const business = field("business", 160);
     const email = field("email", 254).toLowerCase();
-    const description = [field("problem", 4000), field("automation", 4000)]
-      .filter(Boolean).join("\n\nWhat they'd like automated: ");
+    const problem = field("problem", 4000) || field("description", 4000);
+    const automation = field("automation", 4000) || field("notes", 4000);
+    const description = [problem, automation]
+      .filter(Boolean).join("\n\nAdditional details: ");
     const consent = body.consent === true;
 
     if (!name || !business || !email || !description) {
@@ -50,10 +52,10 @@ export default async function handler(req, res) {
       business,
       email,
       business_type: field("business_type", 160),
-      problem: field("problem", 4000),
+      problem: field("problem", 4000) || field("description", 4000),
       current_software: field("current_software", 500),
       contact: ["Email", "Website message", "Either"].includes(field("contact", 40)) ? field("contact", 40) : "Email",
-      automation: field("automation", 4000),
+      automation: field("automation", 4000) || field("notes", 4000),
       budget: field("budget", 80),
       package: field("package", 120),
       description,
