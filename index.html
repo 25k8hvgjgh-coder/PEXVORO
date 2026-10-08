@@ -843,6 +843,7 @@ document.getElementById('demoRequestForm').addEventListener('submit',e=>{
   const estimateBtn=document.getElementById('estimateBtn');
   const estimateInput=document.getElementById('estimateInput');
   const requestForm=document.getElementById('demoRequestForm');
+  if(requestForm)requestForm.onsubmit=null;
   const useEstimate=document.getElementById('useEstimate');
   let liveEstimate=null;
 
