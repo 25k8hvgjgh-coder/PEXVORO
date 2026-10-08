@@ -246,8 +246,9 @@ footer{border-top:1px solid var(--line);padding:35px 0;color:var(--muted);font-s
         <strong id="requestPrice">—</strong>
       </div>
 
+      <label class="consent-label"><input type="checkbox" id="demoConsent" required> I agree that PEXVORO may use these details to review and respond to my project request. See the <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</label>
       <div class="estimate-actions">
-        <button class="btn primary" type="submit">Submit Demo Project Request →</button>
+        <button class="btn primary" type="submit">Submit Project Request →</button>
         <button class="btn" id="backToEstimate" type="button">← Back to Estimate</button>
       </div>
       <div class="demo-success" id="demoSuccess">
@@ -952,6 +953,7 @@ document.getElementById('demoRequestForm').addEventListener('submit',e=>{
       email:(document.getElementById('demoEmail')?.value||'').trim(),
       contact:document.getElementById('demoContact')?.value||'Email',
       description:(document.getElementById('demoProject')?.value||'').trim(),
+      notes:(document.getElementById('demoNotes')?.value||'').trim(),
       estimate:liveEstimate||window.currentEstimateForDemo||null,
       consent:!!document.getElementById('demoConsent')?.checked
     };
@@ -1003,7 +1005,7 @@ document.getElementById('demoRequestForm').addEventListener('submit',e=>{
 
     }
 
-  },true);
+  },true);}
 
 })();
 </script>
