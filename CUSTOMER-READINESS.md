@@ -7,12 +7,12 @@ This branch contains a proposed website intake and usability update. It is not a
 - Mobile navigation, keyboard focus styles, skip link, reduced-motion preference, and responsive layout improvements.
 - More explicit project-intake consent and privacy/terms links.
 - A server-side `/api/lead-live` endpoint that validates and stores inquiries in Supabase.
-- A minimal `schema.sql` for the endpoint's `public.leads` table.
+- A minimal `supabase/leads-schema.sql` for the endpoint's `public.leads` table.
 - Starter privacy and terms pages. They must be reviewed and completed before public launch.
 
 ## Required setup before testing live requests
 
-1. Review `schema.sql` and run it in the correct Supabase project's SQL Editor.
+1. Review `supabase/leads-schema.sql` and run it in the correct Supabase project's SQL Editor.
 2. In Vercel, configure `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as server-only environment variables for the deployment environments you intend to test. Never put the service-role key in browser code.
 3. Redeploy after changing environment variables.
 4. Submit a test request using an internal test email; verify one row is saved in `public.leads`.
