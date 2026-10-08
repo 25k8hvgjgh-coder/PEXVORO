@@ -789,3 +789,173 @@ document.getElementById('demoRequestForm').addEventListener('submit',e=>{
   };
 })();
 </script>
+<script>
+/* PEXVORO production bridge */
+(function(){
+  const estimateBtn=document.getElementById('estimateBtn');
+  const estimateInput=document.getElementById('estimateInput');
+  const requestForm=document.getElementById('demoRequestForm');
+  const useEstimate=document.getElementById('useEstimate');
+  let liveEstimate=null;
+
+  const money=n=>'$'+Math.round(Number(n)||0).toLocaleString('en-US');
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+
+  if(estimateBtn) estimateBtn.addEventListener('click',async function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    const description=(estimateInput?.value||'').trim();
+
+    if(description.length<20){
+      estimateInput?.focus();
+      return;
+    }
+
+    estimateBtn.disabled=true;
+    set('aiStatus','◌ CONNECTING TO AI CORE');
+
+    try{
+      const r=await fetch('/api/estimate-live',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({description})
+      });
+
+      const data=await r.json();
+
+      if(!r.ok)throw new Error(data.error||'AI service unavailable');
+
+      liveEstimate=data;
+      window.currentEstimateForDemo=data;
+
+      set('resultPackage',data.package);
+      set('resultPrice',money(data.price_low)+' – '+money(data.price_high));
+      set('resultTotal',money(data.price_low)+' – '+money(data.price_high));
+      set('confidence','LIVE AI ESTIMATE');
+      set('resultSummary',data.summary||'Preliminary AI-generated project analysis.');
+      set(
+        'resultMeta',
+        (data.systems?.length||0)+' systems • '+
+        (data.integrations?.length||0)+' integrations • '+
+        data.timeline
+      );
+
+      const items=document.getElementById('resultItems');
+
+      if(items){
+        items.innerHTML=(data.systems||[])
+          .map(x=>'<div class="line-item"><span>'+
+            String(x)+
+            '</span><span>Included</span></div>')
+          .join('');
+      }
+
+      document.getElementById('estimateResult')?.classList.add('show');
+      set('aiStatus','● LIVE AI ANALYSIS COMPLETE');
+
+    }catch(err){
+      set('aiStatus','⚠ AI NOT CONFIGURED');
+
+      alert(
+        err.message+
+        '\n\nThe live AI service needs its Vercel environment variables. '+
+        'The browser demo remains available.'
+      );
+
+    }finally{
+      estimateBtn.disabled=false;
+    }
+  },true);
+
+  if(useEstimate)useEstimate.addEventListener('click',function(e){
+
+    if(!liveEstimate)return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    const p=document.getElementById('demoProject');
+    const n=document.getElementById('demoNotes');
+
+    if(p)p.value=estimateInput.value.trim();
+
+    if(n){
+      n.value=
+        'Preliminary live AI estimate: '+
+        money(liveEstimate.price_low)+
+        ' – '+
+        money(liveEstimate.price_high)+
+        ' | '+
+        liveEstimate.package;
+    }
+
+    document.getElementById('projectRequest')?.classList.add('show');
+
+  },true);
+
+  if(requestForm)requestForm.addEventListener('submit',async function(e){
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    const payload={
+      name:(document.getElementById('demoName')?.value||'').trim(),
+      business:(document.getElementById('demoBusiness')?.value||'').trim(),
+      email:(document.getElementById('demoEmail')?.value||'').trim(),
+      contact:document.getElementById('demoContact')?.value||'Email',
+      description:(document.getElementById('demoProject')?.value||'').trim(),
+      estimate:liveEstimate||window.currentEstimateForDemo||null
+    };
+
+    if(!payload.name||!payload.email||!payload.description){
+      alert('Please complete the required fields.');
+      return;
+    }
+
+    const button=requestForm.querySelector('button[type="submit"]');
+
+    if(button)button.disabled=true;
+
+    try{
+      const r=await fetch('/api/lead-live',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      });
+
+      const data=await r.json();
+
+      if(!r.ok)
+        throw new Error(data.error||'Lead service unavailable');
+
+      const ok=document.getElementById('demoSuccess');
+
+      if(ok){
+        ok.classList.add('show');
+
+        const strong=ok.querySelector('strong');
+
+        if(strong)
+          strong.textContent='Project request received — live lead system.';
+      }
+
+      set('queueStatus','● LEAD SAVED');
+
+    }catch(err){
+
+      alert(
+        err.message+
+        '\n\nThe live database must be configured in Vercel before customer submissions can be stored.'
+      );
+
+    }finally{
+
+      if(button)button.disabled=false;
+
+    }
+
+  },true);
+
+})();
+</script>
