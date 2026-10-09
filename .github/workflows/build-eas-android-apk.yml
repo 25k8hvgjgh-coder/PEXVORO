@@ -1,0 +1,46 @@
+name: Build ReconFeed installable Android APK with EAS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/build-eas-android-apk.yml"
+
+jobs:
+  build-android-apk:
+    name: Build signed Android APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verify Expo authentication
+        run: npx eas-cli whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build signed installable APK
+        run: npx eas-cli build --platform android --profile preview --non-interactive --wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_SUPABASE_URL: https://ojprsyvkzgyphpsvksgx.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW
