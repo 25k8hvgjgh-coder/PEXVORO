@@ -1,3 +1,7 @@
+## Integration setup
+
+See [`docs/INTEGRATION_SETUP.md`](docs/INTEGRATION_SETUP.md) for the exact Supabase, Vercel, AI provider, marketplace payment, news pipeline, and mobile release steps, including security notes and tests required before launch.
+
 ## Release readiness
 
 See [`docs/RELEASE_READINESS.md`](docs/RELEASE_READINESS.md) for the current launch checklist and the distinction between committed app components and integrations that still require credentials and testing.
