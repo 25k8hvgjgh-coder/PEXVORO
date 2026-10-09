@@ -1,9 +1,9 @@
-# Veytrava launch-ready product foundation
+# ReconFeed launch-ready product foundation
 
 This checklist is for the remaining app-side work that can be prepared before backend/provider credentials and mobile-store release are configured. It does not certify a public launch.
 
 ## Product identity
-- Veytrava is presented as veteran-owned and operated on the public landing page and README.
+- ReconFeed is presented as veteran-owned and operated on the public landing page and README.
 - Conservative-first feed direction is documented; political viewpoint alone is not a removal reason.
 - The morning news item is optional in-feed content, never a forced interstitial.
 
@@ -12,7 +12,7 @@ This checklist is for the remaining app-side work that can be prepared before ba
 - `mobile/App.tsx` has a conservative keyword ranking baseline and returns to For You when the app resumes.
 - `mobile/App.tsx` now includes a comment list/composer and feed comment counts; live behavior still depends on the deployed Supabase schema and RLS policies being applied and tested.
 - Signup now asks for a birth date and applies an 18+ client-side check. This is not sufficient on its own: enforce age eligibility server-side before launch.
-- Seller flow requirements and a 10% Veytrava platform fee disclosure are documented in `docs/MORNING_NEWS_AND_MARKETPLACE.md`. Payment collection is not implemented by the disclosure alone.
+- Seller flow requirements and a 10% ReconFeed platform fee disclosure are documented in `docs/MORNING_NEWS_AND_MARKETPLACE.md`. Payment collection is not implemented by the disclosure alone.
 
 ## Before calling a feature operational
 - Run the automated TypeScript workflow and a full app build; green CI has not yet been confirmed.
