@@ -1,3 +1,7 @@
+## Release readiness
+
+See [`docs/RELEASE_READINESS.md`](docs/RELEASE_READINESS.md) for the current launch checklist and the distinction between committed app components and integrations that still require credentials and testing.
+
 ## Morning news and marketplace requirements
 
 See [`docs/MORNING_NEWS_AND_MARKETPLACE.md`](docs/MORNING_NEWS_AND_MARKETPLACE.md) for the optional morning news-video feed and seller listing/payment requirements, including the disclosed 10% platform fee. These require implementation and backend integrations before they are live.
