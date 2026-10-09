@@ -35,3 +35,8 @@ jobs:
           print(f"Checking inline script ({len(inline[-1])} characters)")
           PY
           node --check /tmp/pexvoro-inline.js
+      - name: Type-check native mobile app
+        working-directory: mobile
+        run: |
+          npm install --no-audit --no-fund
+          npx tsc --noEmit
