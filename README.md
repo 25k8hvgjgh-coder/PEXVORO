@@ -1,12 +1,14 @@
 # PEXVORO
 
-PEXVORO is being built as a creator-first social video and photo platform: a vertical creator feed, upload-and-post workflow, creator profiles, and a future AI-assisted editing studio.
+PEXVORO is being built as a native iOS and Android creator-first social video/photo app with a short-form feed, creator profiles, media publishing, and an AI creation studio. The root website is intended to be a simple app-download landing page; the native app source lives in `mobile/`.
 
 ## Current status
-- The app-style front end is deployed through Vercel and source-controlled in this repository.
+- The native React Native / Expo app foundation is source-controlled in `mobile/`.
+- The root `index.html` is the app-download landing page, and `app-link.json` is the future official install-link setting. It intentionally does not pretend an App Store or install link exists before a release is published.
+- GitHub Actions checks the website/API JavaScript syntax and runs a TypeScript check on the mobile app.
 - The current feed still includes demo content until Supabase is configured and real posts exist.
-- The creator studio previews selected media locally and includes a cloud publishing workflow that requires the setup below.
-- Account UI, public community feed, server-backed like/unlike state, follow/unfollow, saved-post state and removal, comments, Following feed, profile editing, profile stats, and caption search are wired to Supabase in the front end; these have not yet been end-to-end tested against your live project.
+- The Creator Studio can select local media and publish to cloud storage after the Supabase setup below.
+- The mobile app currently includes account sign-in/sign-up, a public community feed, media publishing, likes, follows, profile editing, caption search, and an AI Studio interface that calls the provider API adapter when configured. It has not yet been end-to-end tested against your live Supabase project.
 - The creator profile includes a saved-post library for reviewing and removing saved posts.
 - Paid memberships, credits, and checkout are intentionally paused.
 - AI generation/editing is not yet connected end-to-end to a selected provider model.
@@ -21,7 +23,15 @@ PEXVORO is being built as a creator-first social video and photo platform: a ver
 4. Open `/api/config` on the deployed site. It should return `configured: true` and only the public URL/key.
 5. Supabase Auth email-confirmation settings may require users to confirm their email before signing in.
 
-The schema creates profiles, posts, likes, comments, follows, saves, row-level security policies, and a public `post-media` storage bucket with a 25 MB limit. The front end currently uses public post publishing; private cloud drafts and followers-only media access are not finished. Public-bucket media is publicly viewable by URL; only upload media you intend to be public. Run the schema in your own Supabase project before the tables exist.
+The schema creates profiles, posts, likes, comments, follows, saves, row-level security policies, and a public `post-media` storage bucket with a 25 MB limit. The mobile app currently uses public post publishing; private cloud drafts and followers-only media access are not finished. Public-bucket media is publicly viewable by URL; only upload media you intend to be public. Run the schema in your own Supabase project before the tables exist.
+
+## Native app
+
+- Source: `mobile/App.tsx`
+- Expo project configuration: `mobile/app.json`
+- Set the three `EXPO_PUBLIC_*` values in `mobile/.env` using `mobile/.env.example` before running the app.
+- Run locally from `mobile/` with `npm install` and `npx expo start`.
+- To produce installable iOS/Android builds, connect an Expo account and run EAS Build. Expo's official guide: https://docs.expo.dev/build/setup/ . An app-store release also requires Apple/Google developer accounts and store review.
 
 ## Endpoints
 - `GET /api/health`: reports whether expected environment variables are present; it does not test a full integration.
