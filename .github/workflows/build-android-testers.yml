@@ -18,11 +18,12 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
       - name: Link or initialize Expo project
-        run: npx eas-cli@latest init --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas init --account Azzholejr06 --force --non-interactive
       - name: Build Android APK for testers
-        run: npx eas-cli@latest build --platform android --profile preview --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform android --profile preview --non-interactive --no-wait
