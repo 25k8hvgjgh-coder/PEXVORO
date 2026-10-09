@@ -2,6 +2,10 @@
 
 PEXVORO is being built as a native iOS and Android creator-first social video/photo app with a short-form feed, creator profiles, media publishing, and an AI creation studio. The root website is intended to be a simple app-download landing page; the native app source lives in `mobile/`.
 
+## Feature parity plan
+
+The prioritized feature checklist and definition-of-done criteria are in [`docs/FEATURE_PARITY_BUILD_PLAN.md`](docs/FEATURE_PARITY_BUILD_PLAN.md). This is a build plan, not a claim that every feature is already implemented.
+
 ## Current status
 - The native React Native / Expo app foundation is source-controlled in `mobile/`.
 - The root `index.html` is the app-download landing page, and `app-link.json` is the future official install-link setting. It intentionally does not pretend an App Store or install link exists before a release is published.
