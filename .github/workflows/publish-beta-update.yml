@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "mobile/**"
+      - ".github/workflows/publish-beta-update.yml"
 
 jobs:
   publish-beta-update:
