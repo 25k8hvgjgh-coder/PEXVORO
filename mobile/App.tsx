@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto';
 import React,{useEffect,useState} from 'react';
 import {ActivityIndicator,Alert,AppState,FlatList,Image,Pressable,RefreshControl,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View} from 'react-native';
 import {Video,ResizeMode} from 'expo-av';
+import {Modal} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import {createClient,Session} from '@supabase/supabase-js';
 const url=process.env.EXPO_PUBLIC_SUPABASE_URL||'';
@@ -14,7 +15,7 @@ type Tab='For You'|'Following'|'Discover'|'Create'|'Profile';
 const conservativeTerms=['conservative','republican','gop','america first','second amendment','2a','pro-life','faith','christian','patriot','small business','border security','constitutional','freedom','traditional values','gun rights','hunting','veterans','limited government','free markets'];
 function conservativeScore(caption:string,format?:string){const text=(String(caption||'')+' '+String(format||'')).toLowerCase();return conservativeTerms.reduce((score,term)=>score+(text.includes(term)?1:0),0)}
 export default function App(){
- const [session,setSession]=useState<Session|null>(null),[tab,setTab]=useState<Tab>('For You'),[posts,setPosts]=useState<Post[]>([]),[loading,setLoading]=useState(false),[search,setSearch]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[name,setName]=useState(''),[caption,setCaption]=useState(''),[asset,setAsset]=useState<ImagePicker.ImagePickerAsset|null>(null),[prompt,setPrompt]=useState(''),[workflow,setWorkflow]=useState('text-video'),[aiUrl,setAiUrl]=useState(''),[aiStatus,setAiStatus]=useState(''),[busy,setBusy]=useState(false),[profile,setProfile]=useState<any>(null);
+ const [session,setSession]=useState<Session|null>(null),[tab,setTab]=useState<Tab>('For You'),[posts,setPosts]=useState<Post[]>([]),[loading,setLoading]=useState(false),[search,setSearch]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[name,setName]=useState(''),[caption,setCaption]=useState(''),[asset,setAsset]=useState<ImagePicker.ImagePickerAsset|null>(null),[prompt,setPrompt]=useState(''),[workflow,setWorkflow]=useState('text-video'),[aiUrl,setAiUrl]=useState(''),[aiStatus,setAiStatus]=useState(''),[busy,setBusy]=useState(false),[profile,setProfile]=useState<any>(null),[commentTarget,setCommentTarget]=useState<Post|null>(null),[commentText,setCommentText]=useState(''),[commentItems,setCommentItems]=useState<any[]>([]),[commentsBusy,setCommentsBusy]=useState(false);
  useEffect(()=>{if(!supabase)return;supabase.auth.getSession().then(({data})=>setSession(data.session));const {data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));return()=>data.subscription.unsubscribe()},[]);
  useEffect(()=>{const sub=AppState.addEventListener('change',state=>{if(state==='active')setTab('For You')});return()=>sub.remove()},[]);
  useEffect(()=>{loadFeed()},[tab,session?.user.id]);
