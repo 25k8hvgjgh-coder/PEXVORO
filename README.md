@@ -40,3 +40,8 @@ The schema creates profiles, posts, likes, comments, follows, saves, row-level s
 
 ## Security
 Never commit API tokens to GitHub or expose service-role keys in browser code. Keep public post media in the public bucket only. Before a wider launch, add moderation/reporting, abuse controls, rate limits, account deletion, stronger validation, and end-to-end tests.
+
+## Community and feed policy
+
+PEXVORO's intended conservative-first feed, political-content moderation, firearms/explosives safety boundaries, and launch requirements are documented in [`docs/COMMUNITY_AND_FEED_POLICY.md`](docs/COMMUNITY_AND_FEED_POLICY.md). These are product requirements; they should not be described as live features until implemented and tested.
+
