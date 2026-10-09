@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReconFeed Licensed Music Catalog Entry",
+  "description": "Planning schema only. Entries must not be treated as cleared unless approved by the designated reviewer with supporting written rights documentation.",
+  "type": "object",
+  "required": [
+    "track_id",
+    "title",
+    "artist",
+    "recording_asset_ref",
+    "rights_status",
+    "territories",
+    "rights",
+    "license_reference"
+  ],
+  "properties": {
+    "track_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artist": {
+      "type": "string",
+      "minLength": 1
+    },
+    "album": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "isrc": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "composition_identifiers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recording_asset_ref": {
+      "type": "string",
+      "description": "Internal storage/provider reference; never a public unlicensed download URL."
+    },
+    "artwork_asset_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "preview_asset_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "rights_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "pending_review",
+        "approved",
+        "restricted",
+        "expired",
+        "blocked"
+      ]
+    },
+    "territories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      },
+      "description": "ISO 3166-1 alpha-2 codes or an explicitly documented global value."
+    },
+    "effective_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "rights": {
+      "type": "object",
+      "required": [
+        "ugc_synchronization",
+        "master_use",
+        "reproduction",
+        "streaming",
+        "monetization"
+      ],
+      "properties": {
+        "ugc_synchronization": {
+          "type": "boolean"
+        },
+        "master_use": {
+          "type": "boolean"
+        },
+        "reproduction": {
+          "type": "boolean"
+        },
+        "streaming": {
+          "type": "boolean"
+        },
+        "public_performance": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "social_sharing": {
+          "type": "boolean"
+        },
+        "promotional_use": {
+          "type": "boolean"
+        },
+        "monetization": {
+          "type": "boolean"
+        },
+        "allowed_clip_seconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "attribution_required": {
+          "type": "boolean",
+          "default": false
+        },
+        "restrictions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "license_reference": {
+      "type": "string",
+      "description": "Internal contract/document reference; do not store confidential contract text in client-visible fields."
+    },
+    "composition_owners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "master_owner": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "licensor_contact_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "fee_model": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reporting_cadence": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "approved_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "approved_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "last_reviewed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "internal_notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
