@@ -1,10 +1,10 @@
-# Frontline Media integration and launch setup
+# Veytrava integration and launch setup
 
 This guide identifies the configuration that must be completed in the real service accounts. Do not paste secret keys into GitHub issues, source files, or chat.
 
 ## 1. Supabase
 
-1. Open the Supabase project intended for Frontline Media.
+1. Open the Supabase project intended for Veytrava.
 2. In SQL Editor, review and run `supabase/schema.sql`. This creates the social tables and the marketplace listing/order data model. Back up existing data before applying schema changes to a project that already has production data.
 3. In Project Settings / API, copy the project URL and the publishable/anon public key.
 4. Set these values for the Expo mobile build using `mobile/.env.example` as a template:
