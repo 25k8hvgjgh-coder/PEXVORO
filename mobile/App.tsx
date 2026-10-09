@@ -1,6 +1,6 @@
 import 'react-native-url-polyfill/auto';
 import React,{useEffect,useState} from 'react';
-import {ActivityIndicator,Alert,AppState,FlatList,Image,Pressable,RefreshControl,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View} from 'react-native';
+import {ActivityIndicator,Alert,FlatList,Image,Pressable,RefreshControl,SafeAreaView,ScrollView,StatusBar,StyleSheet,Text,TextInput,View} from 'react-native';
 import {Video,ResizeMode} from 'expo-av';
 import {Modal} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
