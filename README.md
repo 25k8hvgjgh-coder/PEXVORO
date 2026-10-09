@@ -5,7 +5,8 @@ PEXVORO is being built as a creator-first social video and photo platform: a ver
 ## Current status
 - The app-style front end is deployed through Vercel and source-controlled in this repository.
 - The current feed still includes demo content until Supabase is configured and real posts exist.
-- The creator studio can preview media locally; cloud publishing requires the setup below.
+- The creator studio previews selected media locally and includes a cloud publishing workflow that requires the setup below.
+- Account UI, public community feed, likes, comments, follows, Following feed, profile editing, profile stats, and caption search are wired to Supabase in the front end; these have not yet been end-to-end tested against your live project.
 - Paid memberships, credits, and checkout are intentionally paused.
 - AI generation/editing is not yet connected end-to-end to a selected provider model.
 
@@ -19,7 +20,7 @@ PEXVORO is being built as a creator-first social video and photo platform: a ver
 4. Open `/api/config` on the deployed site. It should return `configured: true` and only the public URL/key.
 5. Supabase Auth email-confirmation settings may require users to confirm their email before signing in.
 
-The schema creates profiles, posts, likes, comments, follows, saves, row-level security policies, and a public `post-media` storage bucket with a 25 MB limit. Public-bucket media is publicly viewable by URL; only upload media you intend to be public. Run the schema in your own Supabase project before the tables exist.
+The schema creates profiles, posts, likes, comments, follows, saves, row-level security policies, and a public `post-media` storage bucket with a 25 MB limit. The front end currently uses public post publishing; private cloud drafts and followers-only media access are not finished. Public-bucket media is publicly viewable by URL; only upload media you intend to be public. Run the schema in your own Supabase project before the tables exist.
 
 ## Endpoints
 - `GET /api/health`: reports whether expected environment variables are present; it does not test a full integration.
