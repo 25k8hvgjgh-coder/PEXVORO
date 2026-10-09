@@ -26,6 +26,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Generate ReconFeed app icon
+        run: |
+          npm install --no-save sharp
+          node -e "require('sharp')('assets/reconfeed-emblem.svg').resize(1024,1024).png().toFile('assets/icon.png')"
+
       - name: Verify Expo token is available
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
