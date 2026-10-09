@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#20271a"/><stop offset="1" stop-color="#080a07"/></linearGradient><linearGradient id="ol" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d5e8a0"/><stop offset="1" stop-color="#7d9a45"/></linearGradient></defs>
+<rect x="24" y="24" width="976" height="976" rx="210" fill="url(#bg)" stroke="#52643a" stroke-width="12"/>
+<path d="M512 105 820 278 780 650 512 876 244 650 204 278Z" fill="#11160d" stroke="url(#ol)" stroke-width="24"/>
+<path d="M512 160 760 300 728 624 512 806 296 624 264 300Z" fill="none" stroke="#647b3a" stroke-width="10"/>
+<path d="M512 260 572 390 716 407 608 504 638 648 512 574 386 648 416 504 308 407 452 390Z" fill="url(#ol)" stroke="#e4f2c2" stroke-width="8" stroke-linejoin="round"/>
+<path d="M390 690 512 636 634 690 590 738 512 710 434 738Z" fill="#a6bd65"/>
+<path d="M330 300 360 265 390 300M634 300 664 265 694 300" fill="none" stroke="#dce9bb" stroke-width="12" stroke-linecap="round"/>
+<text x="512" y="848" font-family="Arial,sans-serif" font-weight="900" font-size="54" text-anchor="middle" fill="#f3f5e9" letter-spacing="4">RECONFEED</text>
+</svg>
