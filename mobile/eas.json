@@ -29,7 +29,13 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://ojprsyvkzgyphpsvksgx.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW"
       },
-      "channel": "production"
+      "channel": "production",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "distribution": "store"
+      }
     }
   },
   "submit": {
