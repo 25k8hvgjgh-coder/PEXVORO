@@ -1,0 +1,37 @@
+name: Validate app JavaScript
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check API JavaScript syntax
+        run: |
+          node --check api/config.js
+          node --check api/health.js
+          node --check api/generate.js
+          node --check api/generation-status.js
+      - name: Extract and check inline app JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", html, re.I)
+          inline = [s for s in scripts if s.strip()]
+          if not inline:
+              raise SystemExit("No inline JavaScript found in index.html")
+          Path("/tmp/pexvoro-inline.js").write_text(inline[-1], encoding="utf-8")
+          print(f"Checking inline script ({len(inline[-1])} characters)")
+          PY
+          node --check /tmp/pexvoro-inline.js
