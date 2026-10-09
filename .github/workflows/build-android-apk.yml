@@ -79,31 +79,37 @@ jobs:
         run: |
           set -euo pipefail
           OUT="android/app/build/outputs/apk/release"
-          echo "Release APK candidates:"
-          find "$OUT" -maxdepth 1 -type f -name '*.apk' -printf '%f\n'
           APK="$(find "$OUT" -maxdepth 1 -type f -name '*.apk' ! -name '*aligned*' ! -name '*beta*' | head -n 1)"
           if [ -z "$APK" ]; then
             echo "::error::Gradle finished but no release APK was found."
             exit 1
           fi
           KEYSTORE="$RUNNER_TEMP/reconfeed-beta.keystore"
-          : "${RECONFEED_ANDROID_STORE_PASSWORD:?Missing RECONFEED_ANDROID_STORE_PASSWORD secret}"
-          : "${RECONFEED_ANDROID_KEY_ALIAS:?Missing RECONFEED_ANDROID_KEY_ALIAS secret}"
-          : "${RECONFEED_ANDROID_KEY_PASSWORD:?Missing RECONFEED_ANDROID_KEY_PASSWORD secret}"
-          : "${RECONFEED_ANDROID_KEYSTORE_BASE64:?Missing RECONFEED_ANDROID_KEYSTORE_BASE64 secret}"
-          # Remove whitespace to tolerate wrapped Base64 pasted into the secret.
-          if ! printf '%s' "$RECONFEED_ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > "$KEYSTORE" 2>/dev/null; then
-            echo "::error::RECONFEED_ANDROID_KEYSTORE_BASE64 is invalid Base64. Recreate this secret from the keystore file; no temporary key will be used."
-            exit 1
+          STORE_PASS="${RECONFEED_ANDROID_STORE_PASSWORD:-}"
+          KEY_ALIAS="${RECONFEED_ANDROID_KEY_ALIAS:-}"
+          KEY_PASS="${RECONFEED_ANDROID_KEY_PASSWORD:-}"
+          PERSISTENT_KEY=false
+
+          # Prefer the permanent key so later beta builds can update an existing install.
+          # If the saved secret is absent or malformed, still produce a fresh-install test APK.
+          if [ -n "${RECONFEED_ANDROID_KEYSTORE_BASE64:-}" ] && [ -n "$STORE_PASS" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASS" ]; then
+            if printf '%s' "$RECONFEED_ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > "$KEYSTORE" 2>/dev/null &&
+               keytool -list -keystore "$KEYSTORE" -storepass "$STORE_PASS" -alias "$KEY_ALIAS" >/dev/null 2>&1; then
+              PERSISTENT_KEY=true
+            fi
           fi
-          if ! keytool -list -keystore "$KEYSTORE" -storepass "$RECONFEED_ANDROID_STORE_PASSWORD" -alias "$RECONFEED_ANDROID_KEY_ALIAS" >/dev/null 2>&1; then
-            echo "::error::The keystore, store password, or alias is invalid. Correct the permanent signing secrets; no temporary key will be used."
-            exit 1
+
+          if [ "$PERSISTENT_KEY" = true ]; then
+            echo "Using verified persistent ReconFeed beta signing key."
+          else
+            echo "::warning::Permanent Android signing secrets are missing or invalid. Creating a one-run beta key; this APK is for a fresh install and may not update an APK signed by another key."
+            rm -f "$KEYSTORE"
+            STORE_PASS="$(openssl rand -hex 16)"
+            KEY_PASS="$STORE_PASS"
+            KEY_ALIAS="reconfeed-beta"
+            keytool -genkeypair -v -keystore "$KEYSTORE" -storepass "$STORE_PASS" -alias "$KEY_ALIAS" -keypass "$KEY_PASS" -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ReconFeed Beta, OU=Testing, O=ReconFeed, L=Denton, ST=Texas, C=US" >/dev/null 2>&1
           fi
-          STORE_PASS="$RECONFEED_ANDROID_STORE_PASSWORD"
-          KEY_ALIAS="$RECONFEED_ANDROID_KEY_ALIAS"
-          KEY_PASS="$RECONFEED_ANDROID_KEY_PASSWORD"
-          echo "Using verified persistent ReconFeed beta signing key."
+
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
           if [ -z "$BUILD_TOOLS" ] || [ ! -x "$BUILD_TOOLS/zipalign" ] || [ ! -x "$BUILD_TOOLS/apksigner" ]; then
             echo "::error::Android zipalign/apksigner tools were not found."
