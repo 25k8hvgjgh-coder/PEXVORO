@@ -6,7 +6,7 @@ create table if not exists public.marketplace_listings (
   title text not null check (char_length(title) between 3 and 120),
   description text not null default '' check (char_length(description) <= 5000),
   category text not null check (category in ('Vehicles','Parts & Accessories','Tools & Equipment','Outdoor & Lifestyle','Other')),
-  condition text not null default 'Used' check (condition in ('New','Like new','Good','Fair','For parts')),
+  condition text not null default 'Good' check (condition in ('New','Like new','Good','Fair','For parts','Used')),
   price numeric(12,2) not null check (price >= 0),
   currency text not null default 'USD' check (currency = 'USD'),
   location text not null default '' check (char_length(location) <= 160),
@@ -89,3 +89,7 @@ drop policy if exists "Users can report listings" on public.marketplace_listing_
 create policy "Users can report listings" on public.marketplace_listing_reports for insert to authenticated with check ((select auth.uid()) = reporter_id);
 drop policy if exists "Users can view their own reports" on public.marketplace_listing_reports;
 create policy "Users can view their own reports" on public.marketplace_listing_reports for select to authenticated using ((select auth.uid()) = reporter_id);
+
+-- Keep existing deployments aligned if this migration is reapplied after an earlier draft.
+alter table public.marketplace_listings drop constraint if exists marketplace_listings_condition_check;
+alter table public.marketplace_listings add constraint marketplace_listings_condition_check check (condition in ('New','Like new','Good','Fair','For parts','Used'));
