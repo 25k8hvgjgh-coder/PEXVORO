@@ -10,6 +10,8 @@ This checklist is for the remaining app-side work that can be prepared before ba
 ## App-side components
 - `mobile/MorningBriefCard.tsx` provides an optional, source-attributed news card component for insertion among ordinary feed items. It is not connected to a scheduler or news provider yet.
 - `mobile/App.tsx` has a conservative keyword ranking baseline and returns to For You when the app resumes.
+- `mobile/App.tsx` now includes a comment list/composer and feed comment counts; live behavior still depends on the deployed Supabase schema and RLS policies being applied and tested.
+- Signup now asks for a birth date and applies an 18+ client-side check. This is not sufficient on its own: enforce age eligibility server-side before launch.
 - Seller flow requirements and a 10% PEXVORO platform fee disclosure are documented in `docs/MORNING_NEWS_AND_MARKETPLACE.md`. Payment collection is not implemented by the disclosure alone.
 
 ## Before calling a feature operational
