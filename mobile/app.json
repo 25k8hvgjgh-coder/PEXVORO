@@ -1,1 +1,42 @@
-{"expo":{"name":"ReconFeed","slug":"reconfeed","scheme":"reconfeed","version":"1.0.0","orientation":"portrait","userInterfaceStyle":"dark","newArchEnabled":true,"ios":{"supportsTablet":true,"bundleIdentifier":"com.reconfeed.app","infoPlist":{"NSPhotoLibraryUsageDescription":"Choose photos and videos to share or edit in ReconFeed.","NSCameraUsageDescription":"Record content to share in ReconFeed.","NSMicrophoneUsageDescription":"Record audio with your videos."}},"android":{"package":"com.reconfeed.app","permissions":["CAMERA","RECORD_AUDIO","READ_MEDIA_IMAGES","READ_MEDIA_VIDEO"],"adaptiveIcon":{"backgroundColor":"#11130d"}},"plugins":[["expo-image-picker",{"photosPermission":"Allow ReconFeed to select photos and videos.","cameraPermission":"Allow ReconFeed to record content."}]]}}
+{
+  "expo": {
+    "name": "ReconFeed",
+    "slug": "reconfeed",
+    "owner": "Azzholejr06",
+    "scheme": "reconfeed",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.reconfeed.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Choose photos and videos to share or edit in ReconFeed.",
+        "NSCameraUsageDescription": "Record content to share in ReconFeed.",
+        "NSMicrophoneUsageDescription": "Record audio with your videos."
+      }
+    },
+    "android": {
+      "package": "com.reconfeed.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#11130d"
+      }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow ReconFeed to select photos and videos.",
+          "cameraPermission": "Allow ReconFeed to record content."
+        }
+      ]
+    ]
+  }
+}
