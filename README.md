@@ -6,7 +6,8 @@ PEXVORO is being built as a creator-first social video and photo platform: a ver
 - The app-style front end is deployed through Vercel and source-controlled in this repository.
 - The current feed still includes demo content until Supabase is configured and real posts exist.
 - The creator studio previews selected media locally and includes a cloud publishing workflow that requires the setup below.
-- Account UI, public community feed, likes, comments, follows, Following feed, profile editing, profile stats, and caption search are wired to Supabase in the front end; these have not yet been end-to-end tested against your live project.
+- Account UI, public community feed, server-backed like/unlike state, follow/unfollow, saved-post state and removal, comments, Following feed, profile editing, profile stats, and caption search are wired to Supabase in the front end; these have not yet been end-to-end tested against your live project.
+- The creator profile includes a saved-post library for reviewing and removing saved posts.
 - Paid memberships, credits, and checkout are intentionally paused.
 - AI generation/editing is not yet connected end-to-end to a selected provider model.
 
