@@ -87,17 +87,27 @@ jobs:
             exit 1
           fi
           KEYSTORE="$RUNNER_TEMP/reconfeed-beta.keystore"
+          USE_PERSISTENT_KEY=false
           if [ -n "${RECONFEED_ANDROID_KEYSTORE_BASE64:-}" ]; then
-            echo "$RECONFEED_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE"
-            STORE_PASS="${RECONFEED_ANDROID_STORE_PASSWORD:?Set RECONFEED_ANDROID_STORE_PASSWORD in GitHub Actions secrets}"
-            KEY_ALIAS="${RECONFEED_ANDROID_KEY_ALIAS:?Set RECONFEED_ANDROID_KEY_ALIAS in GitHub Actions secrets}"
-            KEY_PASS="${RECONFEED_ANDROID_KEY_PASSWORD:?Set RECONFEED_ANDROID_KEY_PASSWORD in GitHub Actions secrets}"
+            # Strip whitespace so secrets copied with line breaks still decode.
+            if printf '%s' "$RECONFEED_ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > "$KEYSTORE" 2>/dev/null && keytool -list -keystore "$KEYSTORE" -storepass "${RECONFEED_ANDROID_STORE_PASSWORD:-}" -alias "${RECONFEED_ANDROID_KEY_ALIAS:-reconfeed}" >/dev/null 2>&1; then
+              USE_PERSISTENT_KEY=true
+            else
+              rm -f "$KEYSTORE"
+              echo "::warning::The configured keystore secret could not be decoded or opened. Building a temporary-signed beta so the APK is still available; fix RECONFEED_ANDROID_KEYSTORE_BASE64 before distributing updates."
+            fi
+          else
+            echo "::warning::No persistent signing-key secrets configured. Building a temporary-signed beta; this build may not update an existing installation."
+          fi
+          if [ "$USE_PERSISTENT_KEY" = true ]; then
+            STORE_PASS="$RECONFEED_ANDROID_STORE_PASSWORD"
+            KEY_ALIAS="$RECONFEED_ANDROID_KEY_ALIAS"
+            KEY_PASS="$RECONFEED_ANDROID_KEY_PASSWORD"
             echo "Using persistent ReconFeed beta signing key."
           else
             STORE_PASS="reconfeed-beta"
             KEY_ALIAS="reconfeed"
             KEY_PASS="reconfeed-beta"
-            echo "::warning::No persistent signing-key secrets configured. This APK uses a temporary key and may not update an existing installation."
             keytool -genkeypair -noprompt -keystore "$KEYSTORE" -storepass "$STORE_PASS" -alias "$KEY_ALIAS" -keypass "$KEY_PASS" -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ReconFeed Beta, OU=Beta, O=ReconFeed, L=Denton, ST=Texas, C=US"
           fi
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
