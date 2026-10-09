@@ -1,0 +1,58 @@
+name: Build ReconFeed iOS Simulator Preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-ios-simulator.yml"
+      - "mobile/**"
+
+permissions:
+  contents: read
+
+jobs:
+  ios-simulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate ReconFeed app icon
+        run: |
+          npm install --no-save sharp
+          node -e "require('sharp')('assets/reconfeed-emblem.svg').resize(1024,1024).png().toFile('assets/icon.png')"
+
+      - name: Verify Expo token is available
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN is missing from GitHub Actions secrets."
+            exit 1
+          fi
+          echo "Expo token is present."
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verify Expo project
+        run: npx eas-cli init --id cb631cf4-5781-426a-a5f9-9d3c52abf8dc --non-interactive
+
+      - name: Queue credential-free iOS Simulator build
+        run: npx eas-cli build --platform ios --profile ios-simulator --non-interactive --no-wait
