@@ -6,7 +6,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (id uuid primary key references auth.users(id) on delete cascade, username text unique not null, display_name text not null default 'Creator', bio text not null default '', avatar_url text, birth_date date, gender text check (gender in ('MALE','FEMALE','Other')), created_at timestamptz not null default now());
 alter table public.profiles add column if not exists birth_date date;
 alter table public.profiles add column if not exists gender text;
-do $ begin if not exists (select 1 from pg_constraint where conname = 'profiles_gender_check') then alter table public.profiles add constraint profiles_gender_check check (gender in ('MALE','FEMALE','Other')); end if; end $;
+DO $ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'profiles_gender_check') THEN ALTER TABLE public.profiles ADD CONSTRAINT profiles_gender_check CHECK (gender IN ('MALE','FEMALE','Other')); END IF; END $;
 create table if not exists public.posts (id uuid primary key default gen_random_uuid(), user_id uuid not null references public.profiles(id) on delete cascade, caption text not null default '', media_url text not null, media_type text not null check (media_type in ('image','video')), visibility text not null default 'public' check (visibility in ('public','followers','private')), format text not null default 'Original', created_at timestamptz not null default now());
 create table if not exists public.likes (post_id uuid not null references public.posts(id) on delete cascade, user_id uuid not null references auth.users(id) on delete cascade, created_at timestamptz not null default now(), primary key (post_id,user_id));
 create table if not exists public.comments (id uuid primary key default gen_random_uuid(), post_id uuid not null references public.posts(id) on delete cascade, user_id uuid not null references auth.users(id) on delete cascade, body text not null check (char_length(body) between 1 and 2000), created_at timestamptz not null default now());
@@ -16,7 +16,7 @@ create index if not exists posts_created_at_idx on public.posts (created_at desc
 create index if not exists posts_user_created_idx on public.posts (user_id, created_at desc);
 create index if not exists comments_post_created_idx on public.comments (post_id, created_at asc);
 
-create or replace function public.create_profile_for_new_user() returns trigger language plpgsql security definer set search_path = '' as $
+CREATE OR REPLACE FUNCTION public.create_profile_for_new_user() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $
 declare base_name text; dob date; selected_gender text;
 begin
   begin dob := (new.raw_user_meta_data ->> 'date_of_birth')::date;
@@ -34,8 +34,8 @@ begin
   values (new.id, base_name || '_' || substr(new.id::text, 1, 6), coalesce(nullif(new.raw_user_meta_data ->> 'display_name',''), nullif(split_part(coalesce(new.email,''),'@',1),''), 'Creator'), dob, selected_gender)
   on conflict (id) do nothing;
   return new;
-end; $;
-drop trigger if exists on_auth_user_created_profile on auth.users;
+END; $;
+DROP TRIGGER IF EXISTS on_auth_user_created_profile on auth.users;
 create trigger on_auth_user_created_profile after insert on auth.users for each row execute procedure public.create_profile_for_new_user();
 
 alter table public.profiles enable row level security;
