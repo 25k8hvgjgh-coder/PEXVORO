@@ -123,3 +123,51 @@ drop policy if exists "Public reads post media" on storage.objects;
 create policy "Public reads post media" on storage.objects for select using (bucket_id = 'post-media');
 drop policy if exists "Users delete own media" on storage.objects;
 create policy "Users delete own media" on storage.objects for delete to authenticated using (bucket_id = 'post-media' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- Marketplace foundation. Payment state and platform fee are server-controlled;
+-- clients can create drafts but cannot mark listings paid or alter financial totals.
+create table if not exists public.marketplace_listings (
+  id uuid primary key default gen_random_uuid(),
+  seller_id uuid not null references auth.users(id) on delete cascade,
+  title text not null check (char_length(title) between 3 and 120),
+  description text not null default '' check (char_length(description) <= 5000),
+  category text not null default 'Other',
+  price_cents integer not null check (price_cents between 1 and 100000000),
+  currency text not null default 'usd' check (currency = 'usd'),
+  image_urls text[] not null default '{}',
+  status text not null default 'draft' check (status in ('draft','active','paused','sold','removed')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists marketplace_listings_active_idx on public.marketplace_listings (created_at desc) where status = 'active';
+alter table public.marketplace_listings enable row level security;
+drop policy if exists "Active listings readable by everyone" on public.marketplace_listings;
+create policy "Active listings readable by everyone" on public.marketplace_listings for select using (status = 'active' or seller_id = (select auth.uid()));
+drop policy if exists "Sellers create own drafts" on public.marketplace_listings;
+create policy "Sellers create own drafts" on public.marketplace_listings for insert to authenticated with check (seller_id = (select auth.uid()) and status = 'draft');
+drop policy if exists "Sellers update own listings" on public.marketplace_listings;
+create policy "Sellers update own listings" on public.marketplace_listings for update to authenticated using (seller_id = (select auth.uid())) with check (seller_id = (select auth.uid()) and status in ('draft','active','paused','removed'));
+drop policy if exists "Sellers delete own drafts" on public.marketplace_listings;
+create policy "Sellers delete own drafts" on public.marketplace_listings for delete to authenticated using (seller_id = (select auth.uid()) and status = 'draft');
+
+-- Orders are written by trusted server/payment webhooks only; no client write policy.
+create table if not exists public.marketplace_orders (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references public.marketplace_listings(id),
+  buyer_id uuid not null references auth.users(id),
+  seller_id uuid not null references auth.users(id),
+  currency text not null default 'usd' check (currency = 'usd'),
+  gross_cents integer not null check (gross_cents > 0),
+  platform_fee_cents integer not null check (platform_fee_cents >= 0),
+  seller_amount_cents integer not null check (seller_amount_cents >= 0),
+  payment_provider text not null default 'stripe',
+  provider_session_id text unique,
+  payment_status text not null default 'pending' check (payment_status in ('pending','paid','refunded','disputed','cancelled')),
+  created_at timestamptz not null default now(),
+  check (platform_fee_cents + seller_amount_cents = gross_cents)
+);
+create index if not exists marketplace_orders_buyer_idx on public.marketplace_orders (buyer_id, created_at desc);
+create index if not exists marketplace_orders_seller_idx on public.marketplace_orders (seller_id, created_at desc);
+alter table public.marketplace_orders enable row level security;
+drop policy if exists "Buyers and sellers read own orders" on public.marketplace_orders;
+create policy "Buyers and sellers read own orders" on public.marketplace_orders for select to authenticated using (buyer_id = (select auth.uid()) or seller_id = (select auth.uid()));
