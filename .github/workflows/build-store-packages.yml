@@ -1,0 +1,48 @@
+name: Build ReconFeed store packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  production-builds:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate ReconFeed app icon
+        run: |
+          npm install --no-save sharp
+          node -e "require('sharp')('assets/reconfeed-emblem.svg').resize(1024,1024).png().toFile('assets/icon.png')"
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verify Expo authentication
+        run: npx eas-cli whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Link ReconFeed project
+        run: npx eas-cli init --id cb631cf4-5781-426a-a5f9-9d3c52abf8dc --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android App Bundle and iOS store archive
+        run: npx eas-cli build --platform all --profile production --non-interactive --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
