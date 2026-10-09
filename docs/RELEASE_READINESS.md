@@ -15,9 +15,9 @@ This checklist is for the remaining app-side work that can be prepared before ba
 - Seller flow requirements and a 10% PEXVORO platform fee disclosure are documented in `docs/MORNING_NEWS_AND_MARKETPLACE.md`. Payment collection is not implemented by the disclosure alone.
 
 ## Before calling a feature operational
-- Run TypeScript checks and app build.
-- Connect Supabase and run the schema.
-- Add server-side 18+ enforcement, not only a client check.
+- Run the automated TypeScript workflow and a full app build; green CI has not yet been confirmed.
+- Connect Supabase and run the updated schema in the project's SQL Editor.
+- The schema now rejects signup metadata for users under 18 and requires one of the configured gender values at account creation; this is not identity verification and must be tested against the real Supabase project.
 - Test uploads, post creation, likes/follows, and row-level security against a real project.
 - Integrate trusted news sources and a scheduled job; include source attribution, timestamps, correction workflow, and generated-media labels.
 - Implement marketplace listings, moderation, payment provider, verified webhooks, refunds/disputes, seller payout flow, and server-side fee accounting.
