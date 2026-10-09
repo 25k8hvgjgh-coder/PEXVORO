@@ -10,11 +10,11 @@ See [`docs/RELEASE_READINESS.md`](docs/RELEASE_READINESS.md) for the current lau
 
 See [`docs/MORNING_NEWS_AND_MARKETPLACE.md`](docs/MORNING_NEWS_AND_MARKETPLACE.md) for the optional morning news-video feed and seller listing/payment requirements, including the disclosed 10% platform fee. These require implementation and backend integrations before they are live.
 
-# Veytrava
+# ReconFeed
 
 **Veteran-owned and operated.**
 
-Veytrava is being built as a native iOS and Android creator-first social video/photo app with a short-form feed, creator profiles, media publishing, and an AI creation studio. The root website is intended to be a simple app-download landing page; the native app source lives in `mobile/`.
+ReconFeed is being built as a native iOS and Android creator-first social video/photo app with a short-form feed, creator profiles, media publishing, and an AI creation studio. The root website is intended to be a simple app-download landing page; the native app source lives in `mobile/`.
 
 ## Feature parity plan
 
@@ -61,5 +61,5 @@ Never commit API tokens to GitHub or expose service-role keys in browser code. K
 
 ## Community and feed policy
 
-Veytrava's intended conservative-first feed, political-content moderation, firearms/explosives safety boundaries, and launch requirements are documented in [`docs/COMMUNITY_AND_FEED_POLICY.md`](docs/COMMUNITY_AND_FEED_POLICY.md). These are product requirements; they should not be described as live features until implemented and tested.
+ReconFeed's intended conservative-first feed, political-content moderation, firearms/explosives safety boundaries, and launch requirements are documented in [`docs/COMMUNITY_AND_FEED_POLICY.md`](docs/COMMUNITY_AND_FEED_POLICY.md). These are product requirements; they should not be described as live features until implemented and tested.
 
