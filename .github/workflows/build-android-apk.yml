@@ -70,6 +70,11 @@ jobs:
 
       - name: Sign APK for beta installation
         shell: bash
+        env:
+          RECONFEED_ANDROID_KEYSTORE_BASE64: ${{ secrets.RECONFEED_ANDROID_KEYSTORE_BASE64 }}
+          RECONFEED_ANDROID_STORE_PASSWORD: ${{ secrets.RECONFEED_ANDROID_STORE_PASSWORD }}
+          RECONFEED_ANDROID_KEY_ALIAS: ${{ secrets.RECONFEED_ANDROID_KEY_ALIAS }}
+          RECONFEED_ANDROID_KEY_PASSWORD: ${{ secrets.RECONFEED_ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           OUT="android/app/build/outputs/apk/release"
@@ -81,14 +86,26 @@ jobs:
             exit 1
           fi
           KEYSTORE="$RUNNER_TEMP/reconfeed-beta.keystore"
-          keytool -genkeypair -noprompt -keystore "$KEYSTORE" -storepass reconfeed-beta -alias reconfeed -keypass reconfeed-beta -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ReconFeed Beta, OU=Beta, O=ReconFeed, L=Denton, ST=Texas, C=US"
+          if [ -n "${RECONFEED_ANDROID_KEYSTORE_BASE64:-}" ]; then
+            echo "$RECONFEED_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE"
+            STORE_PASS="${RECONFEED_ANDROID_STORE_PASSWORD:?Set RECONFEED_ANDROID_STORE_PASSWORD in GitHub Actions secrets}"
+            KEY_ALIAS="${RECONFEED_ANDROID_KEY_ALIAS:?Set RECONFEED_ANDROID_KEY_ALIAS in GitHub Actions secrets}"
+            KEY_PASS="${RECONFEED_ANDROID_KEY_PASSWORD:?Set RECONFEED_ANDROID_KEY_PASSWORD in GitHub Actions secrets}"
+            echo "Using persistent ReconFeed beta signing key."
+          else
+            STORE_PASS="reconfeed-beta"
+            KEY_ALIAS="reconfeed"
+            KEY_PASS="reconfeed-beta"
+            echo "::warning::No persistent signing-key secrets configured. This APK uses a temporary key and may not update an existing installation."
+            keytool -genkeypair -noprompt -keystore "$KEYSTORE" -storepass "$STORE_PASS" -alias "$KEY_ALIAS" -keypass "$KEY_PASS" -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ReconFeed Beta, OU=Beta, O=ReconFeed, L=Denton, ST=Texas, C=US"
+          fi
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
           if [ -z "$BUILD_TOOLS" ] || [ ! -x "$BUILD_TOOLS/zipalign" ] || [ ! -x "$BUILD_TOOLS/apksigner" ]; then
             echo "::error::Android zipalign/apksigner tools were not found."
             exit 1
           fi
           "$BUILD_TOOLS/zipalign" -f -p 4 "$APK" "$OUT/reconfeed-beta-aligned.apk"
-          "$BUILD_TOOLS/apksigner" sign --ks "$KEYSTORE" --ks-key-alias reconfeed --ks-pass pass:reconfeed-beta --key-pass pass:reconfeed-beta --out "$OUT/ReconFeed-beta.apk" "$OUT/reconfeed-beta-aligned.apk"
+          "$BUILD_TOOLS/apksigner" sign --ks "$KEYSTORE" --ks-key-alias "$KEY_ALIAS" --ks-pass "pass:$STORE_PASS" --key-pass "pass:$KEY_PASS" --out "$OUT/ReconFeed-beta.apk" "$OUT/reconfeed-beta-aligned.apk"
           "$BUILD_TOOLS/apksigner" verify "$OUT/ReconFeed-beta.apk"
           echo "Signed APK size: $(du -h "$OUT/ReconFeed-beta.apk" | cut -f1)"
 
