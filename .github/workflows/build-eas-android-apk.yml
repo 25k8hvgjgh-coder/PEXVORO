@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-android-apk:
-    name: Build signed Android APK
+    name: Diagnose and build signed Android APK
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,6 +27,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Check Expo config and asset paths
+        run: |
+          node -e "const fs=require('fs'); const c=require('./app.json').expo; console.log('App:',c.name,'Expo package:',require('./package.json').dependencies.expo); for (const p of [c.icon,c.android?.adaptiveIcon?.foregroundImage]) { if (p && p.startsWith('.') && !fs.existsSync(p)) { console.error('Missing configured asset:',p); process.exitCode=1; } }"
+          npx expo config --type public
+          npx expo-doctor
+
+      - name: Verify generated Android project
+        run: npx expo prebuild --platform android --no-install --clean
+
       - name: Set up Expo and EAS
         uses: expo/expo-github-action@v8
         with:
@@ -42,5 +51,3 @@ jobs:
         run: npx eas-cli build --platform android --profile preview --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EXPO_PUBLIC_SUPABASE_URL: https://ojprsyvkzgyphpsvksgx.supabase.co
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW
