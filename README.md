@@ -1,3 +1,7 @@
+## Morning news and marketplace requirements
+
+See [`docs/MORNING_NEWS_AND_MARKETPLACE.md`](docs/MORNING_NEWS_AND_MARKETPLACE.md) for the optional morning news-video feed and seller listing/payment requirements, including the disclosed 10% platform fee. These require implementation and backend integrations before they are live.
+
 # PEXVORO
 
 PEXVORO is being built as a native iOS and Android creator-first social video/photo app with a short-form feed, creator profiles, media publishing, and an AI creation studio. The root website is intended to be a simple app-download landing page; the native app source lives in `mobile/`.
