@@ -1,4 +1,4 @@
-# Manual verification trigger: confirm persistent ReconFeed Android signing secrets are configured.
+# Android beta build: tolerate invalid pasted keystore secrets so a test APK can still be produced.
 name: Build ReconFeed Android beta APK
 
 on:
