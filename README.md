@@ -33,13 +33,14 @@ The prioritized feature checklist and definition-of-done criteria are in [`docs/
 
 ## Enable accounts and cloud posts
 
-1. In Supabase, open **SQL Editor**, create a new query, paste the contents of `supabase/schema.sql`, and run it.
-2. In Vercel → Project → **Settings → Environment Variables**, add:
+1. In Supabase, open **SQL Editor**, create a new query, paste the contents of `supabase/schema.sql`, and run it. This creates the social feed tables and storage policies.
+2. In Supabase SQL Editor, run the full contents of [`supabase/migrations/20261009030000_marketplace.sql`](supabase/migrations/20261009030000_marketplace.sql) after the base schema. This upgrades the earlier marketplace table shape in-place and creates listings, saved listings, messages, and reporting tables. Do not skip this step: the Market tab will not work until the migration succeeds.
+3. In Vercel → Project → **Settings → Environment Variables**, add:
    - `SUPABASE_URL`: your project's base URL, such as `https://YOUR_PROJECT.supabase.co` (not the `/rest/v1/` endpoint).
    - `SUPABASE_ANON_KEY`: the project's public anon/publishable key. Do not use a service-role key.
-3. Apply the variables to the deployment environments you use, then redeploy.
-4. Open `/api/config` on the deployed site. It should return `configured: true` and only the public URL/key.
-5. Supabase Auth email-confirmation settings may require users to confirm their email before signing in.
+4. Apply the variables to the deployment environments you use, then redeploy.
+5. Open `/api/config` on the deployed site. It should return `configured: true` and only the public URL/key.
+6. Supabase Auth email-confirmation settings may require users to confirm their email before signing in.
 
 The schema creates profiles, posts, likes, comments, follows, saves, row-level security policies, and a public `post-media` storage bucket with a 25 MB limit. The mobile app currently uses public post publishing; private cloud drafts and followers-only media access are not finished. Public-bucket media is publicly viewable by URL; only upload media you intend to be public. Run the schema in your own Supabase project before the tables exist.
 
