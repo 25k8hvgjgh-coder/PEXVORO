@@ -4,6 +4,8 @@ See [`docs/MORNING_NEWS_AND_MARKETPLACE.md`](docs/MORNING_NEWS_AND_MARKETPLACE.m
 
 # PEXVORO
 
+**Veteran-owned and operated.**
+
 PEXVORO is being built as a native iOS and Android creator-first social video/photo app with a short-form feed, creator profiles, media publishing, and an AI creation studio. The root website is intended to be a simple app-download landing page; the native app source lives in `mobile/`.
 
 ## Feature parity plan
