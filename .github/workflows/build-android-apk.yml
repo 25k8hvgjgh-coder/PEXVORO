@@ -1,0 +1,81 @@
+name: Build ReconFeed Android beta APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/build-android-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-beta-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate ReconFeed app icon
+        run: |
+          npm install --no-save sharp
+          node -e "require('sharp')('assets/reconfeed-emblem.svg').resize(1024,1024).png().toFile('assets/icon.png')"
+
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android --non-interactive --clean
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://ojprsyvkzgyphpsvksgx.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Build bundled release APK
+        run: cd android && ./gradlew --no-daemon assembleRelease
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://ojprsyvkzgyphpsvksgx.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Sign APK for beta installation
+        working-directory: mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          test -f "$APK"
+          KEYSTORE="$RUNNER_TEMP/reconfeed-beta.keystore"
+          keytool -genkeypair -v -keystore "$KEYSTORE" -storepass reconfeed-beta -alias reconfeed -keypass reconfeed-beta -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ReconFeed Beta, OU=Beta, O=ReconFeed, L=Denton, ST=Texas, C=US"
+          BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          "$BUILD_TOOLS/zipalign" -f -p 4 "$APK" android/app/build/outputs/apk/release/reconfeed-beta-aligned.apk
+          "$BUILD_TOOLS/apksigner" sign --ks "$KEYSTORE" --ks-key-alias reconfeed --ks-pass pass:reconfeed-beta --key-pass pass:reconfeed-beta --out android/app/build/outputs/apk/release/ReconFeed-beta.apk android/app/build/outputs/apk/release/reconfeed-beta-aligned.apk
+          "$BUILD_TOOLS/apksigner" verify android/app/build/outputs/apk/release/ReconFeed-beta.apk
+
+      - name: Upload installable beta APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReconFeed-Android-Beta-APK
+          path: mobile/android/app/build/outputs/apk/release/ReconFeed-beta.apk
+          if-no-files-found: error
+          retention-days: 14
