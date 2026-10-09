@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Frontline Media emblem</title><desc id="desc">A stylized bronze star and tactical shield on an olive-black field.</desc>
+<defs><linearGradient id="bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0d18a"/><stop offset=".55" stop-color="#c6a15b"/><stop offset="1" stop-color="#8d6a32"/></linearGradient></defs>
+<rect width="512" height="512" rx="88" fill="#10110c"/>
+<path d="M256 36 430 105 414 287Q390 397 256 470 122 397 98 287L82 105Z" fill="#202318" stroke="url(#bronze)" stroke-width="12"/>
+<path d="m256 86 24 73 77 1-62 47 23 74-62-44-62 44 23-74-62-47 77-1Z" fill="url(#bronze)"/>
+<path d="M172 235h168l-17 115-67 52-67-52Z" fill="#10110c" stroke="url(#bronze)" stroke-width="9"/>
+<path d="m204 262 24 0 28 48 28-48h24l-40 70h-24Z" fill="url(#bronze)"/>
+<path d="M128 385h256" stroke="url(#bronze)" stroke-width="7" stroke-linecap="round"/>
+</svg>
