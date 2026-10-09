@@ -26,8 +26,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: mobile/package-lock.json
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -39,7 +37,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Generate ReconFeed app icon
         run: |
@@ -50,16 +48,15 @@ jobs:
         run: npx expo prebuild --platform android --non-interactive --clean
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://ojprsyvkzgyphpsvksgx.supabase.co
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW
 
       - name: Build bundled release APK
         run: cd android && ./gradlew --no-daemon assembleRelease
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://ojprsyvkzgyphpsvksgx.supabase.co
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW
 
       - name: Sign APK for beta installation
-        working-directory: mobile
         shell: bash
         run: |
           set -euo pipefail
