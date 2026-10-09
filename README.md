@@ -1,25 +1,30 @@
 # PEXVORO
 
-Responsive app-style AI video and image creation prototype: creator feed, AI Studio, editor concept, templates, drafts, profile, inbox, and proposed memberships.
+PEXVORO is being built as a creator-first social video and photo platform: a vertical creator feed, upload-and-post workflow, creator profiles, and a future AI-assisted editing studio.
 
 ## Current status
-- Front-end interactions and local media preview run in the browser.
-- Server-side AI endpoint foundation is present but requires a compatible Replicate model and secret token.
-- Authentication, cloud storage, public publishing, durable credit ledger, and payment checkout are not enabled.
-- Membership prices and credits are proposals, not active offers.
+- The app-style front end is deployed through Vercel and source-controlled in this repository.
+- The current feed still includes demo content until Supabase is configured and real posts exist.
+- The creator studio can preview media locally; cloud publishing requires the setup below.
+- Paid memberships, credits, and checkout are intentionally paused.
+- AI generation/editing is not yet connected end-to-end to a selected provider model.
 
-## Configure AI generation
-In Vercel Project Settings → Environment Variables, add:
-- `REPLICATE_API_TOKEN`: secret token, server-side only.
-- `REPLICATE_VIDEO_MODEL`: a compatible Replicate model in `owner/model-name` format.
-- `REPLICATE_IMAGE_MODEL`: optional image model in the same format.
+## Enable accounts and cloud posts
 
-The initial adapter passes `prompt`, `aspect_ratio`, and video `duration`; Replicate models have different input schemas, so choose compatible models and test privately before opening the feature to customers. Do not advertise paid generation yet: authentication, per-user rate limits, credit debit/refunds, upload handling, content moderation, and cost controls are still required.
+1. In Supabase, open **SQL Editor**, create a new query, paste the contents of `supabase/schema.sql`, and run it.
+2. In Vercel → Project → **Settings → Environment Variables**, add:
+   - `SUPABASE_URL`: your project's base URL, such as `https://YOUR_PROJECT.supabase.co` (not the `/rest/v1/` endpoint).
+   - `SUPABASE_ANON_KEY`: the project's public anon/publishable key. Do not use a service-role key.
+3. Apply the variables to the deployment environments you use, then redeploy.
+4. Open `/api/config` on the deployed site. It should return `configured: true` and only the public URL/key.
+5. Supabase Auth email-confirmation settings may require users to confirm their email before signing in.
+
+The schema creates profiles, posts, likes, comments, follows, saves, row-level security policies, and a public `post-media` storage bucket with a 25 MB limit. Public-bucket media is publicly viewable by URL; only upload media you intend to be public. Run the schema in your own Supabase project before the tables exist.
 
 ## Endpoints
-- `GET /api/health`: shows whether service environment variables are present. Does not test a real generation.
-- `POST /api/generate`: starts a generation.
-- `GET /api/generation-status?id=...`: returns provider status/output.
+- `GET /api/health`: reports whether expected environment variables are present; it does not test a full integration.
+- `GET /api/config`: returns only the Supabase project URL and public anon key for browser initialization.
+- `api/generate.js` and `api/generation-status.js`: provider adapter scaffolding only; AI generation is not ready for users.
 
 ## Security
-Never commit API tokens to GitHub or expose them in browser code. Do not use a Supabase service-role key in a browser. Stripe checkout should remain disabled until signed webhook verification, server-side product/price mapping, subscription lifecycle handling, and a durable credit ledger are implemented.
+Never commit API tokens to GitHub or expose service-role keys in browser code. Keep public post media in the public bucket only. Before a wider launch, add moderation/reporting, abuse controls, rate limits, account deletion, stronger validation, and end-to-end tests.
