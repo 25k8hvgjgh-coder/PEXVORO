@@ -86,6 +86,11 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: npx eas-cli whoami
 
+      - name: Link existing ReconFeed EAS project
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli init --id cb631cf4-5781-426a-a5f9-9d3c52abf8dc --non-interactive
+
       - name: Build iOS beta for registered iPhones
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
