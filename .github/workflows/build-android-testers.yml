@@ -50,7 +50,7 @@ jobs:
       - name: Link or initialize Expo project
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: npx eas-cli init --account Azzholejr06 --force --non-interactive
+        run: npx eas-cli init --account azzholejr06 --force --non-interactive
 
       - name: Build Android APK for testers
         env:
