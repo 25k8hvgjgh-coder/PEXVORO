@@ -27,7 +27,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Check Expo config and asset paths
+      - name: Generate required PNG app icon from committed ReconFeed emblem
+        run: |
+          python -m pip install --user cairosvg
+          python - <<'PY'
+          import cairosvg
+          cairosvg.svg2png(url="assets/reconfeed-emblem.svg", write_to="assets/icon.png", output_width=1024, output_height=1024)
+          print("Generated assets/icon.png from assets/reconfeed-emblem.svg")
+          PY
+
+      - name: Check Expo config and assets
         run: |
           node -e "const fs=require('fs'); const c=require('./app.json').expo; console.log('App:',c.name,'Expo package:',require('./package.json').dependencies.expo); for (const p of [c.icon,c.android?.adaptiveIcon?.foregroundImage]) { if (p && p.startsWith('.') && !fs.existsSync(p)) { console.error('Missing configured asset:',p); process.exitCode=1; } }"
           npx expo config --type public
