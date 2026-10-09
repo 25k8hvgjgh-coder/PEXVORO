@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Veytrava emblem</title><desc id="desc">A modern compass star within a shield, in bronze and olive on charcoal.</desc>
+<defs><linearGradient id="bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ead29b"/><stop offset=".55" stop-color="#c6a15b"/><stop offset="1" stop-color="#8c6b35"/></linearGradient></defs>
+<rect width="512" height="512" rx="88" fill="#11130d"/>
+<path d="M256 38 427 105 412 282Q390 394 256 470 122 394 100 282L85 105Z" fill="#25291b" stroke="url(#bronze)" stroke-width="12"/>
+<path d="m256 91 24 72 76 2-61 46 22 73-61-43-61 43 22-73-61-46 76-2Z" fill="url(#bronze)"/>
+<path d="m179 251 43 0 34 57 34-57 43 0-60 99h-34Z" fill="#11130d" stroke="url(#bronze)" stroke-width="7" stroke-linejoin="round"/>
+<path d="M142 386h228" stroke="url(#bronze)" stroke-width="7" stroke-linecap="round"/>
+</svg>
