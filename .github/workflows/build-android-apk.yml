@@ -40,7 +40,7 @@ jobs:
           SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -path '*/bin/sdkmanager' -type f | sort -V | tail -n 1)"
           if [ -z "$SDKMANAGER" ]; then
-            echo "Android SDK command-line tools not found on runner."
+            echo "::error::Android SDK command-line tools not found on runner."
             exit 1
           fi
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
@@ -72,14 +72,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          APK="android/app/build/outputs/apk/release/app-release-unsigned.apk"
-          test -f "$APK"
+          OUT="android/app/build/outputs/apk/release"
+          echo "Release APK candidates:"
+          find "$OUT" -maxdepth 1 -type f -name '*.apk' -printf '%f\n'
+          APK="$(find "$OUT" -maxdepth 1 -type f -name '*.apk' ! -name '*aligned*' ! -name '*beta*' | head -n 1)"
+          if [ -z "$APK" ]; then
+            echo "::error::Gradle finished but no release APK was found."
+            exit 1
+          fi
           KEYSTORE="$RUNNER_TEMP/reconfeed-beta.keystore"
-          keytool -genkeypair -v -keystore "$KEYSTORE" -storepass reconfeed-beta -alias reconfeed -keypass reconfeed-beta -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ReconFeed Beta, OU=Beta, O=ReconFeed, L=Denton, ST=Texas, C=US"
+          keytool -genkeypair -noprompt -keystore "$KEYSTORE" -storepass reconfeed-beta -alias reconfeed -keypass reconfeed-beta -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=ReconFeed Beta, OU=Beta, O=ReconFeed, L=Denton, ST=Texas, C=US"
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
-          "$BUILD_TOOLS/zipalign" -f -p 4 "$APK" android/app/build/outputs/apk/release/reconfeed-beta-aligned.apk
-          "$BUILD_TOOLS/apksigner" sign --ks "$KEYSTORE" --ks-key-alias reconfeed --ks-pass pass:reconfeed-beta --key-pass pass:reconfeed-beta --out android/app/build/outputs/apk/release/ReconFeed-beta.apk android/app/build/outputs/apk/release/reconfeed-beta-aligned.apk
-          "$BUILD_TOOLS/apksigner" verify android/app/build/outputs/apk/release/ReconFeed-beta.apk
+          if [ -z "$BUILD_TOOLS" ] || [ ! -x "$BUILD_TOOLS/zipalign" ] || [ ! -x "$BUILD_TOOLS/apksigner" ]; then
+            echo "::error::Android zipalign/apksigner tools were not found."
+            exit 1
+          fi
+          "$BUILD_TOOLS/zipalign" -f -p 4 "$APK" "$OUT/reconfeed-beta-aligned.apk"
+          "$BUILD_TOOLS/apksigner" sign --ks "$KEYSTORE" --ks-key-alias reconfeed --ks-pass pass:reconfeed-beta --key-pass pass:reconfeed-beta --out "$OUT/ReconFeed-beta.apk" "$OUT/reconfeed-beta-aligned.apk"
+          "$BUILD_TOOLS/apksigner" verify "$OUT/ReconFeed-beta.apk"
+          echo "Signed APK size: $(du -h "$OUT/ReconFeed-beta.apk" | cut -f1)"
 
       - name: Upload installable beta APK
         uses: actions/upload-artifact@v4
