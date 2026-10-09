@@ -55,7 +55,18 @@ drop policy if exists "Users remove own likes" on public.likes;
 create policy "Users remove own likes" on public.likes for delete to authenticated using (user_id = (select auth.uid()));
 
 drop policy if exists "Comments are readable" on public.comments;
-create policy "Comments are readable" on public.comments for select using (exists (select 1 from public.posts p where p.id = comments.post_id and (p.visibility = 'public' or p.user_id = (select auth.uid()) or (p.visibility = 'followers' and exists (select 1 from public.follows f where f.follower_id = (select auth.uid()) and f.following_id = p.user_id))));
+create policy "Comments are readable" on public.comments for select using (
+  exists (
+    select 1 from public.posts p
+    where p.id = comments.post_id and (
+      p.visibility = 'public' or p.user_id = (select auth.uid()) or
+      (p.visibility = 'followers' and exists (
+        select 1 from public.follows f
+        where f.follower_id = (select auth.uid()) and f.following_id = p.user_id
+      ))
+    )
+  )
+);
 drop policy if exists "Users create comments" on public.comments;
 create policy "Users create comments" on public.comments for insert to authenticated with check (
   user_id = (select auth.uid()) and exists (
