@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android-beta-apk:
@@ -99,3 +99,16 @@ jobs:
           path: mobile/android/app/build/outputs/apk/release/ReconFeed-beta.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish beta APK release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-beta-${{ github.run_number }}
+          name: ReconFeed Android Beta ${{ github.run_number }}
+          body: |
+            Installable ReconFeed Android beta build.
+
+            Download `ReconFeed-beta.apk` below. This is a beta build, not a Google Play release.
+          files: mobile/android/app/build/outputs/apk/release/ReconFeed-beta.apk
+          prerelease: true
+          make_latest: true
