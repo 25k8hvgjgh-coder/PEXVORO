@@ -17,6 +17,12 @@ assert.match(app,/feedPageHeight=Math\.max\(1,feedViewportHeight/,'feed should m
 assert.match(app,/onLayout=\{event=>\{const h=Math\.round\(event\.nativeEvent\.layout\.height\)/,'feed should measure real layout');
 assert.match(app,/feedViewportHeight>0\?<FlatList/,'feed should wait for a measured viewport');
 assert.match(app,/onCreate=\{startStory\}/,'profile plus must open stories rather than regular post');
-assert.match(app,/maxHeight:Math\.max\(90,Math\.min\(360/,'action rail should fit short screens');
+assert.match(app,/feedNavRow:/,'feed category tabs should share a responsive row');
+assert.match(app,/tab==='Following'\?<StoryStrip/,'Stories should not reduce For You video height');
+assert.match(app,/pageHeight>=400\?<Pressable/,'short screens should collapse Save into More');
+assert.match(app,/pageHeight>=460\?<Pressable/,'short screens should collapse Share into More');
+assert.match(app,/accessibilityLabel="More post actions"/,'extra feed actions remain accessible');
+assert.doesNotMatch(app,/<ScrollView style=\{\[s.videoActions/,'action rail must not be clipped within a scroller');
+assert.match(app,/feedViewportHeight>0\?<FlatList/,'feed should wait for a measured viewport');
 assert.match(inbox,/maxWidth:780,width:'100%'/,'message view should fit both tablets and phones');
 console.log('Responsive layout contracts verified (static checks; real-device testing still required).');
