@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "ReconFeed",
+  "short_name": "ReconFeed",
+  "description": "A community for creators, veterans, outdoor life, trucks, and real stories.",
+  "start_url": "/?source=homescreen",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090b08",
+  "theme_color": "#10130c",
+  "icons": [
+    {
+      "src": "/assets/reconfeed-emblem.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
