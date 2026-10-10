@@ -310,6 +310,8 @@ export default function App(){
  useEffect(()=>{
   if(!supabase)return;
   let active=true;
+  // Do not hold the whole app behind a session spinner on a slow network.
+  const startupFallback=setTimeout(()=>{if(active)setAuthReady(true)},1800);
   const {data}=supabase.auth.onAuthStateChange((event,next)=>{
    if(!active)return;
    setSession(next);
@@ -322,7 +324,7 @@ export default function App(){
    else setSession(current=>current&&!restored.session?current:restored.session);
    setAuthReady(true);
   }).catch(error=>{if(active){console.warn('Session restore unavailable',error);setAuthReady(true)}});
-  return()=>{active=false;data.subscription.unsubscribe()};
+  return()=>{active=false;clearTimeout(startupFallback);data.subscription.unsubscribe()};
  },[]);
  // Keep the message badge synced for all devices, without loading message
  // bodies or requiring the user to leave the feed. Account isolation is
@@ -389,7 +391,7 @@ export default function App(){
   return()=>{clearInterval(flushInterval);if(feedQueueRef.current===queue)feedQueueRef.current=null;queue.dispose()};
  },[session?.user.id]);
 
- useEffect(()=>{++feedRequest.current;++marketRequest.current;setActivePostId(null);if(tab==='Market')void loadMarketplace();else if(tab==='For You'||tab==='Following')void loadFeed();return()=>{++feedRequest.current;++marketRequest.current}},[tab,session?.user.id]);
+ useEffect(()=>{++feedRequest.current;++marketRequest.current;setActivePostId(null);if(tab==='Market')void loadMarketplace();else if((tab==='For You'||tab==='Following')&&(!session||prefsLoaded))void loadFeed();return()=>{++feedRequest.current;++marketRequest.current}},[tab,session?.user.id,prefsLoaded]);
  useEffect(()=>{setNotInterested([]);setSavedPostIds([]);setProfile(null);setName('');setPassword('');setCommentTarget(null);setCommentItems([]);setInboxOpen(false);setSocialInboxOpen(false);setSocialPeer(null);setStoryComposerOpen(false);setMarketThread(null);setCollection(null);setAiUrl('');setAiStatus('');setCaption('');setAsset(null);setMarketMode('browse');setMarketAck(false);setResearchLoaded(false);setResearchSaved(false);setResearchFeatures([]);setResearchPrice('free');setResearchIdentity('both');setResearchNeed('');setResearchWilling(false)},[session?.user.id]);
  useEffect(()=>{if(session){loadProfile();loadResearchResponse()}else{setResearchLoaded(false);setResearchSaved(false);setResearchFeatures([]);setResearchPrice('free');setResearchIdentity('both');setResearchNeed('');setResearchWilling(false)}},[session?.user.id]);
  useEffect(()=>{let active=true;setRepostedIds([]);if(supabase&&session){void supabase.from('reposts').select('post_id').eq('user_id',session.user.id).then(r=>{if(active&&!r.error)setRepostedIds((r.data||[]).map(x=>x.post_id))})}return()=>{active=false}},[session?.user.id]);
@@ -713,14 +715,33 @@ export default function App(){
    const isFollowing=tab==='Following';
    const feedSelect='id,user_id,caption,media_url,media_type,format,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles!posts_user_id_fkey(username,display_name,avatar_url),likes(count),comments(count)';
    // Begin the public For You request immediately; don't wait for preference queries.
+   const initialFeedPageSize=32;
    const publicFeedPromise=!isFollowing
-    ?supabase.from('posts').select(feedSelect).eq('visibility','public').eq('recommendation_status','eligible').order('created_at',{ascending:false}).limit(100)
+    ?supabase.from('posts').select(feedSelect).eq('visibility','public').eq('recommendation_status','eligible').order('created_at',{ascending:false}).limit(initialFeedPageSize)
     :Promise.resolve(null);
+   // Render a first batch before historical signal queries finish. Filters
+   // already honor the loaded account preferences; recommendation ranking
+   // continues independently so it cannot delay the first video.
+   let previewShown=false;
+   if(!isFollowing){
+    const preview=await publicFeedPromise;
+    if(request!==feedRequest.current)return;
+    if(!preview||preview.error)throw (preview?.error||new Error('Could not load videos'));
+    const starterContext:RankingContext={
+     mode:'For You',followingIds:[],likedPostIds:[],savedPostIds:[],
+     history:[],historyPosts:[],hiddenIds:notInterested,blockedKeywords,hideMatureContent
+    };
+    const starterPosts=rankFeedPosts((preview.data||[]) as Post[],starterContext);
+    setPosts(starterPosts);
+    setActivePostId(starterPosts[0]?.id||null);
+    setLoading(false);
+    previewShown=true;
+   }
    const [followRes,historyRes,likesRes,saveRes]=userId?await Promise.all([
     supabase.from('follows').select('following_id,created_at').eq('follower_id',userId).limit(300),
-    personalizationEnabled?(recommendationsResetAt?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).gte('created_at',recommendationsResetAt).order('created_at',{ascending:false}).limit(180):supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(180)):(recommendationsResetAt?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).eq('event_type','not_interested').gte('created_at',recommendationsResetAt).order('created_at',{ascending:false}).limit(180):supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).eq('event_type','not_interested').order('created_at',{ascending:false}).limit(180)),
-    personalizationEnabled?(recommendationsResetAt?supabase.from('likes').select('post_id').eq('user_id',userId).gte('created_at',recommendationsResetAt).limit(160):supabase.from('likes').select('post_id').eq('user_id',userId).limit(160)):Promise.resolve({data:[]}),
-    personalizationEnabled?(recommendationsResetAt?supabase.from('saved_posts').select('post_id').eq('user_id',userId).gte('created_at',recommendationsResetAt).limit(160):supabase.from('saved_posts').select('post_id').eq('user_id',userId).limit(160)):Promise.resolve({data:[]})
+    personalizationEnabled?(recommendationsResetAt?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).gte('created_at',recommendationsResetAt).order('created_at',{ascending:false}).limit(100):supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(100)):(recommendationsResetAt?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).eq('event_type','not_interested').gte('created_at',recommendationsResetAt).order('created_at',{ascending:false}).limit(100):supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).eq('event_type','not_interested').order('created_at',{ascending:false}).limit(100)),
+    personalizationEnabled?(recommendationsResetAt?supabase.from('likes').select('post_id').eq('user_id',userId).gte('created_at',recommendationsResetAt).limit(100):supabase.from('likes').select('post_id').eq('user_id',userId).limit(100)):Promise.resolve({data:[]}),
+    personalizationEnabled?(recommendationsResetAt?supabase.from('saved_posts').select('post_id').eq('user_id',userId).gte('created_at',recommendationsResetAt).limit(100):supabase.from('saved_posts').select('post_id').eq('user_id',userId).limit(100)):Promise.resolve({data:[]})
    ]):[{data:[]},{data:[]},{data:[]},{data:[]}];
    if(request!==feedRequest.current)return;
    // Recommendation features degrade gracefully if history collection is unavailable.
@@ -737,12 +758,12 @@ export default function App(){
    const followingPromise=isFollowing
     ?supabase.from('posts').select(feedSelect).in('user_id',followed).order('created_at',{ascending:false}).limit(100)
     :Promise.resolve(null);
-   const oldIds=personalizationEnabled?[...new Set([...history.map(h=>h.post_id),...saved,...liked])].slice(0,85):[];
+   const oldIds=personalizationEnabled?[...new Set([...history.map(h=>h.post_id),...saved,...liked])].slice(0,55):[];
    const olderPosts=oldIds.length
-    ?supabase.from('posts').select('id,user_id,caption,format,topic_tags,audio_label,overlay_text,transcript').in('id',oldIds).limit(85)
+    ?supabase.from('posts').select('id,user_id,caption,format,topic_tags,audio_label,overlay_text,transcript').in('id',oldIds).limit(55)
     :Promise.resolve({data:[],error:null});
    const followedSamples=personalizationEnabled&&personalFollows.length
-    ?supabase.from('posts').select('id,user_id,caption,format,topic_tags,audio_label,overlay_text,transcript').in('user_id',personalFollows.slice(0,50)).eq('visibility','public').order('created_at',{ascending:false}).limit(40)
+    ?supabase.from('posts').select('id,user_id,caption,format,topic_tags,audio_label,overlay_text,transcript').in('user_id',personalFollows.slice(0,50)).eq('visibility','public').order('created_at',{ascending:false}).limit(24)
     :Promise.resolve({data:[],error:null});
    const [fresh,prior,followedContent]=await Promise.all([isFollowing?followingPromise:publicFeedPromise,olderPosts,followedSamples]);
    if(!fresh||fresh.error)throw (fresh?.error||new Error('Could not load feed'));
@@ -763,12 +784,26 @@ export default function App(){
    const candidatePosts=(fresh.data||[]) as Post[];
    const ranked=rankFeedPosts(candidatePosts,rankingContext);
    feedRankingContextRef.current=rankingContext;
-   feedCanLoadMoreRef.current=candidatePosts.length>=100;
+   feedCanLoadMoreRef.current=candidatePosts.length>=initialFeedPageSize;
    feedCursorRef.current=candidatePosts.length?candidatePosts[candidatePosts.length-1].created_at:null;
-   setPosts(ranked);
-   setActivePostId(id=>ranked.some(p=>p.id===id)?id:ranked[0]?.id||null);
+   if(previewShown){
+    // Do not jump to a different video when slower personalization finishes.
+    setPosts(current=>{
+     if(!current.length)return ranked;
+     const rankedIds=new Set(ranked.map(post=>post.id));
+     const retained=current.filter(post=>rankedIds.has(post.id));
+     const existing=new Set(retained.map(post=>post.id));
+     return [...retained,...ranked.filter(post=>!existing.has(post.id))];
+    });
+   }else{
+    setPosts(ranked);
+    setActivePostId(id=>ranked.some(p=>p.id===id)?id:ranked[0]?.id||null);
+   }
   }catch(error:any){
-   if(request===feedRequest.current){console.warn('Feed load failed',safeErrorMessage(error));showAlert('Feed temporarily unavailable',safeErrorMessage(error))}
+   if(request===feedRequest.current){
+    console.warn('Feed load failed',safeErrorMessage(error));
+    if(!previewShown)showAlert('Feed temporarily unavailable',safeErrorMessage(error));
+   }
   }finally{if(request===feedRequest.current)setLoading(false)}
  }
  async function loadMoreFeed(){
