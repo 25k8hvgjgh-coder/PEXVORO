@@ -15,7 +15,7 @@ await auth({method:'GET',headers:{authorization:'Bearer forged-token'}}, res);
 assert.equal(called,true);assert.equal(res.code,401);
 globalThis.fetch = async () => ({ok:true,json:async()=>({id:'test-user',email:'private@example.invalid'})});
 res=response();await auth({method:'GET',headers:{authorization:'Bearer test-token'}},res);
-assert.deepEqual(res.data,{authenticated:true,userId:'test-user'});
+assert.deepEqual(res.data,{authenticated:true,userId:'test-user',isBetaTester:false});
 globalThis.fetch = originalFetch;
 const checkout = await load('api/create-checkout.js');
 res=response();await checkout({method:'POST'},res);assert.equal(res.code,503);
