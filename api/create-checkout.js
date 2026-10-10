@@ -1,1 +1,9 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+// Fail closed until checkout, seller payouts and verified webhooks are implemented.
+export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  return res.status(503).json({ error: 'In-app checkout is not available yet. Contact the seller to discuss transaction arrangements.' });
+}

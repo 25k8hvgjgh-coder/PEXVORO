@@ -17,12 +17,11 @@ jobs:
           node-version: 22
       - name: Check API JavaScript syntax
         run: |
-          node --check api/config.js
-          node --check api/health.js
-          node --check api/generate.js
-          node --check api/generation-status.js
+          find api -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Verify AI Studio request contracts without provider charges
         run: node scripts/ai-studio-contract-test.mjs
+      - name: Verify authentication and checkout contracts without external calls
+        run: node scripts/api-contract-test.mjs
       - name: Extract and check inline app JavaScript
         run: |
           python3 - <<'PY'
@@ -55,5 +54,5 @@ jobs:
       - name: Type-check native mobile app
         working-directory: mobile
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npx tsc --noEmit
