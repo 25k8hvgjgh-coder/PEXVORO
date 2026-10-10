@@ -168,7 +168,7 @@ async function main() {
       console.warn('::warning::Public home-screen service worker returned HTTP ' + swResponse.status + '.');
     } else {
       const worker = await swResponse.text();
-      if (worker.includes("addEventListener('fetch'") && worker.includes('reconfeed-shell-v1')) {
+      if (worker.includes("addEventListener('fetch'") && worker.includes('reconfeed-shell-v2')) {
         console.log('[PASS] Public home-screen service worker is live.');
       } else {
         console.warn('::warning::Public service worker response does not match the expected install shell.');
