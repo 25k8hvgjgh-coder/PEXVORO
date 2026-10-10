@@ -149,9 +149,9 @@ form.addEventListener('submit',async function(e){
  if(!response.ok)throw new Error(body.error||'Signup could not be saved.');
  // Create a genuine Supabase Auth account with the same email. Never send or store password in the tester API.
  const rawPassword=document.getElementById('beta-password').value;
- const authResponse=await fetch('https://ojprsyvkzgyphpsvksgx.supabase.co/auth/v1/signup',{
+ const authResponse=await fetch('https://ojprsyvkzgyphpsvksgx.supabase.co/auth/v1/signup?redirect_to='+encodeURIComponent('https://reconfeed.com/app/?beta=1'),{
   method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW'},
-  body:JSON.stringify({email:data.email,password:rawPassword,data:{display_name:data.email.split('@')[0]},email_redirect_to:'https://reconfeed.com/app/?beta=1'})
+  body:JSON.stringify({email:data.email,password:rawPassword,data:{display_name:data.email.split('@')[0]}})
  });
  // Erase sensitive form text on success or error; never persist it in page storage.
  document.getElementById('beta-password').value='';
