@@ -39,7 +39,7 @@ export default function PostCollection({ client, userId, savedIds, onClose }: Pr
         <Pressable accessibilityRole="button" onPress={() => setRefresh(v => v + 1)} style={s.control}><Text style={s.link}>Refresh</Text></Pressable></View>
       {profile ? <View style={s.card}><Text style={s.link}>@{profile.username}</Text>{profile.bio ? <Text style={s.text}>{profile.bio}</Text> : null}</View> : null}
       {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}
-      {loading ? <ActivityIndicator color="#e0bd78" /> : <FlatList data={posts} keyExtractor={p => p.id}
+      {loading ? <ActivityIndicator color="#efc984" /> : <FlatList data={posts} keyExtractor={p => p.id}
         ListEmptyComponent={<Text style={s.note}>{userId ? 'No visible posts from this creator yet.' : 'No saved posts available. Tap Save on a feed post to add it here.'}</Text>}
         renderItem={({ item: p }) => <View style={s.card}>
           {p.media_type === 'video' ? <Video source={{ uri: p.media_url }} style={s.media} resizeMode={ResizeMode.CONTAIN} useNativeControls /> : <Image source={{ uri: p.media_url }} style={s.media} resizeMode="contain" />}
@@ -49,9 +49,9 @@ export default function PostCollection({ client, userId, savedIds, onClose }: Pr
   </Modal>;
 }
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0a0d0c' }, header: { flexDirection: 'row', alignItems: 'center', padding: 8 },
-  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#f2f4ef', fontWeight: '800', fontSize: 18 },
-  link: { color: '#e0bd78', fontWeight: '800' }, card: { margin: 10, padding: 14, backgroundColor: '#121816', borderRadius: 14 },
-  text: { color: '#f2f4ef', fontSize: 15, lineHeight: 22, marginTop: 10 }, note: { color: '#9ba9a0', padding: 12 },
-  error: { color: '#ffb4b4', padding: 12 }, media: { width: '100%', aspectRatio: 9 / 12, borderRadius: 12 }
+  screen: { flex: 1, backgroundColor: '#080e0f' }, header: { flexDirection: 'row', alignItems: 'center', padding: 8 },
+  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#f5f4ed', fontWeight: '800', fontSize: 22 },
+  link: { color: '#efc984', fontWeight: '800' }, card: { margin: 10, padding: 14, backgroundColor: '#132122', borderRadius: 20 },
+  text: { color: '#f5f4ed', fontSize: 15, lineHeight: 22, marginTop: 10 }, note: { color: '#acbcb9', padding: 12 },
+  error: { color: '#ffb4b4', padding: 12 }, media: { width: '100%', aspectRatio: 9 / 12, borderRadius: 16 }
 });
