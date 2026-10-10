@@ -23,6 +23,8 @@ jobs:
         run: node ../scripts/responsive-layout-test.mjs
       - name: Check full-video feed slideshow paging
         run: node ../scripts/feed-slide-test.mjs
+      - name: Check fast startup and first-video rendering
+        run: node ../scripts/fast-startup-test.mjs
       - name: Check inbox, report and PWA reliability contracts
         run: node ../scripts/reliability-regression-test.mjs
       - name: Check Story and screenshot reliability
