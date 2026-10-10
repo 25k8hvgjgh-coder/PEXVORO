@@ -1,4 +1,4 @@
--- PEXVORO social foundation (Supabase SQL Editor)
+-- ReconFeed social foundation (Supabase SQL Editor)
 -- Run once in the Supabase project connected to this app.
 
 create extension if not exists pgcrypto;
@@ -20,9 +20,9 @@ CREATE OR REPLACE FUNCTION public.create_profile_for_new_user() RETURNS trigger 
 declare base_name text; dob date; selected_gender text;
 begin
   begin dob := (new.raw_user_meta_data ->> 'date_of_birth')::date;
-  exception when others then raise exception 'A valid date of birth is required; PEXVORO is for adults 18 and older.'; end;
+  exception when others then raise exception 'A valid date of birth is required; ReconFeed is for adults 18 and older.'; end;
   if dob is null or dob > (current_date - interval '18 years')::date or dob < date '1900-01-01' then
-    raise exception 'PEXVORO is for adults 18 and older.';
+    raise exception 'ReconFeed is for adults 18 and older.';
   end if;
   selected_gender := new.raw_user_meta_data ->> 'gender';
   if selected_gender not in ('MALE','FEMALE','Other') then
