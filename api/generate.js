@@ -94,15 +94,24 @@ export default async function handler(req, res) {
   const imageOnly = workflow === "image";
   const model = String(imageOnly
     ? (process.env.REPLICATE_IMAGE_MODEL || "black-forest-labs/flux-schnell")
-    : (process.env.REPLICATE_VIDEO_MODEL || "runwayml/gen4-turbo")).trim();
+    : (process.env.REPLICATE_VIDEO_MODEL || "wan-video/wan-2.6-t2v")).trim();
   if (!/^[a-z0-9_-]+\/[a-z0-9_.-]+$/i.test(model)) {
     return send(res, 503, { error: "The configured generation model identifier is invalid." });
   }
   const duration = Number(body.duration || 5);
   if (!imageOnly && ![5, 10].includes(duration)) return send(res, 400, { error: "Duration must be 5 or 10 seconds for the current video model." });
   const aspect = ["9:16", "16:9", "1:1"].includes(body.aspectRatio) ? body.aspectRatio : "9:16";
-  const input = { prompt, aspect_ratio: aspect };
-  if (!imageOnly) input.duration = duration;
+  // Wan 2.6 accepts prompt-only video and uses "size", not "aspect_ratio".
+  // Runway Gen-4 Turbo requires an initial image, so it cannot fulfill text-only jobs.
+  if (!imageOnly && model === "runwayml/gen4-turbo") {
+    return send(res, 400, { error: "This video model needs a starting image. Configure wan-video/wan-2.6-t2v for text-to-video generation." });
+  }
+  const videoSizes = { "9:16": "720*1280", "16:9": "1280*720", "1:1": "960*960" };
+  const input = imageOnly
+    ? { prompt, aspect_ratio: aspect }
+    : model === "wan-video/wan-2.6-t2v"
+      ? { prompt, duration, size: videoSizes[aspect] }
+      : { prompt, duration, aspect_ratio: aspect };
 
   // Reserve a per-user job before calling the paid provider; this also applies hourly/daily quotas.
   let reservation;
