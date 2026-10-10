@@ -1,0 +1,73 @@
+name: Publish stable ReconFeed Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-eas-apk.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set up Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Verify Expo authentication
+        run: npx eas-cli whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Download the EAS-signed ReconFeed 1.0.2 build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx eas-cli build:download --build-id 82ab6e2c-03c6-4aea-ac49-461828765bed --non-interactive
+          APK_PATH="$(find . -type f -name '*.apk' -print -quit)"
+          if [ -z "$APK_PATH" ]; then
+            echo "::error::EAS build download finished but no APK file was found."
+            find . -maxdepth 4 -type f | sort | tail -80
+            exit 1
+          fi
+          cp "$APK_PATH" "$GITHUB_WORKSPACE/ReconFeed-beta.apk"
+          test -s "$GITHUB_WORKSPACE/ReconFeed-beta.apk"
+          file "$GITHUB_WORKSPACE/ReconFeed-beta.apk"
+          unzip -t "$GITHUB_WORKSPACE/ReconFeed-beta.apk" | tail -2
+
+      - name: Publish signed APK download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-eas-beta
+          name: ReconFeed Android Beta (signed)
+          body: |
+            ReconFeed Android beta 1.0.2, signed with the persistent EAS Android signing credential.
+
+            Download ReconFeed-beta.apk below. This is a beta build, not a Google Play release.
+            Older beta installations signed with the previous one-run key may need a one-time uninstall/reinstall. Sign in again after installing; server-side account data stays in Supabase.
+          prerelease: true
+          make_latest: false
+          overwrite_files: true
+          files: ${{ github.workspace }}/ReconFeed-beta.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
