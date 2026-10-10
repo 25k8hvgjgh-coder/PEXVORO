@@ -24,7 +24,7 @@
         "CAMERA",
         "RECORD_AUDIO"
       ],
-      "versionCode": 31,
+      "versionCode": 32,
       "adaptiveIcon": {
         "backgroundColor": "#090b08",
         "foregroundImage": "./assets/icon.png"
@@ -52,7 +52,8 @@
           "cameraPermission": "Use your camera only when you choose to take a photo or record a video.",
           "microphonePermission": "Use your microphone only to record sound when you choose to capture a video."
         }
-      ]
+      ],
+      "./plugins/withImmersiveNavigation"
     ],
     "updates": {
       "url": "https://u.expo.dev/cb631cf4-5781-426a-a5f9-9d3c52abf8dc",
