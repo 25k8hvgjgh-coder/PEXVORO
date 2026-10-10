@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reconfeed-shell-v2';
+const CACHE_NAME = 'reconfeed-shell-reference-v3';
 const PRECACHE_URLS = [
   '/',
   '/manifest.webmanifest',
