@@ -108,7 +108,7 @@ export default function MarketplaceInbox({ client, session, initialThread, onClo
           <Pressable accessibilityRole="button" onPress={() => void load()} style={s.control}><Text style={s.link}>Refresh</Text></Pressable>
         </View>
         {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}
-        {loading ? <ActivityIndicator color="#e0bd78" style={{ margin: 20 }} /> : thread ?
+        {loading ? <ActivityIndicator color="#efc984" style={{ margin: 20 }} /> : thread ?
           <FlatList inverted data={messages} keyExtractor={m => m.id} keyboardShouldPersistTaps="handled"
             ListEmptyComponent={<Text style={s.note}>Ask about availability, condition, or delivery. Messages are private to the participants.</Text>}
             renderItem={({ item: m }) => <View style={[s.message, m.sender_id === userId && s.own]}>
@@ -124,7 +124,7 @@ export default function MarketplaceInbox({ client, session, initialThread, onClo
             </Pressable>} />}
         {thread ? <View style={s.composer}>
           <TextInput accessibilityLabel="Message to seller or buyer" value={body} onChangeText={setBody} maxLength={2000} multiline editable={!sending}
-            placeholder="Write a message…" placeholderTextColor="#9ba9a0" style={s.input} />
+            placeholder="Write a message…" placeholderTextColor="#acbcb9" style={s.input} />
           <Pressable accessibilityRole="button" disabled={sending || !body.trim()} onPress={() => void send()} style={[s.send, (sending || !body.trim()) && { opacity: .5 }]}>
             <Text style={{ fontWeight: '800' }}>{sending ? 'Sending…' : 'Send'}</Text>
           </Pressable>
@@ -135,14 +135,14 @@ export default function MarketplaceInbox({ client, session, initialThread, onClo
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0a0d0c' },
-  header: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#2b3731', padding: 8, gap: 8 },
-  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#f2f4ef', fontWeight: '800', fontSize: 17 },
-  link: { color: '#e0bd78', fontWeight: '800' }, label: { color: '#e0bd78', fontWeight: '800', marginBottom: 6 },
-  text: { color: '#f2f4ef', fontSize: 15, lineHeight: 22 }, date: { color: '#9ba9a0', fontSize: 10, marginTop: 8 },
-  note: { color: '#9ba9a0', fontSize: 13, padding: 12, lineHeight: 20 }, error: { color: '#ffb4b4', padding: 12 },
-  message: { backgroundColor: '#121816', borderWidth: 1, borderColor: '#2b3731', padding: 14, borderRadius: 14, margin: 8 },
-  own: { backgroundColor: '#29261d', marginLeft: 38 }, composer: { flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8 },
-  input: { flex: 1, maxHeight: 130, minHeight: 48, color: '#f2f4ef', backgroundColor: '#121816', padding: 12, borderRadius: 12 },
-  send: { backgroundColor: '#e0bd78', padding: 14, borderRadius: 12, minHeight: 48 }
+  screen: { flex: 1, backgroundColor: '#080e0f' },
+  header: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#344648', padding: 8, gap: 8 },
+  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#f5f4ed', fontWeight: '800', fontSize: 21 },
+  link: { color: '#efc984', fontWeight: '800' }, label: { color: '#efc984', fontWeight: '800', marginBottom: 6 },
+  text: { color: '#f5f4ed', fontSize: 15, lineHeight: 22 }, date: { color: '#acbcb9', fontSize: 10, marginTop: 8 },
+  note: { color: '#acbcb9', fontSize: 13, padding: 12, lineHeight: 20 }, error: { color: '#ffb4b4', padding: 12 },
+  message: { backgroundColor: '#132122', borderWidth: 1, borderColor: '#344648', padding: 14, borderRadius: 20, margin: 8 },
+  own: { backgroundColor: '#2c4538', marginLeft: 38 }, composer: { flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8 },
+  input: { flex: 1, maxHeight: 130, minHeight: 48, color: '#f5f4ed', backgroundColor: '#132122', padding: 12, borderRadius: 16 },
+  send: { backgroundColor: '#efc984', padding: 14, borderRadius: 16, minHeight: 48 }
 });
