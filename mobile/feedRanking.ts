@@ -73,6 +73,12 @@ export function rankFeedPosts<T extends RankablePost>(candidates:T[],ctx:Ranking
   for(const topic of topicTokens(p.caption+' '+(p.format||'')))bump(topical,topic,value*freshness);
  }
  for(const p of meta.values()){
+  // Following somebody is a weak topic-interest signal, even if their videos have not yet been watched.
+  // Avoid directly training on candidate posts solely because they're shown in the current feed.
+  if(following.has(p.user_id)&&ctx.historyPosts.some(h=>h.id===p.id)){
+   bump(creators,p.user_id,.4);
+   for(const topic of topicTokens(p.caption))bump(topical,topic,.24);
+  }
   const extra=(liked.has(p.id)?3.5:0)+(saved.has(p.id)?4.5:0);
   if(extra){bump(creators,p.user_id,extra);for(const topic of topicTokens(p.caption))bump(topical,topic,extra)}
  }
