@@ -86,6 +86,22 @@ async function main() {
     console.log('[PASS] Sensitive profile columns are not selectable by the anonymous client.');
   }
 
+  // AI generation job rows must not be accessible to anonymous visitors.
+  try {
+    const aiJobs = await fetch(base + '/rest/v1/ai_generation_jobs?select=id&limit=1', {
+      headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' },
+      signal: AbortSignal.timeout(12000)
+    });
+    await aiJobs.body?.cancel();
+    if (aiJobs.ok) {
+      console.warn('::warning::Anonymous client can read AI generation job records. Verify ai_generation_jobs grants and row-level security.');
+    } else {
+      console.log('[PASS] Anonymous client cannot read AI generation job records.');
+    }
+  } catch (error) {
+    console.warn('::warning::Could not verify anonymous AI job access: ' + String(error?.message || error));
+  }
+
   // Probe the deployed web API without initiating a paid AI generation.
   try {
     const configResponse = await fetch('https://reconfeed.com/api/config', { signal: AbortSignal.timeout(12000) });
