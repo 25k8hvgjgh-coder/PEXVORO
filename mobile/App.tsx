@@ -710,6 +710,7 @@ export default function App(){
   feedCursorRef.current=null;
   feedRankingContextRef.current=null;
   setLoading(true);
+  let previewShown=false;
   try{
    const userId=session?.user.id;
    const isFollowing=tab==='Following';
@@ -722,7 +723,6 @@ export default function App(){
    // Render a first batch before historical signal queries finish. Filters
    // already honor the loaded account preferences; recommendation ranking
    // continues independently so it cannot delay the first video.
-   let previewShown=false;
    if(!isFollowing){
     const preview=await publicFeedPromise;
     if(request!==feedRequest.current)return;
