@@ -108,7 +108,7 @@ export default function MarketplaceInbox({ client, session, initialThread, onClo
           <Pressable accessibilityRole="button" onPress={() => void load()} style={s.control}><Text style={s.link}>Refresh</Text></Pressable>
         </View>
         {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}
-        {loading ? <ActivityIndicator color="#e0bd7b" style={{ margin: 20 }} /> : thread ?
+        {loading ? <ActivityIndicator color="#C6AA72" style={{ margin: 20 }} /> : thread ?
           <FlatList inverted data={messages} keyExtractor={m => m.id} keyboardShouldPersistTaps="handled"
             ListEmptyComponent={<Text style={s.note}>Ask about availability, condition, or delivery. Messages are private to the participants.</Text>}
             renderItem={({ item: m }) => <View style={[s.message, m.sender_id === userId && s.own]}>
@@ -124,7 +124,7 @@ export default function MarketplaceInbox({ client, session, initialThread, onClo
             </Pressable>} />}
         {thread ? <View style={s.composer}>
           <TextInput accessibilityLabel="Message to seller or buyer" value={body} onChangeText={setBody} maxLength={2000} multiline editable={!sending}
-            placeholder="Send a field message…" placeholderTextColor="#b8baa6" style={s.input} />
+            placeholder="Send a field message…" placeholderTextColor="#B7BDBB" style={s.input} />
           <Pressable accessibilityRole="button" disabled={sending || !body.trim()} onPress={() => void send()} style={[s.send, (sending || !body.trim()) && { opacity: .5 }]}>
             <Text style={{ fontWeight: '800' }}>{sending ? 'Sending…' : 'TRANSMIT'}</Text>
           </Pressable>
@@ -135,14 +135,14 @@ export default function MarketplaceInbox({ client, session, initialThread, onClo
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0d09' },
-  header: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#505b42', padding: 8, gap: 8 },
-  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#f2eddf', fontWeight: '800', fontSize: 21 },
-  link: { color: '#e0bd7b', fontWeight: '800' }, label: { color: '#e0bd7b', fontWeight: '800', marginBottom: 6 },
-  text: { color: '#f2eddf', fontSize: 15, lineHeight: 22 }, date: { color: '#b8baa6', fontSize: 10, marginTop: 8 },
-  note: { color: '#b8baa6', fontSize: 13, padding: 12, lineHeight: 20 }, error: { color: '#ffb4b4', padding: 12 },
-  message: { backgroundColor: '#1e251a', borderWidth: 1, borderColor: '#505b42', padding: 14, borderRadius: 7, margin: 8 },
-  own: { backgroundColor: '#394630', marginLeft: 38 }, composer: { flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8 },
-  input: { flex: 1, maxHeight: 130, minHeight: 48, color: '#f2eddf', backgroundColor: '#1e251a', padding: 12, borderRadius: 6 },
-  send: { backgroundColor: '#e0bd7b', padding: 14, borderRadius: 6, minHeight: 48 }
+  screen: { flex: 1, backgroundColor: '#090C0B' },
+  header: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#C6AA7280', backgroundColor: '#151c1d', padding: 8, gap: 8 },
+  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#F0EEE5', fontWeight: '800', fontSize: 21 },
+  link: { color: '#C6AA72', fontWeight: '800' }, label: { color: '#C6AA72', fontWeight: '800', marginBottom: 6 },
+  text: { color: '#F0EEE5', fontSize: 15, lineHeight: 22 }, date: { color: '#B7BDBB', fontSize: 10, marginTop: 8 },
+  note: { color: '#B7BDBB', fontSize: 13, padding: 12, lineHeight: 20 }, error: { color: '#ffb4b4', padding: 12 },
+  message: { backgroundColor: '#222c29', borderWidth: 1, borderColor: '#66784B', padding: 14, borderRadius: 13, margin: 8 },
+  own: { backgroundColor: '#354632', marginLeft: 38 }, composer: { flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8 },
+  input: { flex: 1, maxHeight: 130, minHeight: 48, color: '#F0EEE5', backgroundColor: '#222c29', padding: 12, borderRadius: 6 },
+  send: { backgroundColor: '#C6AA72', padding: 14, borderRadius: 8, minHeight: 48, borderWidth: 1, borderColor: '#F0EEE5' }
 });
