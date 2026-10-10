@@ -36,7 +36,7 @@ export default function App(){
  const wide=screenWidth>=700;
  const contentMaxWidth=wide?860:screenWidth;
  const [researchFeatures,setResearchFeatures]=useState<string[]>([]),[researchPrice,setResearchPrice]=useState('free'),[researchIdentity,setResearchIdentity]=useState('both'),[researchNeed,setResearchNeed]=useState(''),[researchWilling,setResearchWilling]=useState(false),[researchLoaded,setResearchLoaded]=useState(false),[researchSaved,setResearchSaved]=useState(false); const researchOptions=[{id:'none_yet',label:'None of these yet'},{id:'avatar_cosmetics',label:'Avatar cosmetics & emotes'},{id:'creator_memberships',label:'Creator memberships'},{id:'live_tips_events',label:'Live tips & events'},{id:'ai_creator_tools',label:'AI creator tools'},{id:'creator_marketplace',label:'Creator marketplace'}];
- const [inboxOpen,setInboxOpen]=useState(false),[marketThread,setMarketThread]=useState<MarketThread|null>(null),[collection,setCollection]=useState<{userId?:string;saved:boolean}|null>(null);
+ const [inboxOpen,setInboxOpen]=useState(false),[marketThread,setMarketThread]=useState<MarketThread|null>(null),[collection,setCollection]=useState<{userId?:string;saved:boolean;liked?:boolean}|null>(null);
  const feedRequest=useRef(0);
  const feedCursorRef=useRef<string|null>(null);
  const feedCanLoadMoreRef=useRef(false);
@@ -52,6 +52,7 @@ export default function App(){
  const [recovering,setRecovering]=useState(Platform.OS==='web'&&String((globalThis as any).location?.hash||'').includes('type=recovery')),[newPassword,setNewPassword]=useState('');
  const [captureMode,setCaptureMode]=useState<'photo'|'video'>('video'),[captureSeconds,setCaptureSeconds]=useState(15);
  const [profileStats,setProfileStats]=useState({following:0,followers:0,posts:0,likes:0});
+ const [likedPostIds,setLikedPostIds]=useState<string[]>([]);
  const [profilePosts,setProfilePosts]=useState<Array<{id:string;media_url:string;media_type:string;caption:string;pinned_at?:string|null}>>([]);
  const [creatorAnalytics,setCreatorAnalytics]=useState({views:0,completedViews:0,watchSeconds:0,shares:0});
  const [creatorSettings,setCreatorSettings]=useState({
@@ -229,6 +230,14 @@ export default function App(){
  useEffect(()=>{if(session){loadProfile();loadResearchResponse()}else{setResearchLoaded(false);setResearchSaved(false);setResearchFeatures([]);setResearchPrice('free');setResearchIdentity('both');setResearchNeed('');setResearchWilling(false)}},[session?.user.id]);
  async function loadResearchResponse(){if(!supabase||!session)return;try{const r=await supabase.from('reconfeed_research_responses').select('feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test').eq('user_id',session.user.id).maybeSingle();if(r.error)throw r.error;if(accountRef.current!==session.user.id)return;if(r.data){setResearchFeatures(r.data.feature_interests||[]);setResearchPrice(r.data.monthly_price||'free');setResearchIdentity(r.data.identity_mode||'both');setResearchNeed(r.data.biggest_need||'');setResearchWilling(!!r.data.willing_to_test);setResearchSaved(true)}else setResearchSaved(false)}catch(e:any){console.warn('Research survey load failed:',e.message)}finally{if(accountRef.current===session.user.id)setResearchLoaded(true)}}
  async function saveResearchResponse(){if(!supabase||!session){showAlert('Sign in required','Sign in to submit tester research.');return}const features=researchFeatures.includes('none_yet')?['none_yet']:researchFeatures;setBusy(true);try{const r=await supabase.from('reconfeed_research_responses').upsert({user_id:session.user.id,feature_interests:features,monthly_price:researchPrice,identity_mode:researchIdentity,biggest_need:researchNeed.trim(),willing_to_test:researchWilling,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(r.error)throw r.error;setResearchFeatures(features);setResearchSaved(true);showAlert('Response saved','Thanks. Your answer is stored as a real tester response and can be updated later.')}catch(e:any){showAlert('Survey unavailable',safeErrorMessage(e)+' If this is a new build, the research survey database migration must be applied first.')}finally{setBusy(false)}}
+ useEffect(()=>{
+  let alive=true;
+  if(!supabase||!session){setLikedPostIds([]);return}
+  void supabase.from('likes').select('post_id').eq('user_id',session.user.id).limit(500).then(({data,error})=>{
+   if(alive&&!error)setLikedPostIds((data||[]).map(x=>x.post_id));
+  });
+  return()=>{alive=false};
+ },[session?.user.id]);
  useEffect(()=>{let active=true;async function loadSavedPosts(){if(!supabase||!session){setSavedPostIds([]);return}const r=await supabase.from('saved_posts').select('post_id').eq('user_id',session.user.id);if(!r.error&&active)setSavedPostIds((r.data||[]).map((row:any)=>row.post_id))}loadSavedPosts();return()=>{active=false}},[session?.user.id]);
  useEffect(()=>{
   let live=true;
@@ -383,7 +392,7 @@ export default function App(){
   if(!supabase||!session||busy)return;
   setBusy(true);
   try{
-   const update:any={display_name:name.trim().slice(0,80)||profile?.display_name,bio:profileBioDraft.trim().slice(0,300)};
+   const update:any={display_name:name.trim().slice(0,80)||profile?.display_name,bio:profileBioDraft.trim().slice(0,80)};
    if(profileAvatarDraft){
     const asset=profileAvatarDraft;
     const result=await fetch(asset.uri);
@@ -704,15 +713,29 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <View style={s.profileAvatar}>{profile?.avatar_url?<Image source={{uri:profile.avatar_url}} style={{width:'100%',height:'100%',borderRadius:44}}/>:<Text style={s.profileAvatarText}>{(profile?.display_name||session.user.email||'R')[0].toUpperCase()}</Text>}</View>
   <Text style={s.profileName}>{profile?.display_name||session.user.email}</Text>
   {isBetaTester&&<View style={{paddingHorizontal:14,paddingVertical:6,marginTop:7,borderWidth:1,borderColor:'#C6AA72',backgroundColor:'#334632',borderRadius:16}}><Text style={{color:'#F0EEE5',fontWeight:'900',fontSize:12,letterSpacing:1.2}}>✦ VERIFIED BETA TESTER</Text></View>}
-  <Text style={s.profileHandle}>@{profile?.username||'creator'}</Text>
-  <View style={s.profileStatRow}><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.following.toLocaleString()}</Text><Text style={s.profileStatLabel}>Following</Text></View><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.followers.toLocaleString()}</Text><Text style={s.profileStatLabel}>Followers</Text></View><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.posts.toLocaleString()}</Text><Text style={s.profileStatLabel}>Posts</Text></View></View>
+  <Text style={s.profileHandle}>@{profile?.username||'creator'} {creatorSettings.pronouns?'· '+creatorSettings.pronouns:''}</Text>
+  <View style={s.profileStatRow}><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.following.toLocaleString()}</Text><Text style={s.profileStatLabel}>Following</Text></View><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.followers.toLocaleString()}</Text><Text style={s.profileStatLabel}>Followers</Text></View><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.likes.toLocaleString()}</Text><Text style={s.profileStatLabel}>Likes</Text></View></View>
   <Text style={s.profileBio}>{profile?.bio||'VETERAN ROOTS  |  REAL STORIES  |  GOOD PEOPLE'}</Text>
+ {creatorSettings.website_url?<Pressable accessibilityRole="link" onPress={()=>{void Linking.openURL(creatorSettings.website_url)}}><Text style={s.link}>⌁ {creatorSettings.website_url} ↗</Text></Pressable>:null}
+ <Text style={[s.muted,{fontSize:11}]}>{creatorSettings.account_type==='business'?'BUSINESS ACCOUNT':'CREATOR ACCOUNT'} · {creatorSettings.is_private?'POSTS RESTRICTED':'PUBLIC POSTS'}</Text>
  </View>
- <Pressable accessibilityRole="button" style={s.profileEditShortcut} onPress={()=>{showAlert('Edit profile','Use the display-name field below to save profile changes.')}}><Text style={s.profileEditText}>EDIT PROFILE</Text></Pressable>
- <View style={s.profileGalleryHeader}><Text style={s.profileGalleryTitle}>▦   YOUR POSTS</Text><Text style={s.profileGallerySub}>{profileStats.posts} posts</Text></View>
- <View style={s.profileGallery}>{profilePosts.length?profilePosts.map(p=><Pressable key={p.id} accessibilityRole="button" onPress={()=>setCollection({userId:session.user.id,saved:false})} style={s.galleryTile}>{p.media_type==='image'?<Image source={{uri:p.media_url}} style={s.galleryTileImage}/>:<View style={s.galleryVideo}><Text style={s.galleryPlay}>▶</Text><Text style={s.galleryVideoCaption} numberOfLines={2}>{p.caption||'Video post'}</Text></View>}<Pressable onPress={()=>deleteOwnPost(p.id)} accessibilityRole="button" accessibilityLabel="Delete this post" style={{position:'absolute',top:5,right:5,paddingHorizontal:9,paddingVertical:6,backgroundColor:'#B83235',borderRadius:5,zIndex:2}}><Text style={{color:'#fff',fontSize:10,fontWeight:'900'}}>✕ DELETE</Text></Pressable></Pressable>):<View style={s.noGallery}><Text style={s.noGalleryText}>{profileLoading?'Loading your posts…':'Your videos and photos will appear here after you publish.'}</Text><Pressable onPress={()=>setTab('Create')}><Text style={s.noGalleryAction}>＋ CREATE YOUR FIRST POST</Text></Pressable></View>}</View><View style={s.row}><Pressable style={s.chip} onPress={()=>setCollection({userId:session.user.id,saved:false})}><Text style={s.chipText}>My posts</Text></Pressable><Pressable style={s.chip} onPress={()=>setCollection({saved:true})}><Text style={s.chipText}>Saved posts ({savedPostIds.length})</Text></Pressable><Pressable style={s.chip} onPress={()=>{setMarketThread(null);setInboxOpen(true)}}><Text style={s.chipText}>Market messages</Text></Pressable></View><Text style={s.subheading}>EDIT YOUR PROFILE</Text><Pressable onPress={chooseProfilePhoto} style={s.outline}><Text style={s.link}>◉ Choose custom profile picture</Text></Pressable>{profileAvatarDraft&&<Image source={{uri:profileAvatarDraft.uri}} style={{width:100,height:100,borderRadius:50,alignSelf:'center',marginVertical:12}}/>}
+ <View style={[s.row,{justifyContent:'center',gap:10,marginVertical:10}]}>
+  <Pressable accessibilityRole="button" style={s.profileEditShortcut} onPress={()=>setProfileSettingsOpen(v=>!v)}><Text style={s.profileEditText}>{profileSettingsOpen?'CLOSE SETTINGS':'≡ SETTINGS'}</Text></Pressable>
+  <Pressable accessibilityRole="button" style={s.profileEditShortcut} onPress={()=>{void shareProfile(profile?.username||'')}}><Text style={s.profileEditText}>↗ SHARE PROFILE</Text></Pressable>
+ </View>
+ <View style={s.profileGalleryHeader}><Text style={s.profileGalleryTitle}>▦   YOUR CONTENT</Text><Text style={s.profileGallerySub}>{profileStats.posts} posts</Text></View>
+ <View style={[s.row,{justifyContent:'space-around',marginVertical:10}]}>
+  {([{id:'videos',label:'▶ Videos'},{id:'photos',label:'▧ Photos'},{id:'saved',label:'☆ Favorites'},{id:'liked',label:'♡ Liked'}] as const).map(item=>
+    <Pressable key={item.id} accessibilityRole="button" style={[s.chip,profileGridTab===item.id&&s.selected]} onPress={()=>{
+      setProfileGridTab(item.id);
+      if(item.id==='saved')setCollection({saved:true});
+      if(item.id==='liked')setCollection({saved:false,liked:true});
+    }}><Text style={s.chipText}>{item.label}</Text></Pressable>
+  )}
+ </View>
+ <View style={s.profileGallery}>{profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':profileGridTab==='videos'?p.media_type==='video':true).length?profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':profileGridTab==='videos'?p.media_type==='video':true).map(p=><Pressable key={p.id} accessibilityRole="button" onPress={()=>setCollection({userId:session.user.id,saved:false})} style={s.galleryTile}>{p.media_type==='image'?<Image source={{uri:p.media_url}} style={s.galleryTileImage}/>:<View style={s.galleryVideo}><Text style={s.galleryPlay}>▶</Text><Text style={s.galleryVideoCaption} numberOfLines={2}>{p.caption||'Video post'}</Text></View>}<Pressable onPress={()=>{void togglePinPost(p.id,!!p.pinned_at)}} accessibilityRole="button" accessibilityLabel={p.pinned_at?'Unpin post':'Pin post'} style={{position:'absolute',bottom:5,left:5,paddingHorizontal:8,paddingVertical:6,backgroundColor:'#30383D',borderRadius:5,zIndex:2}}><Text style={{color:'#F0EEE5',fontSize:10,fontWeight:'900'}}>{p.pinned_at?'★ PINNED':'☆ PIN'}</Text></Pressable><Pressable onPress={()=>deleteOwnPost(p.id)} accessibilityRole="button" accessibilityLabel="Delete this post" style={{position:'absolute',top:5,right:5,paddingHorizontal:9,paddingVertical:6,backgroundColor:'#B83235',borderRadius:5,zIndex:2}}><Text style={{color:'#fff',fontSize:10,fontWeight:'900'}}>✕ DELETE</Text></Pressable></Pressable>):<View style={s.noGallery}><Text style={s.noGalleryText}>{profileLoading?'Loading your posts…':'Your videos and photos will appear here after you publish.'}</Text><Pressable onPress={()=>setTab('Create')}><Text style={s.noGalleryAction}>＋ CREATE YOUR FIRST POST</Text></Pressable></View>}</View><View style={s.row}><Pressable style={s.chip} onPress={()=>setCollection({userId:session.user.id,saved:false})}><Text style={s.chipText}>My posts</Text></Pressable><Pressable style={s.chip} onPress={()=>setCollection({saved:true})}><Text style={s.chipText}>Saved posts ({savedPostIds.length})</Text></Pressable><Pressable style={s.chip} onPress={()=>{setMarketThread(null);setInboxOpen(true)}}><Text style={s.chipText}>Market messages</Text></Pressable></View><Text style={s.subheading}>EDIT YOUR PROFILE</Text><Text style={s.muted}>Your name, avatar, pronouns and bio help people find and recognize you. Other public links are under Settings.</Text><Pressable onPress={chooseProfilePhoto} style={s.outline}><Text style={s.link}>◉ Choose custom profile picture</Text></Pressable>{profileAvatarDraft&&<Image source={{uri:profileAvatarDraft.uri}} style={{width:100,height:100,borderRadius:50,alignSelf:'center',marginVertical:12}}/>}
  <TextInput value={name} onChangeText={setName} maxLength={80} placeholder="Display name" placeholderTextColor={theme.muted} style={s.input}/>
- <TextInput value={profileBioDraft} onChangeText={setProfileBioDraft} maxLength={300} multiline placeholder="Your bio (300 characters max)" placeholderTextColor={theme.muted} style={[s.input,{height:90}]}/>
+ <TextInput value={profileBioDraft} onChangeText={setProfileBioDraft} maxLength={80} multiline placeholder="Your bio (80 characters max)" placeholderTextColor={theme.muted} style={[s.input,{height:90}]}/>
  <Pressable style={s.outline} disabled={busy} onPress={saveFullProfile}><Text style={s.link}>{busy?'Saving…':'Save profile changes'}</Text></Pressable><View style={s.rule}/>
  <View style={[s.card,{gap:12,marginVertical:14}]}>
   <Text style={s.subheading}>FEED PERSONALIZATION & PRIVACY</Text>
@@ -747,7 +770,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
     <Pressable style={s.outline} onPress={()=>setReportTarget(null)}><Text style={s.link}>Cancel</Text></Pressable>
    </View>
   </View>
- </Modal>{inboxOpen&&supabase&&session?<MarketplaceInbox key={session.user.id} client={supabase} session={session} initialThread={marketThread} onClose={()=>setInboxOpen(false)}/>:null}{collection&&supabase?<PostCollection client={supabase} userId={collection.userId} savedIds={collection.saved?savedPostIds:undefined} onClose={()=>setCollection(null)}/>:null}</SafeAreaView>
+ </Modal>{inboxOpen&&supabase&&session?<MarketplaceInbox key={session.user.id} client={supabase} session={session} initialThread={marketThread} onClose={()=>setInboxOpen(false)}/>:null}{collection&&supabase?<PostCollection client={supabase} userId={collection.userId} savedIds={collection.liked?likedPostIds:collection.saved?savedPostIds:undefined} onClose={()=>setCollection(null)}/>:null}</SafeAreaView>
 }
 const s=StyleSheet.create({
  appBackdropImage:{opacity:0.10},
