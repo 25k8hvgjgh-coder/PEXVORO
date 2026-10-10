@@ -17,6 +17,12 @@ assert.match(app,/feedPageHeight=Math\.max\(1,feedViewportHeight/,'feed should m
 assert.match(app,/onLayout=\{event=>\{const h=Math\.round\(event\.nativeEvent\.layout\.height\)/,'feed should measure real layout');
 assert.match(app,/feedViewportHeight>0\?<FlatList/,'feed should wait for a measured viewport');
 assert.match(app,/onCreate=\{startStory\}/,'profile plus must open stories rather than regular post');
+assert.match(app,/pagingEnabled snapToInterval=\{feedPageHeight\}/,'native swipe must advance one full-height video');
+assert.match(app,/disableIntervalMomentum/,'swipe momentum should not skip multiple posts');
+assert.match(app,/scrollSnapType:'y mandatory'/,'web feed must snap to complete video boundaries');
+assert.match(app,/scrollSnapAlign:'start',scrollSnapStop:'always'/,'web slides should stop at each post');
+assert.match(app,/scheduleWebFeedSnap\(event\.nativeEvent\.contentOffset\.y\)/,'web should settle after touch and trackpad scrolling');
+assert.match(app,/ListFooterComponent=\{null\}/,'infinite scrolling must not leave a partial loading-only slide');
 assert.match(app,/feedNavRow:/,'feed category tabs should share a responsive row');
 assert.match(app,/tab==='Following'\?<StoryStrip/,'Stories should not reduce For You video height');
 assert.match(app,/pageHeight>=400\?<Pressable/,'short screens should collapse Save into More');

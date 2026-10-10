@@ -21,6 +21,8 @@ jobs:
       - run: npm run typecheck
       - name: Check responsive website and app layout contracts
         run: node ../scripts/responsive-layout-test.mjs
+      - name: Check full-video feed slideshow paging
+        run: node ../scripts/feed-slide-test.mjs
       - name: Check inbox, report and PWA reliability contracts
         run: node ../scripts/reliability-regression-test.mjs
       - name: Check Story and screenshot reliability
