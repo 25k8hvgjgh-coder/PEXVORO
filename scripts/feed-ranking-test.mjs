@@ -5,11 +5,19 @@ import vm from 'node:vm';
 
 const requireMobile=createRequire(new URL('../mobile/package.json',import.meta.url));
 const ts=requireMobile('typescript');
-const source=await readFile(new URL('../mobile/feedRanking.ts',import.meta.url),'utf8');
-const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+const transpile=async path=>ts.transpileModule(await readFile(new URL(path,import.meta.url),'utf8'),{
+ compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}
+}).outputText;
+const helper={exports:{}};
+vm.runInNewContext(await transpile('../mobile/contentSignals.ts'),{
+ module:helper,exports:helper.exports,Date,Math,Number,String,Object,Array,Set,Map,RegExp
+});
 const module={exports:{}};
-vm.runInNewContext(js,{module,exports:module.exports,Date,Math,Number,String,Object,Array,Set,Map,RegExp});
+vm.runInNewContext(await transpile('../mobile/feedRanking.ts'),{
+ module,exports:module.exports,require:(id)=>{if(id==='./contentSignals')return helper.exports;throw new Error('Unexpected module: '+id)},Date,Math,Number,String,Object,Array,Set,Map,RegExp
+});
 const {rankFeedPosts,topicTokens}=module.exports;
+const {allowedForFeed,normalizeBlockedKeywords,parseCreatorTags}=helper.exports;
 const now=Date.parse('2026-10-10T12:00:00Z');
 const post=(id,user_id,caption,minsAgo=10)=>({id,user_id,caption,created_at:new Date(now-minsAgo*60000).toISOString(),likes:[{count:0}],comments:[{count:0}]});
 const history=(post_id,event_type,watched_ms,duration_ms)=>({post_id,event_type,watched_ms,duration_ms,created_at:new Date(now-120000).toISOString()});
@@ -34,6 +42,17 @@ const saved={...base,savedPostIds:['old'],historyPosts:[post('old','a','Diesel t
 assert.equal(rankFeedPosts([dance,truck],saved)[0].id,'truck','Saved stories influence recommendations');
 const followAffinity={...base,followingIds:['a'],historyPosts:[post('followed-old','a','Diesel mechanics truck projects')]};
 assert.equal(rankFeedPosts([dance,truck],followAffinity)[0].id,'truck','Following a creator should help identify interests when enabled');
+assert.deepEqual(Array.from(normalizeBlockedKeywords(' #Diesel, military, diesel, #country-life ')),['diesel','military','country-life']);
+assert.deepEqual(Array.from(parseCreatorTags('#Military, trucks, trucks')),['military','trucks']);
+assert.equal(allowedForFeed({caption:'My military truck'}, {blockedKeywords:['military'],hideMatureContent:false},'For You'),false);
+assert.equal(allowedForFeed({caption:'My MILITARY#Truck'}, {blockedKeywords:['military'],hideMatureContent:false},'For You'),false);
+assert.equal(allowedForFeed({caption:'Supertrucks'}, {blockedKeywords:['truck'],hideMatureContent:false},'For You'),true);
+assert.equal(allowedForFeed({caption:'A video',topic_tags:['outdoors']}, {blockedKeywords:['outdoors'],hideMatureContent:false},'Following'),false);
+assert.equal(allowedForFeed({caption:'A video',audio_label:'Country Roads'}, {blockedKeywords:['country'],hideMatureContent:false},'For You'),false);
+assert.equal(allowedForFeed({caption:'Hi',content_rating:'mature'}, {blockedKeywords:[],hideMatureContent:true},'For You'),false);
+assert.equal(allowedForFeed({caption:'Hi',recommendation_status:'review'}, {blockedKeywords:[],hideMatureContent:false},'For You'),false);
+assert.equal(allowedForFeed({caption:'Hi',recommendation_status:'review'}, {blockedKeywords:[],hideMatureContent:false},'Following'),true);
+assert.deepEqual(Array.from(rankFeedPosts([{...truck,topic_tags:['welding']}],{...base,blockedKeywords:['welding']}).map(p=>p.id)),[]);
 const candidates=Array.from({length:100},(_,i)=>post('id'+i,'creator'+i,'Country trucks welding tools '+i,i));
 const started=performance.now();
 const ranked=rankFeedPosts(candidates,base);
