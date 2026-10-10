@@ -2,12 +2,6 @@ name: Build ReconFeed iOS TestFlight candidate
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'mobile/plugins/**'
-      - 'mobile/app.json'
-      - '.github/workflows/build-ios-beta.yml'
 
 permissions:
   contents: read
