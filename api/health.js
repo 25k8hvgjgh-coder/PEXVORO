@@ -32,14 +32,21 @@ export default async function handler(req, res) {
     supabase = { reachable: false, profilesTableAccessible: false, httpStatus: null };
   }
 
+  const aiMissingConfiguration = [];
+  if (!process.env.REPLICATE_API_TOKEN) aiMissingConfiguration.push('REPLICATE_API_TOKEN');
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) aiMissingConfiguration.push('SUPABASE_SERVICE_ROLE_KEY');
+  if (!process.env.REPLICATE_VIDEO_MODEL) aiMissingConfiguration.push('REPLICATE_VIDEO_MODEL');
+  if (!process.env.REPLICATE_IMAGE_MODEL) aiMissingConfiguration.push('REPLICATE_IMAGE_MODEL');
+
   return res.status(200).json({
     app: 'ReconFeed',
     status: 'online',
     checks: {
       supabase,
-      aiConfigured: Boolean(process.env.REPLICATE_API_TOKEN && (process.env.REPLICATE_VIDEO_MODEL || process.env.REPLICATE_IMAGE_MODEL)),
+      aiConfigured: aiMissingConfiguration.length === 0,
+      aiMissingConfiguration,
       paymentsConfigured: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET)
     },
-    note: 'Supabase is tested with a read-only profiles query. AI and payments are configuration checks only; no generation or charge is attempted.'
+    note: 'Supabase is tested with a read-only profiles query. AI and payments are configuration checks only; no generation or charge is attempted. Only missing variable names are reported, never values.'
   });
 }
