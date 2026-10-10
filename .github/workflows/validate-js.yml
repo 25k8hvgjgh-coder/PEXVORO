@@ -21,6 +21,8 @@ jobs:
           node --check api/health.js
           node --check api/generate.js
           node --check api/generation-status.js
+      - name: Verify AI Studio request contracts without provider charges
+        run: node scripts/ai-studio-contract-test.mjs
       - name: Extract and check inline app JavaScript
         run: |
           python3 - <<'PY'
