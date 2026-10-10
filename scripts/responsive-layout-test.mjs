@@ -25,4 +25,12 @@ assert.match(app,/accessibilityLabel="More post actions"/,'extra feed actions re
 assert.doesNotMatch(app,/<ScrollView style=\{\[s.videoActions/,'action rail must not be clipped within a scroller');
 assert.match(app,/feedViewportHeight>0\?<FlatList/,'feed should wait for a measured viewport');
 assert.match(inbox,/maxWidth:780,width:'100%'/,'message view should fit both tablets and phones');
+
+assert.match(app,/const feed=\(\)=> <View style=\{\{flex:1,backgroundColor:olive\.bg\}\}/,'feed background must use ReconFeed olive');
+assert.match(app,/feedTop:\{[^\n]*backgroundColor:olive\.bg/,'top navigation must remain olive');
+assert.match(app,/navOuter:\{backgroundColor:olive\.bg/,'bottom navigation must remain olive');
+assert.match(app,/videoPage:\{[^\n]*backgroundColor:olive\.deep/,'media letterboxing must stay dark olive');
+assert.match(app,/feedTabActive:\{[^\n]*borderBottomColor:olive\.gold/,'selected category must use the gold accent');
+assert.match(app,/backgroundColor:olive\.accent,borderLeftColor:olive\.border,borderRightColor:olive\.gold/,'Create button must use olive and gold');
+assert.doesNotMatch(app,/\(tab==='For You'\|\|tab==='Following'\)\&\&\{backgroundColor:'#000'/,'feed overrides must not revert to black');
 console.log('Responsive layout contracts verified (static checks; real-device testing still required).');
