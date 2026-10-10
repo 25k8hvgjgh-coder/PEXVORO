@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     if (serviceKey && user.id && user.email && user.email_confirmed_at) {
       try {
         const email=String(user.email).trim().toLowerCase();
-        const check=await fetch(url.replace(/\\/$/,'')+'/rest/v1/reconfeed_beta_testers?select=status,adult_18_plus,contact_consent&email=eq.'+encodeURIComponent(email)+'&limit=1', {
+        const check=await fetch(url.replace(/\/$/,'')+'/rest/v1/reconfeed_beta_testers?select=status,adult_18_plus,contact_consent&email=eq.'+encodeURIComponent(email)+'&limit=1', {
           headers:{apikey:serviceKey,Authorization:'Bearer '+serviceKey},signal:AbortSignal.timeout(8000)
         });
         if(check.ok) {
