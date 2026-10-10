@@ -10,15 +10,19 @@ type Props={creator:Creator;following:boolean;onFollow:()=>void;onShare:()=>void
 export default function PublicCreatorHeader({creator,following,onFollow,onShare}:Props){
  const name=creator.display_name||creator.username||'ReconFeed Creator';
  return <View style={s.header}>
-  <View style={s.avatarWrap}>
-   <View style={s.avatar}>{creator.avatar_url?<Image source={{uri:creator.avatar_url}} style={s.avatarImage}/>:<Text style={s.avatarInitial}>{name.charAt(0).toUpperCase()}</Text>}</View>
-   {!following&&<Pressable accessibilityRole="button" accessibilityLabel="Follow creator" onPress={onFollow} style={s.followPlus}><Text style={s.plusText}>+</Text></Pressable>}
-  </View>
-  <Text style={s.name} numberOfLines={2}>{name}</Text>
-  <Text style={s.handle}>@{creator.username||'creator'}</Text>
-  <View style={s.stats}>
-   <View style={s.stat}><Text style={s.count}>{Number(creator.following||0).toLocaleString()}</Text><Text style={s.statLabel}>Following</Text></View>
-   <View style={s.stat}><Text style={s.count}>{Number(creator.followers||0).toLocaleString()}</Text><Text style={s.statLabel}>Followers</Text></View>
+  <View style={s.identityRow}>
+   <View style={s.identityText}>
+    <Text style={s.name} numberOfLines={2}>{name}</Text>
+    <Text style={s.handle} numberOfLines={1}>@{creator.username||'creator'}</Text>
+    <View style={s.stats}>
+     <View style={s.stat}><Text style={s.count}>{Number(creator.following||0).toLocaleString()}</Text><Text style={s.statLabel}>Following</Text></View>
+     <View style={s.stat}><Text style={s.count}>{Number(creator.followers||0).toLocaleString()}</Text><Text style={s.statLabel}>Followers</Text></View>
+    </View>
+   </View>
+   <View style={s.avatarWrap}>
+    <View style={s.avatar}>{creator.avatar_url?<Image source={{uri:creator.avatar_url}} style={s.avatarImage}/>:<Text style={s.avatarInitial}>{name.charAt(0).toUpperCase()}</Text>}</View>
+    {!following&&<Pressable accessibilityRole="button" accessibilityLabel="Follow creator" onPress={onFollow} style={s.followPlus}><Text style={s.plusText}>+</Text></Pressable>}
+   </View>
   </View>
   {!!creator.bio&&<Text style={s.bio}>{creator.bio}</Text>}
   {!!creator.pronouns&&<Text style={s.meta}>{creator.pronouns}</Text>}
@@ -30,20 +34,23 @@ export default function PublicCreatorHeader({creator,following,onFollow,onShare}
  </View>;
 }
 const s=StyleSheet.create({
- header:{paddingHorizontal:18,paddingTop:23,paddingBottom:21,backgroundColor:'#101612',alignItems:'center'},
- avatarWrap:{position:'relative',marginBottom:15},
- avatar:{height:112,width:112,borderRadius:56,borderWidth:3,borderColor:'#C6AA72',backgroundColor:'#364836',alignItems:'center',justifyContent:'center',overflow:'hidden'},
- avatarImage:{height:'100%',width:'100%',borderRadius:56},avatarInitial:{fontSize:46,color:'#F0EEE5',fontWeight:'900'},
- followPlus:{position:'absolute',right:-5,bottom:0,width:35,height:35,borderRadius:18,backgroundColor:'#C6AA72',borderWidth:2,borderColor:'#101612',alignItems:'center',justifyContent:'center'},
- plusText:{fontSize:26,color:'#101510',fontWeight:'900',lineHeight:30},
- name:{fontSize:23,fontWeight:'900',color:'#F0EEE5',textAlign:'center',lineHeight:30},
- handle:{color:'#B7BDBB',fontSize:13,fontWeight:'600',marginTop:4},
- stats:{flexDirection:'row',width:'100%',justifyContent:'space-around',paddingVertical:19},
- stat:{alignItems:'center',flex:1},count:{fontSize:22,fontWeight:'900',color:'#F0EEE5'},statLabel:{fontSize:11,color:'#B7BDBB',marginTop:4},
- bio:{fontSize:14,lineHeight:21,fontWeight:'600',color:'#F0EEE5',textAlign:'center',marginTop:6},
- meta:{fontSize:11,color:'#BAC6AF',fontWeight:'700',marginTop:5},
- website:{color:'#C6AA72',fontWeight:'800',fontSize:12,marginTop:8,textAlign:'center'},
- actions:{flexDirection:'row',width:'100%',gap:9,marginTop:17},
- pill:{flex:1,minHeight:40,borderRadius:22,borderWidth:1,borderColor:'#5C6D58',backgroundColor:'#232D26',alignItems:'center',justifyContent:'center',paddingHorizontal:5},
- pillText:{fontSize:13,fontWeight:'700',color:'#F0EEE5',textAlign:'center'}
+ header:{paddingHorizontal:14,paddingTop:18,paddingBottom:20,backgroundColor:'#fff'},
+ identityRow:{flexDirection:'row',alignItems:'flex-start',gap:8},
+ identityText:{flex:1,minWidth:0},
+ name:{fontSize:22,fontWeight:'900',color:'#080808',lineHeight:28},
+ handle:{color:'#858585',fontSize:14,fontWeight:'600',marginTop:3},
+ stats:{flexDirection:'row',gap:20,marginTop:20},
+ stat:{alignItems:'flex-start'},
+ count:{fontSize:21,fontWeight:'900',color:'#111'},statLabel:{fontSize:12,color:'#8a8a8a',marginTop:1},
+ avatarWrap:{position:'relative',marginTop:4,marginBottom:5},
+ avatar:{height:96,width:96,borderRadius:48,backgroundColor:'#dde2e5',alignItems:'center',justifyContent:'center',overflow:'hidden'},
+ avatarImage:{height:'100%',width:'100%',borderRadius:48},avatarInitial:{fontSize:42,color:'#333',fontWeight:'900'},
+ followPlus:{position:'absolute',right:-3,bottom:-4,width:33,height:33,borderRadius:17,backgroundColor:'#00b7df',borderWidth:3,borderColor:'#fff',alignItems:'center',justifyContent:'center'},
+ plusText:{fontSize:26,color:'#fff',fontWeight:'900',lineHeight:27},
+ bio:{fontSize:14,lineHeight:21,fontWeight:'600',color:'#151515',marginTop:11},
+ meta:{fontSize:12,color:'#555',fontWeight:'700',marginTop:5},
+ website:{color:'#246398',fontWeight:'800',fontSize:12,marginTop:7},
+ actions:{flexDirection:'row',gap:9,marginTop:17},
+ pill:{minHeight:42,paddingHorizontal:16,paddingVertical:9,borderWidth:1,borderColor:'#dedede',borderRadius:23,backgroundColor:'#fff',alignItems:'center',justifyContent:'center'},
+ pillText:{fontSize:13,fontWeight:'700',color:'#151515',textAlign:'center'}
 });
