@@ -29,13 +29,13 @@ alter table public.marketplace_listings add column if not exists seller_shipping
 alter table public.marketplace_listings add column if not exists accepted_responsibility boolean not null default false;
 alter table public.marketplace_listings add column if not exists price numeric(12,2);
 -- Migrate cents-based rows from the earlier schema into the current decimal price.
-do $
-begin
+DO $rf$
+BEGIN
   if exists (select 1 from information_schema.columns where table_schema='public' and table_name='marketplace_listings' and column_name='price_cents') then
     execute 'update public.marketplace_listings set price = price_cents / 100.0 where price is null and price_cents is not null';
     execute 'alter table public.marketplace_listings alter column price_cents drop not null';
   end if;
-end $;
+END $rf$;
 update public.marketplace_listings set price = 0 where price is null;
 alter table public.marketplace_listings alter column price set not null;
 alter table public.marketplace_listings drop constraint if exists marketplace_listings_status_check;
@@ -44,6 +44,24 @@ alter table public.marketplace_listings drop constraint if exists marketplace_li
 alter table public.marketplace_listings add constraint marketplace_listings_price_check check (price >= 0);
 alter table public.marketplace_listings drop constraint if exists marketplace_listings_category_check;
 alter table public.marketplace_listings add constraint marketplace_listings_category_check check (category in ('Vehicles','Parts & Accessories','Tools & Equipment','Outdoor & Lifestyle','Other'));
+
+-- Remove legacy permissive policies so older policies cannot OR-bypass acknowledgement checks.
+DROP POLICY IF EXISTS "Active listings readable by everyone" ON public.marketplace_listings;
+DROP POLICY IF EXISTS "Sellers create own drafts" ON public.marketplace_listings;
+DROP POLICY IF EXISTS "Sellers update own listings" ON public.marketplace_listings;
+DROP POLICY IF EXISTS "Sellers delete own drafts" ON public.marketplace_listings;
+DO $rf$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'marketplace_listing_responsibility_ack'
+      AND conrelid = 'public.marketplace_listings'::regclass
+  ) THEN
+    ALTER TABLE public.marketplace_listings
+      ADD CONSTRAINT marketplace_listing_responsibility_ack
+      CHECK (accepted_responsibility = true) NOT VALID;
+  END IF;
+END $rf$;
 
 create index if not exists marketplace_listings_browse_idx on public.marketplace_listings(status, category, created_at desc);
 create index if not exists marketplace_listings_seller_idx on public.marketplace_listings(seller_id, created_at desc);
