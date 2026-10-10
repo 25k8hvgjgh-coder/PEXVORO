@@ -316,7 +316,7 @@ export default function App(){
   finally{setReportBusy(false)}
  }
  async function recordFeedAction(postId:string,eventType:'share'|'not_interested'){
-  if(!supabase||!session||!personalizationEnabled)return;
+  if(!supabase||!session||(eventType!=='not_interested'&&!personalizationEnabled))return;
   try{
    const event={user_id:session.user.id,post_id:postId,event_type:eventType,watched_ms:0,duration_ms:0};
    const r=await supabase.from('feed_events').insert(event);
@@ -367,7 +367,7 @@ export default function App(){
     :Promise.resolve(null);
    const [followRes,historyRes,likesRes,saveRes]=userId?await Promise.all([
     supabase.from('follows').select('following_id,created_at').eq('follower_id',userId).limit(300),
-    personalizationEnabled?(recommendationsResetAt?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).gte('created_at',recommendationsResetAt).order('created_at',{ascending:false}).limit(180):supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(180)):Promise.resolve({data:[]}),
+    personalizationEnabled?(recommendationsResetAt?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).gte('created_at',recommendationsResetAt).order('created_at',{ascending:false}).limit(180):supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(180)):(recommendationsResetAt?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).eq('event_type','not_interested').gte('created_at',recommendationsResetAt).order('created_at',{ascending:false}).limit(180):supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).eq('event_type','not_interested').order('created_at',{ascending:false}).limit(180)),
     personalizationEnabled?(recommendationsResetAt?supabase.from('likes').select('post_id').eq('user_id',userId).gte('created_at',recommendationsResetAt).limit(160):supabase.from('likes').select('post_id').eq('user_id',userId).limit(160)):Promise.resolve({data:[]}),
     personalizationEnabled?(recommendationsResetAt?supabase.from('saved_posts').select('post_id').eq('user_id',userId).gte('created_at',recommendationsResetAt).limit(160):supabase.from('saved_posts').select('post_id').eq('user_id',userId).limit(160)):Promise.resolve({data:[]})
    ]):[{data:[]},{data:[]},{data:[]},{data:[]}];
@@ -403,9 +403,9 @@ export default function App(){
     followingIds:isFollowing?followed:(personalizationEnabled?personalFollows:[]),
     likedPostIds:personalizationEnabled?liked:[],
     savedPostIds:personalizationEnabled?saved:[],
-    history,
+    history:personalizationEnabled?history:[],
     historyPosts:[...(prior.data||[]),...(followedContent.data||[])],
-    hiddenIds:notInterested,
+    hiddenIds:[...notInterested,...history.filter(e=>e.event_type==='not_interested').map(e=>e.post_id)],
     blockedKeywords,
     hideMatureContent
    });
