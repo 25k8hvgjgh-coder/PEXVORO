@@ -36,7 +36,9 @@ export function createFeedEventQueue({userId,storage,insert}:FeedQueueDeps){
   pending.push({user_id:userId,post_id:postId,event_type:eventType,watched_ms:safe(watchedMs),duration_ms:safe(durationMs)});
   if(pending.length>limit)pending=pending.slice(-limit);
   dirty=true;
-  void persist().catch(()=>{});
+  // Wait for older offline events to hydrate before writing to disk.
+  if(hydrated)void persist().catch(()=>{});
+  else void hydrate().then(()=>persist()).catch(()=>{});
  };
  const hydrate=async()=>{
   if(hydrated||disposed)return;
