@@ -8,6 +8,10 @@ on:
       - "mobile/**"
       - ".github/workflows/publish-beta-update.yml"
 
+concurrency:
+  group: reconfeed-beta-ota-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   publish-beta-update:
     runs-on: ubuntu-latest
