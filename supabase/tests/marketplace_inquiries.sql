@@ -1,4 +1,4 @@
--- Transaction-only probes of the EXISTING deployed inquiry policies.
+-- Run only AFTER the reviewed seller-reply migration is authorized and applied.
 -- No policy changes and no fixture data persists after ROLLBACK.
 begin;
 create temporary table reconfeed_probe_users (kind text primary key, id uuid not null default gen_random_uuid()) on commit drop;
@@ -24,12 +24,13 @@ end $$;
 select set_config('request.jwt.claims',json_build_object('sub',(select id from reconfeed_probe_users where kind='seller'),'role','authenticated')::text,true);
 do $$ begin
   if (select count(*) from public.marketplace_messages where listing_id in (select id from reconfeed_probe_listing)) <> 1 then raise exception 'Seller cannot read received inquiry'; end if;
-  begin
-    insert into public.marketplace_messages(listing_id,sender_id,recipient_id,body)
-    select l.id,s.id,b.id,'Seller probe reply' from reconfeed_probe_listing l,reconfeed_probe_users s,reconfeed_probe_users b where s.kind='seller' and b.kind='buyer';
-    raise exception 'Unexpected: seller replies are already enabled; update this baseline test';
-  exception when insufficient_privilege then null;
-  end;
+  insert into public.marketplace_messages(listing_id,sender_id,recipient_id,body)
+  select l.id,s.id,b.id,'Seller probe reply' from reconfeed_probe_listing l,reconfeed_probe_users s,reconfeed_probe_users b where s.kind='seller' and b.kind='buyer';
+  if (select count(*) from public.marketplace_messages where listing_id in (select id from reconfeed_probe_listing)) <> 2 then raise exception 'Seller reply was not saved'; end if;
+end $$;
+select set_config('request.jwt.claims',json_build_object('sub',(select id from reconfeed_probe_users where kind='buyer'),'role','authenticated')::text,true);
+do $$ begin
+  if (select count(*) from public.marketplace_messages where listing_id in (select id from reconfeed_probe_listing)) <> 2 then raise exception 'Buyer cannot read seller reply'; end if;
 end $$;
 select set_config('request.jwt.claims',json_build_object('sub',(select id from reconfeed_probe_users where kind='outsider'),'role','authenticated')::text,true);
 do $$ begin
