@@ -48,5 +48,18 @@ jobs:
             echo "Generated icons are already current."
             exit 0
           fi
-          git commit -m "Add ReconFeed home-screen icons"
-          git push
+          git commit -m "Update Recon Tactical home-screen icons"
+          # Other validated app commits may land while the icons are being rendered.
+          # Rebase the icon-only commit rather than failing on a non-fast-forward push.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              echo "Updated icons published successfully."
+              exit 0
+            fi
+            echo "Concurrent main update detected; retrying icon publication ($attempt/5)."
+            sleep 2
+          done
+          echo "::error::Could not publish refreshed home-screen icons after five attempts."
+          exit 1
