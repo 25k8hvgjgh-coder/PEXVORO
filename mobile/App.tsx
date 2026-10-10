@@ -14,6 +14,8 @@ import PostCollection from './PostCollection';
 import TesterReports from './TesterReports';
 import ProfileConnections from './ProfileConnections';
 import ProfileIcon,{type ProfileIconName} from './ProfileIcon';
+import CreatorProfileHeader from './CreatorProfileHeader';
+import ProfileMenuOverview from './ProfileMenuOverview';
 import {rankFeedPosts, type FeedEvent, type RankingContext} from './feedRanking';
 import {createFeedEventQueue} from './feedEventQueue';
 import {normalizeBlockedKeywords,parseCreatorTags,allowedForFeed} from './contentSignals';
@@ -826,42 +828,20 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
  const profileView=()=> <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.profileScreenContent}>
 {!session?<><Text style={s.sectionEyebrow}>JOIN THE RECONFEED COMMUNITY</Text><ImageBackground source={{uri:'https://images.pexels.com/photos/876345/pexels-photo-876345.jpeg?auto=compress&cs=tinysrgb&w=1000'}} style={s.loginHero} imageStyle={s.sectionHeroImage}><View style={s.loginHeroInner}><Image source={require('./assets/icon.png')} style={s.loginEmblem}/><Text style={s.loginMotto}>MORE THAN A SCROLL.\n<Text style={{color:theme.purple}}>IT'S A BROTHERHOOD.</Text></Text></View></ImageBackground></>:null}
 {session?<>
- <View style={s.profileTopBar}>
-  <Pressable style={s.profileTopIcon} accessibilityRole="button" accessibilityLabel="Edit your profile" onPress={()=>{setProfileEditOpen(v=>!v);setProfileSettingsOpen(false)}}>
-   <ProfileIcon name="pencil"/>
-  </Pressable>
-  <View style={s.profileTopBrand}><Text style={s.profileTopBrandText}>RECON<Text style={{color:'#C6AA72'}}>FEED</Text></Text></View>
-  <View style={{flexDirection:'row',gap:5}}>
-   <Pressable style={s.profileTopIcon} accessibilityRole="button" accessibilityLabel="Creator analytics" onPress={showCreatorAnalytics}><ProfileIcon name="footprints"/></Pressable>
-   <Pressable style={s.profileTopIcon} accessibilityRole="button" accessibilityLabel="Find other creators" onPress={()=>setTab('Discover')}><ProfileIcon name="adduser"/></Pressable>
-   <Pressable style={s.profileTopIcon} accessibilityRole="button" accessibilityLabel="Open profile settings" onPress={()=>{setProfileSettingsOpen(v=>!v);setProfileEditOpen(false)}}><ProfileIcon name="menu"/></Pressable>
-  </View>
- </View>
- <View style={s.profileHeaderBlock}>
-  <View style={s.profileIdentity}>
-   <View style={s.profileIdentityText}>
-    <Pressable accessibilityRole="button" accessibilityLabel="Account menu" onPress={()=>setProfileSettingsOpen(true)}><Text style={s.profileIdentityName} numberOfLines={2}>{profile?.display_name||session.user.email?.split('@')[0]||'ReconFeed Creator'} ⌄</Text></Pressable>
-    <View style={{flexDirection:'row',alignItems:'center',flexWrap:'wrap',gap:6}}><Text style={s.profileIdentityHandle}>@{profile?.username||'creator'}</Text>{(isBetaTester||profile?.is_beta_tester===true)&&<Text accessibilityLabel="Verified beta tester" style={{fontSize:17}}>👨‍💻</Text>}</View>
-
-   </View>
-   <View style={s.profileAvatarWrap}><Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={()=>void chooseProfilePhoto()} style={s.profileIdentityAvatar}>
-    {profile?.avatar_url?<Image source={{uri:profile.avatar_url}} style={s.profileIdentityAvatarImage}/>:<Text style={s.profileIdentityAvatarInitial}>{(profile?.display_name||session.user.email||'R')[0].toUpperCase()}</Text>}
-   </Pressable><Pressable accessibilityRole="button" accessibilityLabel="Create a post" onPress={startCreating} style={s.profileAvatarAdd}><Text style={s.profileAvatarAddText}>+</Text></Pressable></View>
-  </View>
-  <View style={s.profileNumbers}>
-   <Pressable onPress={()=>setConnections('following')} style={s.profileNumberBox} accessibilityRole="button" accessibilityLabel="Your following accounts"><Text style={s.profileNumberValue}>{profileStats.following.toLocaleString()}</Text><Text style={s.profileNumberLabel}>Following</Text></Pressable>
-   <Pressable accessibilityRole="button" onPress={()=>setConnections('followers')} style={s.profileNumberBox}><Text style={s.profileNumberValue}>{profileStats.followers.toLocaleString()}</Text><Text style={s.profileNumberLabel}>Followers</Text></Pressable>
-   <Pressable accessibilityRole="button" onPress={showCreatorAnalytics} style={s.profileNumberBox}><Text style={s.profileNumberValue}>{profileStats.likes.toLocaleString()}</Text><Text style={s.profileNumberLabel}>Likes</Text></Pressable>
-  </View>
-  <Text style={s.profileMainBio}>{profile?.bio||'Add your bio in Edit profile'}</Text>
-  {creatorSettings.pronouns?<Text style={s.profileMetaLine}>{creatorSettings.pronouns}</Text>:null}
-  {creatorSettings.website_url?<Pressable accessibilityRole="link" onPress={()=>{void Linking.openURL(creatorSettings.website_url)}}><Text style={s.profileLink}>⌁ {creatorSettings.website_url} ↗</Text></Pressable>:null}
-
-  <View style={s.profileActionRow}>
-   <Pressable style={s.profileActionPill} accessibilityRole="button" onPress={showCreatorAnalytics}><Text style={s.profileActionLabel}>✦  ReconFeed Studio</Text></Pressable>
-   <Pressable style={s.profileActionPill} accessibilityRole="button" onPress={()=>setTab('Market')}><Text style={s.profileActionLabel}>♧  Marketplace</Text></Pressable>
-  </View>
- </View>
+ <CreatorProfileHeader
+  profile={profile} email={session.user.email} stats={profileStats}
+  isBetaTester={isBetaTester} pronouns={creatorSettings.pronouns} websiteUrl={creatorSettings.website_url}
+  onSettings={()=>{setProfileSettingsOpen(true);setProfileEditOpen(false)}}
+  onEdit={()=>{setProfileEditOpen(true);setProfileSettingsOpen(false)}}
+  onAnalytics={showCreatorAnalytics}
+  onDiscover={()=>setTab('Discover')}
+  onChangePhoto={()=>{void chooseProfilePhoto()}}
+  onCreate={startCreating}
+  onShare={()=>{void shareProfile(profile?.username||'')}}
+  onMarket={()=>setTab('Market')}
+  onConnections={setConnections}
+  onWebsite={()=>{void Linking.openURL(creatorSettings.website_url)}}
+ />
  <Modal visible={profileEditOpen} animationType="slide" onRequestClose={()=>setProfileEditOpen(false)}><SafeAreaView style={s.safe}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.profileEditorSheet}><Pressable accessibilityRole="button" style={s.profileCloseVideo} onPress={()=>setProfileEditOpen(false)}><Text style={s.link}>← Back to profile</Text></Pressable><Text style={s.subheading}>EDIT YOUR PROFILE</Text><Text style={s.muted}>Edit your photo, username, display name and bio. Pronouns and public links are under Account settings.</Text><Pressable onPress={chooseProfilePhoto} style={s.outline}><Text style={s.link}>◉ Choose custom profile picture</Text></Pressable>{profileAvatarDraft&&<Image source={{uri:profileAvatarDraft.uri}} style={{width:100,height:100,borderRadius:50,alignSelf:'center',marginVertical:12}}/>}
  <Text style={s.muted}>Username · 3–24 letters, numbers, periods or underscores</Text><TextInput value={profileUsernameDraft} onChangeText={setProfileUsernameDraft} maxLength={24} autoCapitalize="none" placeholder="@username" placeholderTextColor={theme.muted} style={s.input}/>
  <Text style={s.muted}>Display name</Text><TextInput value={name} onChangeText={setName} maxLength={80} placeholder="Display name" placeholderTextColor={theme.muted} style={s.input}/>
@@ -899,8 +879,23 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
    <Text style={[s.muted,{padding:14}]}>{profileSelected?.caption||''}</Text>{profileSelected&&profilePosts.some(p=>p.id===profileSelected.id)?<View style={[s.row,{padding:12}]}><Pressable accessibilityRole="button" style={s.chip} onPress={()=>void togglePinPost(profileSelected.id,!!profilePosts.find(p=>p.id===profileSelected.id)?.pinned_at)}><Text style={s.chipText}>{profilePosts.find(p=>p.id===profileSelected.id)?.pinned_at?'Unpin':'Pin post'}</Text></Pressable><Pressable accessibilityRole="button" style={s.chip} onPress={()=>deleteOwnPost(profileSelected.id)}><Text style={s.chipText}>Delete post</Text></Pressable></View>:null}
   </SafeAreaView>
  </Modal>
- <Modal visible={profileSettingsOpen} animationType="slide" onRequestClose={()=>setProfileSettingsOpen(false)}><SafeAreaView style={s.safe}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.profileBelowGrid}><Pressable accessibilityRole="button" style={s.profileCloseVideo} onPress={()=>setProfileSettingsOpen(false)}><Text style={s.link}>← Back to profile</Text></Pressable><Pressable accessibilityRole="button" style={s.outline} onPress={()=>{setProfileSettingsOpen(false);setTesterIssueOpen(true)}}><Text style={s.link}>Report an app issue</Text></Pressable><Pressable accessibilityRole="button" style={s.outline} onPress={()=>{setProfileSettingsOpen(false);setTesterReportsOpen(true)}}><Text style={s.link}>Tester reports & screenshots</Text></Pressable><Pressable accessibilityRole="button" style={s.outline} onPress={()=>void shareProfile(profile?.username||'')}><Text style={s.link}>Share profile</Text></Pressable>
-<View style={s.row}><Pressable style={s.chip} onPress={()=>setCollection({userId:session.user.id,saved:false})}><Text style={s.chipText}>My posts</Text></Pressable><Pressable style={s.chip} onPress={()=>setCollection({saved:true})}><Text style={s.chipText}>Saved posts ({savedPostIds.length})</Text></Pressable><Pressable style={s.chip} onPress={()=>{setMarketThread(null);setInboxOpen(true)}}><Text style={s.chipText}>Market messages</Text></Pressable></View>
+ <Modal visible={profileSettingsOpen} animationType="slide" onRequestClose={()=>setProfileSettingsOpen(false)}>
+  <SafeAreaView style={s.safe}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.profileBelowGrid}>
+   <ProfileMenuOverview
+    displayName={profile?.display_name||session.user.email?.split('@')[0]||'ReconFeed Creator'}
+    username={profile?.username||'creator'}
+    avatarUrl={profile?.avatar_url}
+    onClose={()=>setProfileSettingsOpen(false)}
+    onEdit={()=>{setProfileSettingsOpen(false);setProfileEditOpen(true)}}
+    onAnalytics={()=>{setProfileSettingsOpen(false);showCreatorAnalytics()}}
+    onSaved={()=>{setProfileSettingsOpen(false);setCollection({saved:true})}}
+    onMyPosts={()=>{setProfileSettingsOpen(false);setCollection({userId:session.user.id,saved:false})}}
+    onInbox={()=>{setProfileSettingsOpen(false);setMarketThread(null);setInboxOpen(true)}}
+    onMarketplace={()=>{setProfileSettingsOpen(false);setTab('Market')}}
+    onShare={()=>{void shareProfile(profile?.username||'')}}
+    onReportIssue={()=>{setProfileSettingsOpen(false);setTesterIssueOpen(true)}}
+    onTesterReports={()=>{setProfileSettingsOpen(false);setTesterReportsOpen(true)}}
+   />
  {profileSettingsOpen&&<View style={[s.card,{gap:13,marginVertical:14,borderColor:'#C6AA72',borderWidth:1}]}>
   <Text style={s.heading}>≡ RECONFEED ACCOUNT CONTROL</Text>
   <Text style={s.muted}>These settings save to your account. Personal and Business are profile categories; paid rewards, commercial music rights, passkeys and DM features are not enabled here.</Text>
