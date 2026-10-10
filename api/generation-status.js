@@ -82,7 +82,7 @@ export default async function handler(req, res) {
     if (!response.ok) return res.status(503).json({ error: "Could not retrieve your generation job." });
     const jobs = await response.json();
     const job = Array.isArray(jobs) ? jobs[0] : null;
-    // RLS means a job owned by another account is indistinguishable from a missing job.
+    // The server-side query explicitly filters by the authenticated caller's user ID.
     if (!job) return res.status(404).json({ error: "Generation job was not found for this account." });
     if (!job.provider_prediction_id) return res.status(200).json({ id: job.id, status: job.status, output: null });
     const token = String(process.env.REPLICATE_API_TOKEN || "").trim();
