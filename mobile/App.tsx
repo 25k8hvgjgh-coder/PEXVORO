@@ -74,6 +74,9 @@ export default function App(){
  const [captureMode,setCaptureMode]=useState<'photo'|'video'>('video'),[captureSeconds,setCaptureSeconds]=useState(15);
  const [profileStats,setProfileStats]=useState({following:0,followers:0,posts:0,likes:0});
  const [likedPostIds,setLikedPostIds]=useState<string[]>([]);
+ const [recentActivity,setRecentActivity]=useState<Array<{post_id:string;kind:'Liked'|'Saved'|'Reposted';created_at:string;post:any}>>([]);
+ const [activityBusy,setActivityBusy]=useState(false);
+ const [activityError,setActivityError]=useState('');
  const [profilePosts,setProfilePosts]=useState<Array<{id:string;media_url:string;media_type:string;caption:string;visibility?:string;pinned_at?:string|null}>>([]);
  const [creatorAnalytics,setCreatorAnalytics]=useState({views:0,completedViews:0,watchSeconds:0,shares:0});
  const [creatorSettings,setCreatorSettings]=useState({
@@ -89,7 +92,7 @@ export default function App(){
  const [profileSettingsOpen,setProfileSettingsOpen]=useState(false);
  const [profileSettingsPage,setProfileSettingsPage]=useState<'drawer'|'settings'|'balance'|'advanced'>('drawer');
  const [blockedAccounts,setBlockedAccounts]=useState<Array<{blocked_id:string;created_at:string}>>([]);
- const [profileGridTab,setProfileGridTab]=useState<'videos'|'photos'|'private'|'reposts'|'saved'|'liked'>('videos');
+ const [profileGridTab,setProfileGridTab]=useState<'videos'|'photos'|'private'|'reposts'|'saved'|'liked'|'activity'>('videos');
  const [profileLoading,setProfileLoading]=useState(false);
  const [followingIds,setFollowingIds]=useState<string[]>([]);
  const [repostedIds,setRepostedIds]=useState<string[]>([]);
@@ -340,6 +343,37 @@ export default function App(){
    if(active)setProfileCollectionPosts(ids.flatMap(id=>(r.data||[]).filter(p=>p.id===id)));
   }catch(e:any){if(active)setProfileCollectionError(safeErrorMessage(e))}finally{if(active)setProfileCollectionLoading(false)}})();return()=>{active=false};
  },[session?.user.id,profileGridTab,repostedIds,savedPostIds,likedPostIds]);
+ useEffect(()=>{
+  let active=true;
+  setRecentActivity([]);setActivityError('');
+  if(!supabase||!session||profileGridTab!=='activity'){setActivityBusy(false);return}
+  const userId=session.user.id;
+  setActivityBusy(true);
+  void(async()=>{
+   try{
+    const [likes,saves,reposts]=await Promise.all([
+     supabase.from('likes').select('post_id,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(40),
+     supabase.from('saved_posts').select('post_id,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(40),
+     supabase.from('reposts').select('post_id,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(40)
+    ]);
+    if(likes.error||saves.error||reposts.error)throw (likes.error||saves.error||reposts.error);
+    const events:Array<{post_id:string;created_at:string;kind:'Liked'|'Saved'|'Reposted'}>=[
+     ...(likes.data||[]).map((item:any)=>({...item,kind:'Liked' as const})),
+     ...(saves.data||[]).map((item:any)=>({...item,kind:'Saved' as const})),
+     ...(reposts.data||[]).map((item:any)=>({...item,kind:'Reposted' as const}))
+    ].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,70);
+    const ids=[...new Set(events.map(item=>item.post_id))];
+    const result=ids.length?await supabase.from('posts').select('id,caption,media_url,media_type,visibility').in('id',ids):{data:[],error:null};
+    if(result.error)throw result.error;
+    const found=new Map((result.data||[]).map((post:any)=>[post.id,post]));
+    if(active&&accountRef.current===userId){
+     setRecentActivity(events.filter(event=>found.has(event.post_id)).map(event=>({...event,post:found.get(event.post_id)})));
+    }
+   }catch(error:any){if(active)setActivityError(safeErrorMessage(error))}
+   finally{if(active)setActivityBusy(false)}
+  })();
+  return()=>{active=false};
+ },[session?.user.id,profileGridTab,likedPostIds,savedPostIds,repostedIds]);
  const visibleProfilePosts=['reposts','saved','liked'].includes(profileGridTab)?profileCollectionPosts:profilePosts.filter(p=>profileGridTab==='private'?(p.visibility==='private'||creatorSettings.is_private):!creatorSettings.is_private&&p.visibility!=='private'&&(profileGridTab!=='photos'||p.media_type==='image'));
  function showCreatorAnalytics(){setAnalyticsOpen(true)}
  function startCreating(){setTab('Create');void capture()}
@@ -933,13 +967,20 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
  <Pressable style={s.outline} disabled={busy} onPress={saveFullProfile}><Text style={s.link}>{busy?'Saving…':'Save profile changes'}</Text></Pressable><View style={s.rule}/>
 </ScrollView></SafeAreaView></Modal>
  <View style={s.profileContentTabs}>
- {([{id:'videos',symbol:'grid',label:'Posts'},{id:'photos',symbol:'photos',label:'Photos'},{id:'private',symbol:'lock',label:'Private posts'},{id:'reposts',symbol:'repost',label:'Reposts'},{id:'saved',symbol:'bookmark',label:'Favorites'},{id:'liked',symbol:'heart',label:'Liked'}] as const).map(item=>
+ {([{id:'videos',symbol:'grid',label:'Posts'},{id:'photos',symbol:'photos',label:'Photos'},{id:'private',symbol:'lock',label:'Private posts'},{id:'reposts',symbol:'repost',label:'Reposts'},{id:'saved',symbol:'bookmark',label:'Favorites'},{id:'liked',symbol:'heart',label:'Liked'},{id:'activity',symbol:'footprints',label:'Activity'}] as const).map(item=>
  <Pressable accessibilityRole="tab" accessibilityState={{selected:profileGridTab===item.id}} accessibilityLabel={item.label} key={item.id} onPress={()=>{
   setProfileGridTab(item.id);setProfileGridLimit(12);
 
- }} style={[s.profileContentTab,profileGridTab===item.id&&s.profileContentTabActive]}><ProfileIcon name={item.symbol} color={profileGridTab===item.id?olive.text:olive.muted}/></Pressable>)}
+ }} style={[s.profileContentTab,profileGridTab===item.id&&s.profileContentTabActive]}><ProfileIcon name={item.symbol} color={profileGridTab===item.id?olive.text:olive.muted}/>{(item.id==='liked'||item.id==='activity')&&<Text style={{fontSize:9,color:olive.text,fontWeight:'700',marginTop:2}}>{item.label}</Text>}</Pressable>)}
  </View>
- <View style={s.profileTileGrid}>
+ {profileGridTab==='activity'?<View style={{backgroundColor:olive.bg,padding:15,gap:10}}>
+  <Text style={s.subheading}>Recent Activity</Text>
+  <Text style={s.muted}>Your liked videos, saved posts and reposts. This history is private to your account.</Text>
+  {activityBusy?<ActivityIndicator color={theme.purple}/>:activityError?<Text style={s.muted}>{activityError}</Text>:recentActivity.length?recentActivity.map((entry,i)=><Pressable key={entry.kind+'-'+entry.post_id+'-'+i} accessibilityRole="button" accessibilityLabel={'View '+entry.kind+' post'} onPress={()=>setProfileSelected(entry.post)} style={[s.card,{flexDirection:'row',alignItems:'center',gap:12,marginVertical:3}]}>
+   {entry.post.media_type==='image'?<Image source={{uri:entry.post.media_url}} style={{width:55,height:70,borderRadius:8}} resizeMode="cover"/>:<View style={{width:55,height:70,backgroundColor:olive.raised,alignItems:'center',justifyContent:'center',borderRadius:8}}><Text style={{color:olive.text,fontSize:22}}>▶</Text></View>}
+   <View style={{flex:1}}><Text style={s.strong}>{entry.kind} · {new Date(entry.created_at).toLocaleDateString()}</Text><Text style={s.muted} numberOfLines={2}>{entry.post.caption||'ReconFeed post'}</Text></View>
+  </Pressable>):<Text style={s.muted}>No recent activity. Like or save a post to see it here.</Text>}
+ </View>:<View style={s.profileTileGrid}>
  {profileCollectionError?<View style={s.profileTabEmpty}><Text accessibilityRole="alert" style={s.profileEmptyBody}>{profileCollectionError}</Text><Pressable onPress={()=>{setProfileGridTab('videos')}}><Text style={s.link}>Back to posts</Text></Pressable></View>:profileCollectionLoading?<View style={s.profileTabEmpty}><ActivityIndicator color={theme.purple}/></View>:visibleProfilePosts.length
  ? visibleProfilePosts.slice(0,profileGridLimit).map(p=>
   <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={'View '+(p.caption||'post')} onPress={()=>setProfileSelected(p)} style={s.profileVideoTile}>
@@ -955,8 +996,8 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   </Pressable>
  )
  : <View style={s.profileTabEmpty}><Text style={s.profileEmptyTitle}>{profileLoading?'Loading posts…':profileGridTab==='private'?'No private posts':profileGridTab==='reposts'?'No reposts yet':profileGridTab==='saved'?'No favorites yet':profileGridTab==='liked'?'No liked posts yet':profileGridTab==='photos'?'No photos yet':'No posts yet'}</Text><Text style={s.profileEmptyBody}>{profileGridTab==='reposts'?'Tap Repost on a feed post to add it here.':profileGridTab==='saved'?'Save a feed post to keep it here.':profileGridTab==='liked'?'Posts you like will appear here.':profileGridTab==='private'?'Posts you publish with private visibility appear here.':'Your photos and videos will appear in this grid.'}</Text>{['videos','photos','private'].includes(profileGridTab)?<Pressable onPress={startCreating} style={s.profileTabButton}><Text style={s.profileActionLabel}>＋ Create a post</Text></Pressable>:null}</View>}
- </View>
- {visibleProfilePosts.length>profileGridLimit?<Pressable accessibilityRole="button" style={s.profileLoadMore} onPress={()=>setProfileGridLimit(n=>n+18)}><Text style={s.profileActionLabel}>Show more posts ↓</Text></Pressable>:null}
+ </View>}
+ {profileGridTab!=='activity'&&visibleProfilePosts.length>profileGridLimit?<Pressable accessibilityRole="button" style={s.profileLoadMore} onPress={()=>setProfileGridLimit(n=>n+18)}><Text style={s.profileActionLabel}>Show more posts ↓</Text></Pressable>:null}
  <Modal visible={!!profileSelected} animationType="slide" onRequestClose={()=>setProfileSelected(null)}>
   <SafeAreaView style={s.safe}><Pressable style={s.profileCloseVideo} onPress={()=>setProfileSelected(null)}><Text style={s.profileActionLabel}>← BACK TO PROFILE</Text></Pressable>
    {profileSelected?.media_type==='video'?<Video key={profileSelected.id} source={{uri:profileSelected.media_url}} shouldPlay isLooping useNativeControls resizeMode={ResizeMode.CONTAIN} style={{width:'100%',flex:1,backgroundColor:'#050806'}}/>:profileSelected?<Image source={{uri:profileSelected.media_url}} style={{flex:1,width:'100%'}} resizeMode="contain"/>:null}
@@ -1111,7 +1152,7 @@ const s=StyleSheet.create({
  profileActionPill:{minHeight:36,flex:1,paddingHorizontal:8,justifyContent:'center',alignItems:'center',backgroundColor:'#232D26',borderWidth:1,borderColor:'#5C6D58',borderRadius:24},
  profileActionLabel:{color:'#F0EEE5',fontSize:13,fontWeight:'700',letterSpacing:0,textAlign:'center'},
  profileContentTabs:{flexDirection:'row',backgroundColor:olive.bg,borderBottomWidth:1,borderBottomColor:olive.border,paddingTop:5,minHeight:55},
- profileContentTab:{width:'16.6667%',alignItems:'center',justifyContent:'center',borderBottomWidth:3,borderBottomColor:'transparent',paddingVertical:10},
+ profileContentTab:{width:'14.2857%',alignItems:'center',justifyContent:'center',borderBottomWidth:3,borderBottomColor:'transparent',paddingVertical:10},
  profileContentTabActive:{borderBottomColor:olive.gold},
  profileContentTabIcon:{fontSize:24,color:'#88958A',fontWeight:'700'},
  profileContentTabIconActive:{color:'#F0EEE5'},
