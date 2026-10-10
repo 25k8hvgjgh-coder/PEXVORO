@@ -35,11 +35,11 @@ export default function PostCollection({ client, userId, savedIds, onClose }: Pr
   return <Modal visible animationType="slide" onRequestClose={onClose}>
     <SafeAreaView style={s.screen}>
       <View style={s.header}><Pressable accessibilityRole="button" onPress={onClose} style={s.control}><Text style={s.link}>Close</Text></Pressable>
-        <Text style={s.title} numberOfLines={1}>{userId ? profile?.display_name || 'Creator profile' : 'Saved posts'}</Text>
+        <Text style={s.title} numberOfLines={1}>{userId ? profile?.display_name || 'Creator dossier' : 'Saved intel'}</Text>
         <Pressable accessibilityRole="button" onPress={() => setRefresh(v => v + 1)} style={s.control}><Text style={s.link}>Refresh</Text></Pressable></View>
       {profile ? <View style={s.card}><Text style={s.link}>@{profile.username}</Text>{profile.bio ? <Text style={s.text}>{profile.bio}</Text> : null}</View> : null}
       {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}
-      {loading ? <ActivityIndicator color="#efc984" /> : <FlatList data={posts} keyExtractor={p => p.id}
+      {loading ? <ActivityIndicator color="#e0bd7b" /> : <FlatList data={posts} keyExtractor={p => p.id}
         ListEmptyComponent={<Text style={s.note}>{userId ? 'No visible posts from this creator yet.' : 'No saved posts available. Tap Save on a feed post to add it here.'}</Text>}
         renderItem={({ item: p }) => <View style={s.card}>
           {p.media_type === 'video' ? <Video source={{ uri: p.media_url }} style={s.media} resizeMode={ResizeMode.CONTAIN} useNativeControls /> : <Image source={{ uri: p.media_url }} style={s.media} resizeMode="contain" />}
@@ -49,9 +49,9 @@ export default function PostCollection({ client, userId, savedIds, onClose }: Pr
   </Modal>;
 }
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#080e0f' }, header: { flexDirection: 'row', alignItems: 'center', padding: 8 },
-  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#f5f4ed', fontWeight: '800', fontSize: 22 },
-  link: { color: '#efc984', fontWeight: '800' }, card: { margin: 10, padding: 14, backgroundColor: '#132122', borderRadius: 20 },
-  text: { color: '#f5f4ed', fontSize: 15, lineHeight: 22, marginTop: 10 }, note: { color: '#acbcb9', padding: 12 },
-  error: { color: '#ffb4b4', padding: 12 }, media: { width: '100%', aspectRatio: 9 / 12, borderRadius: 16 }
+  screen: { flex: 1, backgroundColor: '#0b0d09' }, header: { flexDirection: 'row', alignItems: 'center', padding: 8 },
+  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#f2eddf', fontWeight: '800', fontSize: 22 },
+  link: { color: '#e0bd7b', fontWeight: '800' }, card: { margin: 10, padding: 14, backgroundColor: '#1e251a', borderRadius: 7 },
+  text: { color: '#f2eddf', fontSize: 15, lineHeight: 22, marginTop: 10 }, note: { color: '#b8baa6', padding: 12 },
+  error: { color: '#ffb4b4', padding: 12 }, media: { width: '100%', aspectRatio: 9 / 12, borderRadius: 6 }
 });
