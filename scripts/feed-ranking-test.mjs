@@ -32,6 +32,8 @@ const hiddenByEvent={...base,history:[history('truck','not_interested',0,0)]};
 assert.deepEqual(Array.from(rankFeedPosts([truck,dance],hiddenByEvent).map(p=>p.id)),['dance']);
 const saved={...base,savedPostIds:['old'],historyPosts:[post('old','a','Diesel towing garage')]};
 assert.equal(rankFeedPosts([dance,truck],saved)[0].id,'truck','Saved stories influence recommendations');
+const followAffinity={...base,followingIds:['a'],historyPosts:[post('followed-old','a','Diesel mechanics truck projects')]};
+assert.equal(rankFeedPosts([dance,truck],followAffinity)[0].id,'truck','Following a creator should help identify interests when enabled');
 const candidates=Array.from({length:100},(_,i)=>post('id'+i,'creator'+i,'Country trucks welding tools '+i,i));
 const started=performance.now();
 const ranked=rankFeedPosts(candidates,base);
