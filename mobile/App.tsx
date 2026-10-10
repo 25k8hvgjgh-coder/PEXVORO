@@ -336,21 +336,22 @@ export default function App(){
  }
  async function loadFeed(){
   if(!supabase){setPosts([]);return}
+  if(session&&!prefsLoaded){setPosts([]);return}
   const request=++feedRequest.current;
   setLoading(true);
   try{
    const userId=session?.user.id;
    const isFollowing=tab==='Following';
-   const feedSelect='id,user_id,caption,media_url,media_type,format,created_at,profiles(username,display_name),likes(count),comments(count)';
+   const feedSelect='id,user_id,caption,media_url,media_type,format,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles(username,display_name),likes(count),comments(count)';
    // Begin the public For You request immediately; don't wait for preference queries.
    const publicFeedPromise=!isFollowing
-    ?supabase.from('posts').select(feedSelect).eq('visibility','public').order('created_at',{ascending:false}).limit(100)
+    ?supabase.from('posts').select(feedSelect).eq('visibility','public').eq('recommendation_status','eligible').order('created_at',{ascending:false}).limit(100)
     :Promise.resolve(null);
    const [followRes,historyRes,likesRes,saveRes]=userId?await Promise.all([
-    supabase.from('follows').select('following_id').eq('follower_id',userId).limit(300),
-    personalizationEnabled?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(180):Promise.resolve({data:[]}),
-    personalizationEnabled?supabase.from('likes').select('post_id').eq('user_id',userId).limit(160):Promise.resolve({data:[]}),
-    personalizationEnabled?supabase.from('saved_posts').select('post_id').eq('user_id',userId).limit(160):Promise.resolve({data:[]})
+    supabase.from('follows').select('following_id,created_at').eq('follower_id',userId).limit(300),
+    personalizationEnabled?(recommendationsResetAt?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).gte('created_at',recommendationsResetAt).order('created_at',{ascending:false}).limit(180):supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(180)):Promise.resolve({data:[]}),
+    personalizationEnabled?(recommendationsResetAt?supabase.from('likes').select('post_id').eq('user_id',userId).gte('created_at',recommendationsResetAt).limit(160):supabase.from('likes').select('post_id').eq('user_id',userId).limit(160)):Promise.resolve({data:[]}),
+    personalizationEnabled?(recommendationsResetAt?supabase.from('saved_posts').select('post_id').eq('user_id',userId).gte('created_at',recommendationsResetAt).limit(160):supabase.from('saved_posts').select('post_id').eq('user_id',userId).limit(160)):Promise.resolve({data:[]})
    ]):[{data:[]},{data:[]},{data:[]},{data:[]}];
    if(request!==feedRequest.current)return;
    // Recommendation features degrade gracefully if history collection is unavailable.
@@ -358,6 +359,7 @@ export default function App(){
     if((response as any).error)console.warn('Feed signal unavailable',(response as any).error.message);
    }
    const followed=(followRes.data||[]).map((f:any)=>f.following_id as string);
+   const personalFollows=(followRes.data||[]).filter((f:any)=>!recommendationsResetAt||new Date(f.created_at).getTime()>=new Date(recommendationsResetAt).getTime()).map((f:any)=>f.following_id as string);
    const history=(historyRes.data||[]) as FeedEvent[];
    const liked=(likesRes.data||[]).map((v:any)=>v.post_id as string);
    const saved=(saveRes.data||[]).map((v:any)=>v.post_id as string);
@@ -368,10 +370,10 @@ export default function App(){
     :Promise.resolve(null);
    const oldIds=personalizationEnabled?[...new Set([...history.map(h=>h.post_id),...saved,...liked])].slice(0,85):[];
    const olderPosts=oldIds.length
-    ?supabase.from('posts').select('id,user_id,caption,format').in('id',oldIds).limit(85)
+    ?supabase.from('posts').select('id,user_id,caption,format,topic_tags,audio_label,overlay_text,transcript').in('id',oldIds).limit(85)
     :Promise.resolve({data:[],error:null});
-   const followedSamples=personalizationEnabled&&followed.length
-    ?supabase.from('posts').select('id,user_id,caption,format').in('user_id',followed.slice(0,50)).eq('visibility','public').order('created_at',{ascending:false}).limit(40)
+   const followedSamples=personalizationEnabled&&personalFollows.length
+    ?supabase.from('posts').select('id,user_id,caption,format,topic_tags,audio_label,overlay_text,transcript').in('user_id',personalFollows.slice(0,50)).eq('visibility','public').order('created_at',{ascending:false}).limit(40)
     :Promise.resolve({data:[],error:null});
    const [fresh,prior,followedContent]=await Promise.all([isFollowing?followingPromise:publicFeedPromise,olderPosts,followedSamples]);
    if(!fresh||fresh.error)throw (fresh?.error||new Error('Could not load feed'));
@@ -380,12 +382,14 @@ export default function App(){
    if(request!==feedRequest.current)return;
    const ranked=rankFeedPosts((fresh.data||[]) as Post[],{
     mode:isFollowing?'Following':'For You',
-    followingIds:isFollowing||personalizationEnabled?followed:[],
+    followingIds:isFollowing?followed:(personalizationEnabled?personalFollows:[]),
     likedPostIds:personalizationEnabled?liked:[],
     savedPostIds:personalizationEnabled?saved:[],
     history,
     historyPosts:[...(prior.data||[]),...(followedContent.data||[])],
-    hiddenIds:notInterested
+    hiddenIds:notInterested,
+    blockedKeywords,
+    hideMatureContent
    });
    setPosts(ranked);
    setActivePostId(id=>ranked.some(p=>p.id===id)?id:ranked[0]?.id||null);
@@ -397,7 +401,7 @@ export default function App(){
   const view=watchRef.current;
   if(view&&(view.postId!==activePostId||(tab!=='For You'&&tab!=='Following')||!appActive||!personalizationEnabled))flushVideoWatch();
  },[activePostId,tab,appActive,personalizationEnabled]);
- useEffect(()=>{if(tab==='For You'||tab==='Following')void loadFeed()},[personalizationEnabled]);
+ useEffect(()=>{if(prefsLoaded&&(tab==='For You'||tab==='Following'))void loadFeed()},[personalizationEnabled,prefsLoaded,blockedKeywords,hideMatureContent,recommendationsResetAt]);
  async function requestAccountEmail(recovery:boolean){if(busy||!supabase)return;const address=email.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)){showAlert('Email required','Enter your email address first.');return}setBusy(true);try{const redirectTo=(api||'https://reconfeed.com')+'/app/';const r=recovery?await supabase.auth.resetPasswordForEmail(address,{redirectTo}):await supabase.auth.resend({type:'signup',email:address,options:{emailRedirectTo:redirectTo}});if(r.error)throw r.error;showAlert('Email requested',recovery?'If this account exists, a password reset email has been requested. Open its link to choose a new password.':'If this account needs confirmation, a new confirmation email has been requested. Already confirmed? Choose Sign in.')}catch(e:any){showAlert('Email unavailable',e.code==='over_email_send_rate_limit'?'Email sending is temporarily limited. Wait before trying again.':safeErrorMessage(e))}finally{setBusy(false)}}
  async function saveRecoveredPassword(){if(busy||!supabase)return;if(newPassword.length<12){showAlert('Stronger password required','Use at least 12 characters.');return}setBusy(true);try{const r=await supabase.auth.updateUser({password:newPassword});if(r.error)throw r.error;setNewPassword('');setRecovering(false);setTab('Profile');showAlert('Password updated','Your new password is saved.')}catch(e:any){showAlert('Password reset failed',safeErrorMessage(e))}finally{setBusy(false)}}
  async function auth(signup:boolean){if(busy)return;if(!supabase){showAlert('Setup required','Add the Supabase URL and public anon key to the mobile environment.');return}if(!email.trim()||password.length<6){showAlert('Check details','Enter an email and a password with at least 6 characters.');return}if(signup&&password.length<12){showAlert('Stronger password required','Use at least 12 characters for a new ReconFeed account. Existing accounts can still sign in with their current password.');return}if(signup&&!['MALE','FEMALE','Other'].includes(gender)){showAlert('Choose gender','Choose MALE, FEMALE, or Other to continue.');return}setBusy(true);try{const r=signup?await supabase.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:(api||'https://reconfeed.com')+'/app/',data:{display_name:name||email.split('@')[0],gender}}}):await supabase.auth.signInWithPassword({email:email.trim(),password});if(r.error)throw r.error;if(signup&&!r.data.session)showAlert('Account request received','If this is a new account, check your email for confirmation. If you already confirmed this email, use Sign in with your original password or Forgot password.');else setTab('For You')}catch(e:any){showAlert('Account error',e.code==='invalid_credentials'?'Email or password did not match. Use your original account password, or choose Forgot password.':e.code==='over_email_send_rate_limit'?'Email sending is temporarily limited. Wait before requesting another email.':safeErrorMessage(e))}finally{setBusy(false)}}
