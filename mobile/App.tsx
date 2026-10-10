@@ -196,8 +196,11 @@ export default function App(){
    const creatorReq=safe
     ?creatorsQuery.or('username.ilike.%'+safe+'%,display_name.ilike.%'+safe+'%').limit(35)
     :creatorsQuery.order('created_at',{ascending:false}).limit(35);
+   const tag=safe.replace(/^#/,'').toLowerCase();
+   const clauses=['caption.ilike.%'+safe+'%','audio_label.ilike.%'+safe+'%','overlay_text.ilike.%'+safe+'%','transcript.ilike.%'+safe+'%'];
+   if(/^[a-z0-9_]{2,25}$/.test(tag))clauses.push('topic_tags.cs.{'+tag+'}');
    const postReq=safe
-    ?supabase.from('posts').select('id,user_id,caption,media_url,media_type,created_at,profiles(username,display_name)').eq('visibility','public').ilike('caption','%'+safe+'%').order('created_at',{ascending:false}).limit(35)
+    ?supabase.from('posts').select('id,user_id,caption,media_url,media_type,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles(username,display_name)').eq('visibility','public').or(clauses.join(',')).order('created_at',{ascending:false}).limit(35)
     :Promise.resolve({data:[],error:null});
    const [creatorsFound,postsFound]=await Promise.all([creatorReq,postReq]);
    if(request!==exploreSearchRequest.current)return;
@@ -223,7 +226,7 @@ export default function App(){
    if(request!==exploreSearchRequest.current)return;
    setExploreCreators(candidates);
    if(postsFound.error){console.warn('Post search unavailable',postsFound.error.message);setExploreResults([])}
-   else setExploreResults(postsFound.data||[]);
+   else setExploreResults((postsFound.data||[]).filter((p:any)=>allowedForFeed(p,{blockedKeywords,hideMatureContent},'Following')));
   }catch(error:any){
    if(request!==exploreSearchRequest.current)return;
    console.warn('Creator discovery failed',safeErrorMessage(error));
@@ -241,11 +244,11 @@ export default function App(){
   setViewingCreator(creator);setViewingCreatorPosts([]);setCreatorProfileLoading(true);
   try{
    const response=await supabase.from('posts')
-    .select('id,caption,media_type,media_url,created_at')
+    .select('id,caption,media_type,media_url,created_at,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status')
     .eq('user_id',creator.id).eq('visibility','public')
     .order('created_at',{ascending:false}).limit(24);
    if(response.error)throw response.error;
-   setViewingCreatorPosts(response.data||[]);
+   setViewingCreatorPosts((response.data||[]).filter((p:any)=>allowedForFeed(p,{blockedKeywords,hideMatureContent},'Following')));
   }catch(error:any){console.warn('Creator posts unavailable',safeErrorMessage(error))}
   finally{setCreatorProfileLoading(false)}
  }
