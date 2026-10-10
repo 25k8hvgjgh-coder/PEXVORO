@@ -58,3 +58,5 @@ jobs:
           npx tsc --noEmit
       - name: Test personalized feed ranking and recommendation speed
         run: node scripts/feed-ranking-test.mjs
+      - name: Test offline event batching, retry and account isolation
+        run: node scripts/feed-event-queue-test.mjs
