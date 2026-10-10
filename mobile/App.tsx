@@ -167,7 +167,7 @@ const s=StyleSheet.create({
  cameraToolLabel:{fontSize:9,fontWeight:'900',color:'#fff',textAlign:'center'},
  cameraBottom:{paddingBottom:18,paddingHorizontal:17,backgroundColor:'rgba(2,4,2,.62)'},
  captureModes:{flexDirection:'row',justifyContent:'center',gap:19,paddingVertical:14},
- captureMode:{fontSize:11,fontWeight:'850',color:'#c9cfc4',paddingBottom:6},
+ captureMode:{fontSize:11,fontWeight:'800',color:'#c9cfc4',paddingBottom:6},
  captureModeActive:{fontWeight:'900',color:'#f9f9ee',borderBottomColor:'#b9d386',borderBottomWidth:2},
  captureActions:{flexDirection:'row',alignItems:'center',justifyContent:'space-around'},
  galleryButton:{minHeight:52,minWidth:70,justifyContent:'center',alignItems:'center',gap:4},
