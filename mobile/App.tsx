@@ -71,6 +71,7 @@ export default function App(){
  const [profileGridTab,setProfileGridTab]=useState<'videos'|'photos'|'saved'|'liked'>('videos');
  const [profileLoading,setProfileLoading]=useState(false);
  const exploreSearchRequest=useRef(0);
+ const profileDeepLinkOpened=useRef(false);
  const [exploreBusy,setExploreBusy]=useState(false);
  const [exploreResults,setExploreResults]=useState<any[]>([]);
  const [exploreCreators,setExploreCreators]=useState<any[]>([]);
@@ -353,6 +354,11 @@ export default function App(){
   const task=setTimeout(()=>{void runExploreSearch(search)},search.trim()?280:0);
   return()=>{clearTimeout(task);++exploreSearchRequest.current};
  },[tab,search]);
+ useEffect(()=>{
+  if(!initialProfileQuery||profileDeepLinkOpened.current||tab!=='Discover'||exploreBusy||!exploreCreators.length)return;
+  const exact=exploreCreators.find(creator=>String(creator.username||'').toLowerCase()===initialProfileQuery.toLowerCase());
+  if(exact){profileDeepLinkOpened.current=true;void openCreatorProfile(exact)}
+ },[tab,exploreBusy,exploreCreators]);
  async function openCreatorProfile(creator:any){
   if(!supabase)return;
   setViewingCreator(creator);setViewingCreatorPosts([]);setCreatorProfileLoading(true);
@@ -763,7 +769,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <Pressable accessibilityRole="switch" accessibilityState={{checked:creatorSettings.is_private}} style={s.outline} onPress={()=>setCreatorSettings(v=>({...v,is_private:!v.is_private}))}>
    <Text style={s.link}>Private post visibility: {creatorSettings.is_private?'ON ✓':'OFF ✕'}</Text>
   </Pressable>
-  <Text style={s.muted}>Private mode hides your posts from other ReconFeed accounts until an approval system is available. Previously shared public media links may remain accessible outside the app.</Text>
+  <Text style={s.muted}>Private mode hides your posts from other ReconFeed accounts until an approval system is available. Media is stored in a public bucket: anyone with a direct media URL may still access it. This setting controls in-app post visibility, not private file storage.</Text>
   <Text style={s.subheading}>WHO MAY COMMENT?</Text>
   <View style={s.row}>
    {([{id:'everyone',name:'Everyone'},{id:'followers',name:'Followers'},{id:'none',name:'Nobody'}] as const).map(option=><Pressable key={option.id} style={[s.chip,creatorSettings.allow_comments===option.id&&s.selected]} onPress={()=>setCreatorSettings(v=>({...v,allow_comments:option.id}))}><Text style={s.chipText}>{option.name}</Text></Pressable>)}
