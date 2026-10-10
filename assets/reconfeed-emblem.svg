@@ -1,19 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-<title id="title">ReconFeed Recon Tactical emblem</title><desc id="desc">Military-inspired olive shield patch with a bronze compass reticle, chevrons and field insignia.</desc>
+<title id="title">ReconFeed military-inspired helmet and shield badge</title>
+<desc id="desc">Silver tactical helmet and visor inside a layered olive gold chevron shield, faded American flag and metallic ReconFeed wordmark.</desc>
 <defs>
-<linearGradient id="frame" x1="0%" y1="0%" x2="100%" y2="100%"><stop stop-color="#4d5839"/><stop offset=".55" stop-color="#222b1b"/><stop offset="1" stop-color="#0d110b"/></linearGradient>
-<linearGradient id="metal" x1="0%" y1="0%" x2="100%" y2="100%"><stop stop-color="#f0dba9"/><stop offset=".55" stop-color="#d2ac6c"/><stop offset="1" stop-color="#97784a"/></linearGradient>
+<linearGradient id="body" x1=".2" y1="0" x2=".9" y2="1"><stop stop-color="#313b2c"/><stop offset=".48" stop-color="#141b15"/><stop offset="1" stop-color="#070a08"/></linearGradient>
+<linearGradient id="olive" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8e1a1"/><stop offset=".25" stop-color="#829453"/><stop offset=".65" stop-color="#394b30"/><stop offset="1" stop-color="#b9c57e"/></linearGradient>
+<linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8f7e7"/><stop offset=".28" stop-color="#aeb9b0"/><stop offset=".50" stop-color="#38443e"/><stop offset=".76" stop-color="#d7ddcf"/><stop offset="1" stop-color="#58665b"/></linearGradient>
+<linearGradient id="letters" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#ffffff"/><stop offset=".34" stop-color="#e2e5de"/><stop offset=".54" stop-color="#89938c"/><stop offset=".72" stop-color="#f4f4e9"/><stop offset="1" stop-color="#566059"/></linearGradient>
+<linearGradient id="lettersGreen" x1="0" y1="0" x2=".15" y2="1"><stop stop-color="#e5f4b8"/><stop offset=".40" stop-color="#aabb73"/><stop offset=".69" stop-color="#657b42"/><stop offset="1" stop-color="#344a2e"/></linearGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="6"/></filter>
+<clipPath id="tile"><rect x="10" y="10" width="492" height="492" rx="90"/></clipPath>
 </defs>
-<rect x="12" y="12" width="488" height="488" rx="82" fill="#0b0d09" stroke="#6c7651" stroke-width="12"/>
-<rect x="27" y="27" width="458" height="458" rx="65" fill="url(#frame)" stroke="#89926d" stroke-width="3"/>
-<path d="M256 52 425 121 403 303 Q389 375 256 459 Q123 375 109 303 L87 121Z" fill="#151d13" stroke="url(#metal)" stroke-width="13" stroke-linejoin="round"/>
-<path d="M256 75 404 135 382 297 Q369 355 256 431 Q143 355 130 297 L108 135Z" fill="#273220" stroke="#829069" stroke-width="5" stroke-linejoin="round"/>
-<path d="M164 154h184M156 340h200" fill="none" stroke="#9baa79" stroke-width="5" opacity=".45"/>
-<circle cx="256" cy="235" r="100" fill="#141b12" stroke="#d8bd84" stroke-width="9"/>
-<circle cx="256" cy="235" r="79" fill="none" stroke="#7d8d68" stroke-width="4" stroke-dasharray="10 8"/>
-<path d="M256 111v40M256 320v40M132 235h40M340 235h40" fill="none" stroke="#e2cb9d" stroke-width="8" stroke-linecap="square"/>
-<path d="m256 159 19 55 57 21-57 20-19 56-19-56-57-20 57-21Z" fill="url(#metal)" stroke="#f6e8c8" stroke-width="3" stroke-linejoin="round"/>
-<circle cx="256" cy="235" r="11" fill="#172017" stroke="#f6deb1" stroke-width="3"/>
-<path d="m174 361 82 36 82-36M194 387l62 28 62-28" fill="none" stroke="url(#metal)" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M58 77h17M437 77h17M58 435h17M437 435h17" stroke="#e0bd7b" stroke-width="7" stroke-linecap="round"/>
+<g clip-path="url(#tile)">
+<rect width="512" height="512" fill="url(#body)"/>
+<rect x="-15" y="18" width="542" height="304" fill="#263124"/>
+<g opacity=".29" fill="#d9dfcf">
+<path d="M0 22h512v22H0zM0 67h512v18H0zM0 105h512v19H0zM0 144h512v18H0zM0 182h512v19H0zM0 221h512v19H0zM0 260h512v20H0z"/>
+</g>
+<rect x="0" y="18" width="236" height="166" fill="#111a15" opacity=".95"/>
+<g fill="#c7d2b5" opacity=".65"><path d="m34 40 4 11 12 0-10 7 4 12-10-7-10 7 4-12-10-7 12 0Z"/><path d="m94 40 4 11 12 0-10 7 4 12-10-7-10 7 4-12-10-7 4-12-10-7 12 0Z"/><path d="m154 40 4 11 12 0-10 7 4 12-10-7-10 7 4-12-10-7 12 0Z"/><path d="m64 99 4 11h12l-10 7 4 12-10-7-10 7 4-12-10-7h12zM124 99l4 11h12l-10 7 4 12-10-7-10 7 4-12-10-7h12zM184 99l4 11h12l-10 7 4 12-10-7-10 7 4-12-10-7h12z"/></g>
+<path d="M256 46 451 184 416 338 256 445 96 338 61 184Z" fill="#d8d9a6" opacity=".46" filter="url(#glow)"/>
+<path d="M256 33 462 182 427 344 256 460 85 344 50 182Z" fill="#11180e" stroke="url(#olive)" stroke-width="17" stroke-linejoin="round"/>
+<path d="M256 62 431 193 399 325 256 422 113 325 81 193Z" fill="#1c281b" stroke="#758953" stroke-width="4" stroke-linejoin="round"/>
+<path d="M111 195 256 80 401 195" stroke="#a6b773" fill="none" stroke-width="13" stroke-linecap="square"/>
+<path d="m256 88 11 29 29 2-23 18 8 29-25-17-25 17 8-29-23-18 29-2z" fill="#c2d18d" stroke="#eaebc4" stroke-width="3"/>
+<!-- tactical helmet, headset and integrated armor plates -->
+<path d="M161 181Q167 138 204 130L231 118H284L309 132Q346 147 349 181L364 210 350 252H323L309 218 205 224 193 251H162L145 209Z" fill="url(#metal)" stroke="#e4e9d9" stroke-width="6" stroke-linejoin="round"/>
+<path d="M163 182Q182 144 217 144H296Q330 150 346 181L333 206H173Z" fill="#35433a" stroke="#aebdb0" stroke-width="6"/>
+<path d="M205 157h102v15H205z" fill="#171e19"/><rect x="221" y="158" width="70" height="29" rx="7" fill="#778874" stroke="#c4cfaf" stroke-width="5"/><path d="M252 155v32M272 156v30" stroke="#26372a" stroke-width="6"/>
+<path d="M169 201 343 201 321 254 290 274H218L187 254Z" fill="#101b1a" stroke="#b8c6b6" stroke-width="7"/>
+<path d="M181 211h151l-27 22-98 2Z" fill="#40564c" stroke="#c3d2c5" stroke-width="3"/>
+<path d="M172 195 145 200 130 232 138 273 164 275 182 250Z" fill="#2a362d" stroke="#c9d4bf" stroke-width="6"/>
+<path d="M343 195 368 200 382 232 375 273 349 275 330 250Z" fill="#2a362d" stroke="#c9d4bf" stroke-width="6"/>
+<path d="M200 257 256 276 311 257 320 295 298 333 256 350 214 333 192 295Z" fill="url(#metal)" stroke="#9caa9b" stroke-width="6"/>
+<path d="M208 280 256 297 305 280 293 305 256 316 219 305Z" fill="#121c16" stroke="#718974" stroke-width="3"/>
+<path d="M243 316 256 327 269 316" stroke="#202d26" stroke-width="7" fill="none"/>
+<path d="M156 292 195 277 207 342 168 357 135 324ZM356 292 317 277 305 342 344 357 377 324Z" fill="#17261b" stroke="#697b58" stroke-width="5"/>
+<path d="M156 335 191 354 256 376 321 354 356 335" fill="none" stroke="#a2b874" stroke-width="12"/>
+<path d="M147 358 256 413 365 358" fill="none" stroke="#596b48" stroke-width="9"/>
+<!-- metal wordmark -->
+<rect x="23" y="388" width="466" height="64" rx="7" fill="#060b09" opacity=".94"/>
+<path d="M28 386h455M32 452h449" stroke="#a8b680" stroke-width="3"/>
+<text x="254" y="438" text-anchor="middle" font-family="Arial Black,Impact,sans-serif" font-style="italic" font-weight="900" font-size="70" letter-spacing="-3.5" fill="#000" stroke="#000" stroke-width="6" paint-order="stroke">ReconFeed</text>
+<text x="254" y="434" text-anchor="middle" font-family="Arial Black,Impact,sans-serif" font-style="italic" font-weight="900" font-size="70" letter-spacing="-3.5" fill="url(#letters)" stroke="#26332a" stroke-width="1.5" paint-order="stroke">Recon<tspan fill="url(#lettersGreen)">Feed</tspan></text>
+<text x="256" y="479" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="17" letter-spacing="3" fill="#e1e5d8">MORE THAN A SCROLL.</text>
+</g>
+<rect x="10" y="10" width="492" height="492" rx="90" fill="none" stroke="#a3b076" stroke-width="9"/>
+<rect x="17" y="17" width="478" height="478" rx="84" fill="none" stroke="#e6e5bf" stroke-width="2" opacity=".6"/>
 </svg>
