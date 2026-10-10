@@ -6,7 +6,6 @@ node_modules/
 dist/
 mobile/android/
 mobile/ios/
-mobile/assets/icon.png
 supabase/.temp/
 *.keystore
 *.jks
