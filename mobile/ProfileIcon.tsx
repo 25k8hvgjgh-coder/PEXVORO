@@ -1,0 +1,5 @@
+import React from 'react';
+import {Image} from 'react-native';
+const icons={pencil:require('./assets/profile-icons/pencil.png'),footprints:require('./assets/profile-icons/footprints.png'),adduser:require('./assets/profile-icons/adduser.png'),menu:require('./assets/profile-icons/menu.png'),grid:require('./assets/profile-icons/grid.png'),photos:require('./assets/profile-icons/photos.png'),lock:require('./assets/profile-icons/lock.png'),repost:require('./assets/profile-icons/repost.png'),bookmark:require('./assets/profile-icons/bookmark.png'),heart:require('./assets/profile-icons/heart.png'),home:require('./assets/profile-icons/home.png'),users:require('./assets/profile-icons/users.png'),inbox:require('./assets/profile-icons/inbox.png'),user:require('./assets/profile-icons/user.png'),plus:require('./assets/profile-icons/plus.png')};
+export type ProfileIconName=keyof typeof icons;
+export default function ProfileIcon({name,size=26,color='#F0EEE5'}:{name:ProfileIconName;size?:number;color?:string}){return <Image accessible={false} source={icons[name]} style={{width:size,height:size,tintColor:color}}/>}
