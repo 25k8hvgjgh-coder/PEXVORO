@@ -1,4 +1,5 @@
-// ReconFeed adaptive ranking v1. Stateless, deterministic and device-friendly.
+// ReconFeed adaptive ranking v2. Stateless, deterministic and device-friendly.
+import {allowedForFeed,contentSearchText,type DiscoverablePost} from './contentSignals';
 // Signals originate from the authenticated user's own watch events, follows and saved/liked posts.
 export type FeedEvent = {
  post_id:string;
@@ -7,17 +8,19 @@ export type FeedEvent = {
  duration_ms:number;
  created_at:string;
 };
-export type RankablePost = {
+export type RankablePost = DiscoverablePost & {
  id:string;user_id:string;caption:string;created_at:string;format?:string;
  likes?:Array<{count:number}>;comments?:Array<{count:number}>;
 };
-type HistoricalPost={id:string;user_id:string;caption:string;format?:string};
+type HistoricalPost=DiscoverablePost & {id:string;user_id:string;caption:string;format?:string};
 export type RankingContext={
  mode:'For You'|'Following';
  followingIds:string[];
  likedPostIds:string[];
  savedPostIds:string[];
  hiddenIds:string[];
+ blockedKeywords?:string[];
+ hideMatureContent?:boolean;
  history:FeedEvent[];
  historyPosts:HistoricalPost[];
  now?:number;
@@ -70,25 +73,25 @@ export function rankFeedPosts<T extends RankablePost>(candidates:T[],ctx:Ranking
   }
   if(!p)continue;
   bump(creators,p.user_id,value*freshness);
-  for(const topic of topicTokens(p.caption+' '+(p.format||'')))bump(topical,topic,value*freshness);
+  for(const topic of topicTokens(contentSearchText(p)))bump(topical,topic,value*freshness);
  }
  for(const p of meta.values()){
   // Following somebody is a weak topic-interest signal, even if their videos have not yet been watched.
   // Avoid directly training on candidate posts solely because they're shown in the current feed.
   if(following.has(p.user_id)&&ctx.historyPosts.some(h=>h.id===p.id)){
    bump(creators,p.user_id,.4);
-   for(const topic of topicTokens(p.caption))bump(topical,topic,.24);
+   for(const topic of topicTokens(contentSearchText(p)))bump(topical,topic,.24);
   }
   const extra=(liked.has(p.id)?3.5:0)+(saved.has(p.id)?4.5:0);
-  if(extra){bump(creators,p.user_id,extra);for(const topic of topicTokens(p.caption))bump(topical,topic,extra)}
+  if(extra){bump(creators,p.user_id,extra);for(const topic of topicTokens(contentSearchText(p)))bump(topical,topic,extra)}
  }
- const scored=candidates.filter(p=>!hidden.has(p.id)&&(ctx.mode!=='Following'||following.has(p.user_id))).map(post=>{
+ const scored=candidates.filter(p=>!hidden.has(p.id)&&(ctx.mode!=='Following'||following.has(p.user_id))&&allowedForFeed(p,{blockedKeywords:ctx.blockedKeywords||[],hideMatureContent:!!ctx.hideMatureContent},ctx.mode)).map(post=>{
   const hours=bounded((now-new Date(post.created_at).getTime())/3600000,0,100000);
   const freshness=3.5/(1+hours/36);
   const likes=bounded(Number(post.likes?.[0]?.count||0),0,100000000);
   const comments=bounded(Number(post.comments?.[0]?.count||0),0,100000000);
   const engagement=Math.log1p(likes+comments*2)*.65;
-  const topicalMatch=topicTokens(post.caption+' '+(post.format||'')).reduce((sum,t)=>sum+bounded(topical.get(t)||0,-9,13),0);
+  const topicalMatch=topicTokens(contentSearchText(post)).reduce((sum,t)=>sum+bounded(topical.get(t)||0,-9,13),0);
   const interests=bounded(topicalMatch,-12,14)*.8;
   const creatorAffinity=bounded(creators.get(post.user_id)||0,-12,18)*.7;
   const watchCount=views.get(post.id)||0;
