@@ -134,6 +134,11 @@ create table if not exists public.marketplace_listings (
   category text not null default 'Other',
   price_cents integer not null check (price_cents between 1 and 100000000),
   currency text not null default 'usd' check (currency = 'usd'),
+
+  condition text not null default 'Good',
+  location text not null default '',
+  accepted_responsibility boolean not null default false,
+  seller_shipping_terms text not null default '',
   image_urls text[] not null default '{}',
   status text not null default 'draft' check (status in ('draft','active','paused','sold','removed')),
   created_at timestamptz not null default now(),

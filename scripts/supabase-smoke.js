@@ -41,6 +41,15 @@ async function main() {
   );
   if (!feed.ok) failed = true;
 
+  // Probe marketplace columns; schema changes must be applied to the live database too.
+  const marketplace = await check(
+    'marketplace_listings?select=id,title,price_cents,condition,location,accepted_responsibility&limit=1',
+    'marketplace listing schema'
+  );
+  if (!marketplace.ok) {
+    console.warn('::warning::Marketplace database migration may be unapplied: verify price_cents, condition, location, and seller responsibility columns in Supabase.');
+  }
+
   // Probe the configured public media bucket without uploading or exposing user files.
   try {
     const storageProbe = await fetch(base + '/storage/v1/object/public/post-media/__reconfeed_smoke_probe_not_a_real_file__', {
