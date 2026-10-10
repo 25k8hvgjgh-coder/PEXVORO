@@ -2,7 +2,7 @@ import {createRequire} from 'node:module';
 import {mkdir,writeFile} from 'node:fs/promises';
 const require=createRequire(new URL('../mobile/package.json',import.meta.url));const sharp=require('sharp');
 const paths={
- pencil:'<path d="m16 3 5 5M4 16 12 8 7-7 5 5-7 7-8 8-6 1z"/>',
+ pencil:'<path d="M3 17 16 4a2 2 0 0 1 3 0l1 1a2 2 0 0 1 0 3L7 21l-5 1 1-5zM14 6l5 5"/>',
  footprints:'<ellipse cx="7" cy="8" rx="3" ry="6" transform="rotate(-12 7 8)"/><ellipse cx="17" cy="13" rx="3" ry="6" transform="rotate(12 17 13)"/><path d="m5 16 1 4h4l1-3m3 2-1 3h4l2-3"/>',
  adduser:'<circle cx="9" cy="6" r="4"/><path d="M2 21v-3a7 7 0 0 1 12-5m4-3v10m-5-5h10"/>',
  menu:'<path d="M3 5h18M3 12h18M3 19h18"/>',

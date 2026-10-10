@@ -372,7 +372,7 @@ export default function App(){
    const clauses=['caption.ilike.%'+safe+'%','audio_label.ilike.%'+safe+'%','overlay_text.ilike.%'+safe+'%','transcript.ilike.%'+safe+'%'];
    if(/^[a-z0-9_]{2,25}$/.test(tag))clauses.push('topic_tags.cs.{'+tag+'}');
    const postReq=safe
-    ?supabase.from('posts').select('id,user_id,caption,media_url,media_type,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles(username,display_name,avatar_url)').eq('visibility','public').or(clauses.join(',')).order('created_at',{ascending:false}).limit(35)
+    ?supabase.from('posts').select('id,user_id,caption,media_url,media_type,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles!posts_user_id_fkey(username,display_name,avatar_url)').eq('visibility','public').or(clauses.join(',')).order('created_at',{ascending:false}).limit(35)
     :Promise.resolve({data:[],error:null});
    const [creatorsFound,postsFound]=await Promise.all([creatorReq,postReq]);
    if(request!==exploreSearchRequest.current)return;
@@ -550,7 +550,7 @@ export default function App(){
   try{
    const userId=session?.user.id;
    const isFollowing=tab==='Following';
-   const feedSelect='id,user_id,caption,media_url,media_type,format,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles(username,display_name,avatar_url),likes(count),comments(count)';
+   const feedSelect='id,user_id,caption,media_url,media_type,format,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles!posts_user_id_fkey(username,display_name,avatar_url),likes(count),comments(count)';
    // Begin the public For You request immediately; don't wait for preference queries.
    const publicFeedPromise=!isFollowing
     ?supabase.from('posts').select(feedSelect).eq('visibility','public').eq('recommendation_status','eligible').order('created_at',{ascending:false}).limit(100)
@@ -623,7 +623,7 @@ export default function App(){
   feedMorePendingRef.current=true;
   setLoadingMore(true);
   try{
-   const fields='id,user_id,caption,media_url,media_type,format,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles(username,display_name,avatar_url),likes(count),comments(count)';
+   const fields='id,user_id,caption,media_url,media_type,format,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles!posts_user_id_fkey(username,display_name,avatar_url),likes(count),comments(count)';
    let next=supabase.from('posts').select(fields).lt('created_at',cursor).order('created_at',{ascending:false}).limit(50);
    if(following)next=next.in('user_id',followed);
    else next=next.eq('visibility','public').eq('recommendation_status','eligible');
@@ -842,7 +842,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
    <View style={s.profileIdentityText}>
     <Pressable accessibilityRole="button" accessibilityLabel="Account menu" onPress={()=>setProfileSettingsOpen(true)}><Text style={s.profileIdentityName} numberOfLines={2}>{profile?.display_name||session.user.email?.split('@')[0]||'ReconFeed Creator'} ⌄</Text></Pressable>
     <View style={{flexDirection:'row',alignItems:'center',flexWrap:'wrap',gap:6}}><Text style={s.profileIdentityHandle}>@{profile?.username||'creator'}</Text>{(isBetaTester||profile?.is_beta_tester===true)&&<Text accessibilityLabel="Verified beta tester" style={{fontSize:17}}>👨‍💻</Text>}</View>
-    {(isBetaTester||profile?.is_beta_tester===true)&&<View style={s.profileBadge}><Text style={s.profileBadgeText}>✦ VERIFIED BETA TESTER</Text></View>}
+
    </View>
    <View style={s.profileAvatarWrap}><Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={()=>void chooseProfilePhoto()} style={s.profileIdentityAvatar}>
     {profile?.avatar_url?<Image source={{uri:profile.avatar_url}} style={s.profileIdentityAvatarImage}/>:<Text style={s.profileIdentityAvatarInitial}>{(profile?.display_name||session.user.email||'R')[0].toUpperCase()}</Text>}
@@ -856,7 +856,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <Text style={s.profileMainBio}>{profile?.bio||'Add your bio in Edit profile'}</Text>
   {creatorSettings.pronouns?<Text style={s.profileMetaLine}>{creatorSettings.pronouns}</Text>:null}
   {creatorSettings.website_url?<Pressable accessibilityRole="link" onPress={()=>{void Linking.openURL(creatorSettings.website_url)}}><Text style={s.profileLink}>⌁ {creatorSettings.website_url} ↗</Text></Pressable>:null}
-  
+
   <View style={s.profileActionRow}>
    <Pressable style={s.profileActionPill} accessibilityRole="button" onPress={showCreatorAnalytics}><Text style={s.profileActionLabel}>✦  ReconFeed Studio</Text></Pressable>
    <Pressable style={s.profileActionPill} accessibilityRole="button" onPress={()=>setTab('Market')}><Text style={s.profileActionLabel}>♧  Marketplace</Text></Pressable>
@@ -881,7 +881,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={'View '+(p.caption||'post')} onPress={()=>setProfileSelected(p)} style={s.profileVideoTile}>
    {p.media_type==='image'?<Image source={{uri:p.media_url}} style={s.profileVideoThumbnail} resizeMode="cover"/>:<Video source={{uri:p.media_url}} style={s.profileVideoThumbnail} resizeMode={ResizeMode.COVER} shouldPlay={false} isMuted isLooping={false}/>}
    <View pointerEvents="none" style={s.profileTileShade}/>
-   
+
    {p.pinned_at?<View pointerEvents="none" style={s.profilePinBadge}><Text style={s.profilePinText}>★ PINNED</Text></View>:null}
    {profileViewCounts[p.id]!==undefined?<View pointerEvents="none" style={s.profileViewsBadge}><Text style={s.profileViewsText}>▷ {Number(profileViewCounts[p.id]).toLocaleString()}</Text></View>:null}
    {profileEditOpen?<View style={s.profileTileEditTools}>
@@ -1122,7 +1122,7 @@ const s=StyleSheet.create({
  loginHeroInner:{padding:16,paddingVertical:20,alignItems:'center',justifyContent:'center',minHeight:330,backgroundColor:'rgba(3,8,4,.42)'},
  loginEmblem:{width:146,height:146,borderRadius:28,borderWidth:2,borderColor:'#c2c99b',marginBottom:17},
  loginMotto:{fontWeight:'900',fontSize:20,textAlign:'center',color:'#f6f5e8',letterSpacing:1,textShadowColor:'#000',textShadowRadius:8},
- 
+
 brandRow:{flexDirection:'row',alignItems:'center',gap:11},
 brandMark:{width:48,height:48,borderWidth:1,borderColor:'#adb88c',backgroundColor:'#252d1e',borderRadius:12,alignItems:'center',justifyContent:'center'},
  brandGlyph:{color:theme.pink,fontSize:25,fontWeight:'900'},

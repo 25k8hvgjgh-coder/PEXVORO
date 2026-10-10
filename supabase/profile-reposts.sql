@@ -1,6 +1,7 @@
 -- Reposts reference existing posts; they never duplicate media or bypass post visibility.
+-- Reference auth.users rather than public.profiles to preserve unambiguous creator embeds for older clients.
 create table if not exists public.reposts (
- user_id uuid not null references public.profiles(id) on delete cascade,
+ user_id uuid not null references auth.users(id) on delete cascade,
  post_id uuid not null references public.posts(id) on delete cascade,
  created_at timestamptz not null default now(),
  primary key(user_id, post_id)

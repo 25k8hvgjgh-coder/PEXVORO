@@ -36,10 +36,12 @@ async function main() {
   if (!profiles.ok) failed = true;
 
   const feed = await check(
-    'posts?select=id,user_id,caption,media_url,media_type,format,created_at,profiles(username,display_name),likes(count),comments(count)&visibility=eq.public&order=created_at.desc&limit=1',
+    'posts?select=id,user_id,caption,media_url,media_type,format,created_at,profiles!posts_user_id_fkey(username,display_name,avatar_url),likes(count),comments(count)&visibility=eq.public&order=created_at.desc&limit=1',
     'public feed query with profile/like/comment relations'
   );
   if (!feed.ok) failed = true;
+  const reposts = await check('reposts?select=post_id,created_at&limit=1', 'public repost schema and visibility policy');
+  if (!reposts.ok) failed = true;
 
   // Probe marketplace columns; schema changes must be applied to the live database too.
   const marketplace = await check(
