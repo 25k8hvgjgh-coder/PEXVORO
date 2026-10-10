@@ -47,7 +47,9 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish update to beta testers
-        run: 'npx eas-cli update --channel preview --message "ReconFeed beta update: ${GITHUB_SHA}" --non-interactive'
+        run: |
+          npx eas-cli update --channel preview --message "ReconFeed beta update: ${GITHUB_SHA}" --non-interactive
+          npx eas-cli update --channel production --message "ReconFeed production update: ${GITHUB_SHA}" --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_SUPABASE_URL: https://ojprsyvkzgyphpsvksgx.supabase.co

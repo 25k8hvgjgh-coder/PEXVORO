@@ -4,7 +4,7 @@
     "slug": "reconfeed",
     "owner": "azzholejr06",
     "scheme": "reconfeed",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -24,7 +24,7 @@
         "CAMERA",
         "RECORD_AUDIO"
       ],
-      "versionCode": 32,
+      "versionCode": 33,
       "adaptiveIcon": {
         "backgroundColor": "#090b08",
         "foregroundImage": "./assets/icon.png"
@@ -68,6 +68,9 @@
         "projectId": "cb631cf4-5781-426a-a5f9-9d3c52abf8dc"
       }
     },
-    "icon": "./assets/icon.png"
+    "icon": "./assets/icon.png",
+    "androidNavigationBar": {
+      "enforceContrast": false
+    }
   }
 }
