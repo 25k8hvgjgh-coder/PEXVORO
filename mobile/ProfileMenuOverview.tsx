@@ -1,57 +1,67 @@
 import React from 'react';
-import {Image,Pressable,StyleSheet,Text,View} from 'react-native';
-import ProfileIcon from './ProfileIcon';
+import {Pressable,SafeAreaView,ScrollView,StyleSheet,Text,View} from 'react-native';
+import ProfileIcon,{type ProfileIconName} from './ProfileIcon';
 
 type Props={
- displayName:string;username:string;avatarUrl?:string|null;
- onClose:()=>void;onEdit:()=>void;onAnalytics:()=>void;onSaved:()=>void;
- onMyPosts:()=>void;onInbox:()=>void;onMarketplace:()=>void;onShare:()=>void;
+ onClose:()=>void;onSettings:()=>void;onAnalytics:()=>void;
+ onSaved:()=>void;onMyPosts:()=>void;onInbox:()=>void;
  onReportIssue:()=>void;onTesterReports:()=>void;
+ onUnavailable:(label:string)=>void;
 };
-export default function ProfileMenuOverview({displayName,username,avatarUrl,onClose,onEdit,onAnalytics,onSaved,onMyPosts,onInbox,onMarketplace,onShare,onReportIssue,onTesterReports}:Props){
- return <View>
-  <View style={s.top}>
-   <View><Text style={s.eyebrow}>RECONFEED</Text><Text style={s.title}>Settings & activity</Text></View>
-   <Pressable accessibilityRole="button" accessibilityLabel="Close profile settings menu" onPress={onClose} style={s.close}><Text style={s.closeText}>✕</Text></Pressable>
-  </View>
-  <View style={s.account}>
-   <View style={s.avatar}>{avatarUrl?<Image source={{uri:avatarUrl}} style={s.avatarImage}/>:<Text style={s.avatarText}>{(displayName||'R').charAt(0).toUpperCase()}</Text>}</View>
-   <View style={{flex:1}}><Text numberOfLines={1} style={s.displayName}>{displayName}</Text><Text style={s.handle}>@{username}</Text></View>
-  </View>
-  <Text style={s.section}>CREATOR TOOLS</Text>
-  <View style={s.grid}>
-   <Pressable accessibilityRole="button" style={s.tile} onPress={onEdit}><ProfileIcon name="pencil" size={24}/><Text style={s.tileLabel}>Edit profile</Text></Pressable>
-   <Pressable accessibilityRole="button" style={s.tile} onPress={onAnalytics}><ProfileIcon name="footprints" size={24}/><Text style={s.tileLabel}>Analytics</Text></Pressable>
-   <Pressable accessibilityRole="button" style={s.tile} onPress={onSaved}><ProfileIcon name="bookmark" size={24}/><Text style={s.tileLabel}>Saved posts</Text></Pressable>
-  </View>
-  <Text style={s.section}>MY ACTIVITY</Text>
-  <MenuRow icon="grid" label="My posts" action={onMyPosts}/>
-  <MenuRow icon="inbox" label="Market messages" action={onInbox}/>
-  <MenuRow icon="photos" label="Marketplace" action={onMarketplace}/>
-  <MenuRow icon="adduser" label="Share profile" action={onShare}/>
-  <Text style={s.section}>HELP & BETA TESTING</Text>
-  <MenuRow icon="footprints" label="Report an app issue" action={onReportIssue}/>
-  <MenuRow icon="photos" label="Tester reports & screenshots" action={onTesterReports}/>
-  <Text style={s.section}>ACCOUNT & PRIVACY</Text>
- </View>
-}
-function MenuRow({icon,label,action}:{icon:'grid'|'inbox'|'photos'|'adduser'|'footprints';label:string;action:()=>void}){
- return <Pressable style={s.item} accessibilityRole="button" accessibilityLabel={label} onPress={action}><ProfileIcon name={icon} size={22}/><Text style={s.itemText}>{label}</Text><Text style={s.chevron}>›</Text></Pressable>;
+type Entry={id:string;label:string;glyph:string;icon?:ProfileIconName;action:()=>void};
+export default function ProfileMenuOverview({onClose,onSettings,onAnalytics,onSaved,onMyPosts,onInbox,onReportIssue,onTesterReports,onUnavailable}:Props){
+ const section=(items:Entry[],key:string)=> <View key={key} style={s.group}>
+  {items.map((item,i)=><Pressable accessibilityRole="button" accessibilityLabel={item.label} key={item.id} onPress={item.action} style={[s.row,i!==items.length-1&&s.rowDivider]}>
+    <View style={s.iconBox}>{item.icon?<ProfileIcon name={item.icon} size={22} color="#a5a5a5"/>:<Text style={s.glyph}>{item.glyph}</Text>}</View>
+    <Text style={s.itemText}>{item.label}</Text><Text style={s.chevron}>›</Text>
+   </Pressable>)}
+ </View>;
+ return <View style={s.overlay}>
+  <Pressable accessibilityRole="button" accessibilityLabel="Close menu" onPress={onClose} style={s.scrim}/>
+  <SafeAreaView style={s.sheet}>
+   <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+    {section([{id:'balance',label:'Balance',glyph:'▣',action:()=>onUnavailable('Balance')}],'balance')}
+    {section([
+     {id:'activity',label:'Activity center',glyph:'◷',action:onSettings},
+     {id:'offline',label:'Offline videos',glyph:'↓',action:()=>onUnavailable('Offline videos')}
+    ],'activity')}
+    {section([{id:'qr',label:'Your QR code',glyph:'▦',action:()=>onUnavailable('Profile QR code')}],'qr')}
+    {section([
+     {id:'studio',label:'ReconFeed Studio',glyph:'♙',icon:'footprints',action:onAnalytics},
+     {id:'promote',label:'Promote',glyph:'✦',action:()=>onUnavailable('Promote')}
+    ],'studio')}
+    {section([{id:'settings',label:'Settings and privacy',glyph:'⚙',action:onSettings}],'settings')}
+    <View style={s.group}>
+     <Pressable accessibilityRole="button" style={s.row} onPress={onSettings}>
+      <View style={s.iconBox}><Text style={s.glyph}>▤</Text></View><Text style={s.itemText}>ReconFeed Extras</Text><Text style={s.chevron}>›</Text>
+     </Pressable>
+     <View style={s.extras}>
+      <Pressable style={s.extraTile} accessibilityRole="button" onPress={onMyPosts}><ProfileIcon name="grid" color="#777" size={24}/><Text style={s.extraLabel}>My posts</Text></Pressable>
+      <Pressable style={s.extraTile} accessibilityRole="button" onPress={onSaved}><ProfileIcon name="bookmark" color="#777" size={24}/><Text style={s.extraLabel}>Saved</Text></Pressable>
+      <Pressable style={s.extraTile} accessibilityRole="button" onPress={onInbox}><ProfileIcon name="inbox" color="#777" size={24}/><Text style={s.extraLabel}>Inbox</Text></Pressable>
+     </View>
+    </View>
+    {section([
+     {id:'report',label:'Report a problem',glyph:'⚑',action:onReportIssue},
+     {id:'testers',label:'Beta tester reports',glyph:'▧',action:onTesterReports}
+    ],'beta')}
+   </ScrollView>
+  </SafeAreaView>
+ </View>;
 }
 const s=StyleSheet.create({
- top:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingTop:12,paddingBottom:16},
- eyebrow:{fontSize:10,color:'#C6AA72',fontWeight:'900',letterSpacing:1.8},
- title:{fontSize:25,fontWeight:'900',color:'#F0EEE5',marginTop:5},
- close:{width:44,height:44,borderRadius:22,alignItems:'center',justifyContent:'center',backgroundColor:'#263027'},
- closeText:{color:'#F0EEE5',fontSize:20,fontWeight:'800'},
- account:{flexDirection:'row',alignItems:'center',padding:14,gap:12,borderRadius:16,backgroundColor:'#1D2921',borderWidth:1,borderColor:'#40513F',marginBottom:19},
- avatar:{width:52,height:52,borderRadius:26,backgroundColor:'#344436',borderWidth:2,borderColor:'#C6AA72',alignItems:'center',justifyContent:'center',overflow:'hidden'},
- avatarImage:{height:'100%',width:'100%',borderRadius:26},avatarText:{color:'#F0EEE5',fontSize:24,fontWeight:'900'},
- displayName:{fontSize:16,color:'#F0EEE5',fontWeight:'900'},handle:{fontSize:12,color:'#B7BDBB',marginTop:4},
- section:{fontSize:11,color:'#C6AA72',fontWeight:'900',letterSpacing:1.6,marginTop:18,marginBottom:12},
- grid:{flexDirection:'row',gap:10},
- tile:{flex:1,minWidth:0,backgroundColor:'#1D2921',borderWidth:1,borderColor:'#394A3B',borderRadius:13,minHeight:91,alignItems:'center',justifyContent:'center',padding:8,gap:10},
- tileLabel:{color:'#F0EEE5',fontSize:11,fontWeight:'800',textAlign:'center'},
- item:{flexDirection:'row',minHeight:54,alignItems:'center',paddingHorizontal:14,gap:14,backgroundColor:'#1D2921',borderBottomWidth:1,borderBottomColor:'#344136'},
- itemText:{flex:1,color:'#F0EEE5',fontSize:14,fontWeight:'700'},chevron:{fontSize:24,color:'#B7BDBB'}
+ overlay:{flex:1,flexDirection:'row',backgroundColor:'rgba(0,0,0,.46)'},
+ scrim:{flex:1},
+ sheet:{width:'84%',height:'100%',backgroundColor:'#f5f5f5'},
+ scroll:{paddingHorizontal:14,paddingTop:57,paddingBottom:48,gap:10},
+ group:{backgroundColor:'#fff',borderRadius:19,overflow:'hidden'},
+ row:{minHeight:63,flexDirection:'row',alignItems:'center',paddingHorizontal:17},
+ rowDivider:{borderBottomWidth:1,borderBottomColor:'#f7f7f7'},
+ iconBox:{width:25,alignItems:'center',marginRight:11},
+ glyph:{color:'#a6a6a6',fontSize:23,fontWeight:'700'},
+ itemText:{color:'#121212',fontWeight:'600',fontSize:16,flex:1},
+ chevron:{color:'#aaa',fontSize:29,fontWeight:'300'},
+ extras:{flexDirection:'row',justifyContent:'space-around',paddingVertical:13,paddingHorizontal:11,borderTopWidth:1,borderTopColor:'#f6f6f6'},
+ extraTile:{flex:1,alignItems:'center',gap:7,paddingVertical:5},
+ extraLabel:{color:'#333',fontSize:12,fontWeight:'600'}
 });
