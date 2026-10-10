@@ -1,7 +1,7 @@
-# PEXVORO Feature-Parity Build Plan
+# ReconFeed Feature-Parity Build Plan
 
 ## Goal
-Build a polished short-form social video and creator app for iOS and Android, inspired by familiar short-video workflows while keeping PEXVORO's own identity. “Feature parity” means each feature has a real user interface, secure backend behavior, loading/empty/error states, accessibility, tests, and operational controls—not just a button or mock screen.
+Build a polished short-form social video and creator app for iOS and Android, inspired by familiar short-video workflows while keeping ReconFeed's own identity. “Feature parity” means each feature has a real user interface, secure backend behavior, loading/empty/error states, accessibility, tests, and operational controls—not just a button or mock screen.
 
 ## Current verified baseline
 - Expo / React Native app source: `mobile/App.tsx`.
