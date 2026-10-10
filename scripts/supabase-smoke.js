@@ -120,6 +120,34 @@ async function main() {
     console.warn('::warning::Could not reach the deployed website API config endpoint: ' + String(error?.message || error));
   }
 
+  // Read-only health diagnostic; the endpoint reports missing variable names only, never secret values.
+  try {
+    const healthResponse = await fetch('https://reconfeed.com/api/health', { signal: AbortSignal.timeout(12000) });
+    if (!healthResponse.ok) {
+      await healthResponse.body?.cancel();
+      console.warn('::warning::Live health endpoint returned HTTP ' + healthResponse.status + '.');
+    } else {
+      const health = await healthResponse.json();
+      if (health.app !== 'ReconFeed' || !health.checks || !health.checks.supabase) {
+        console.warn('::warning::Live health endpoint returned an unexpected response.');
+      } else {
+        if (health.checks.supabase.profilesTableAccessible) {
+          console.log('[PASS] Live health endpoint confirms public Supabase connectivity.');
+        } else {
+          console.warn('::warning::Live health endpoint reports Supabase is not fully accessible.');
+        }
+        const missingAi = Array.isArray(health.checks.aiMissingConfiguration) ? health.checks.aiMissingConfiguration : [];
+        if (missingAi.length) {
+          console.warn('::warning::AI Studio production configuration is missing: ' + missingAi.join(', ') + '. No values were requested or logged.');
+        } else {
+          console.log('[PASS] Live health endpoint reports the required AI server configuration is present.');
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('::warning::Could not reach the live health endpoint: ' + String(error?.message || error));
+  }
+
   try {
     const unauthenticatedGenerate = await fetch('https://reconfeed.com/api/generate', {
       method: 'POST',
