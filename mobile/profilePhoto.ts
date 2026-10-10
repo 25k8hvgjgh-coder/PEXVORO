@@ -35,7 +35,27 @@ export async function readProfilePhoto(asset:ImagePickerAsset,web:boolean){
 export async function uploadProfilePhoto(client:SupabaseClient,userId:string,asset:ImagePickerAsset,web:boolean){
  const photo=await readProfilePhoto(asset,web);
  const path=userId+'/avatar-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+photo.extension;
- const upload=await client.storage.from('post-media').upload(path,photo.bytes,{contentType:photo.type,upsert:false});
- if(upload.error)throw upload.error;
- return client.storage.from('post-media').getPublicUrl(path).data.publicUrl;
+ // Supabase Storage expects actual binary content, not a file:// URI or an
+ // uninitialized React Native FormData payload. A typed byte array is portable
+ // across Safari, Chrome, Expo iOS, and Expo Android.
+ const data=new Uint8Array(photo.bytes);
+ if(data.byteLength===0)throw new Error('The profile photo contained no image data.');
+ let upload=await client.storage.from('post-media').upload(path,data,{contentType:photo.type,upsert:false});
+ for(let attempt=0;attempt<2&&upload.error;attempt++){
+  const message=String(upload.error.message||'').toLowerCase();
+  const status=String((upload.error as any).statusCode||(upload.error as any).status||'');
+  if(!(/network|fetch|timeout|connection|temporarily|socket|reset/.test(message)||status==='429'||/^5\d\d$/.test(status)))break;
+  await new Promise(resolve=>setTimeout(resolve,(attempt+1)*500));
+  upload=await client.storage.from('post-media').upload(path,data,{contentType:photo.type,upsert:false});
+ }
+ if(upload.error){
+  const message=String(upload.error.message||'');
+  if(/no content provided|empty/i.test(message))throw new Error('Photo upload was empty. Please select your photo again.');
+  if(/policy|permission|unauthorized|forbidden/i.test(message))throw new Error('Photo upload was denied. Sign out and back in, then retry.');
+  throw upload.error;
+ }
+ if(!upload.data?.path)throw new Error('Your photo upload could not be confirmed. Try again.');
+ const link=client.storage.from('post-media').getPublicUrl(upload.data.path).data.publicUrl;
+ if(!link)throw new Error('The photo uploaded but its public URL could not be retrieved.');
+ return link;
 }
