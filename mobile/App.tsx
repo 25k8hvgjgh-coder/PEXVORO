@@ -358,7 +358,7 @@ export default function App(){
   setViewingCreator(creator);setViewingCreatorPosts([]);setCreatorProfileLoading(true);
   try{
    const linkInfo=await supabase.from('profile_settings').select('pronouns,website_url').eq('user_id',creator.id).maybeSingle();
-   if(!linkInfo.error&&linkInfo.data)setViewingCreator(prev=>prev?.id===creator.id?{...prev,...linkInfo.data}:prev);
+   if(!linkInfo.error&&linkInfo.data)setViewingCreator((prev:any)=>prev?.id===creator.id?{...prev,...linkInfo.data}:prev);
    const response=await supabase.from('posts')
     .select('id,caption,media_type,media_url,created_at,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status')
     .eq('user_id',creator.id).eq('visibility','public')
