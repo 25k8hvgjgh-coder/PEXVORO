@@ -73,7 +73,14 @@ export default async function handler(req, res) {
   if (!user) return send(res, 401, { error: "Your session is invalid or expired. Sign in again." });
 
   const token = String(process.env.REPLICATE_API_TOKEN || "").trim();
-  if (!token) return send(res, 503, { error: "AI generation is not configured yet. The server owner must add REPLICATE_API_TOKEN." });
+  const serverKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  const missing = [];
+  if (!token) missing.push("REPLICATE_API_TOKEN");
+  if (!serverKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+  if (missing.length) return send(res, 503, {
+    error: "AI Studio server configuration is incomplete.",
+    missing
+  });
 
   let body = req.body;
   try { if (typeof body === "string") body = JSON.parse(body); }
