@@ -7,6 +7,9 @@ import path from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const mobile = path.join(root, 'mobile');
 const requireMobile = createRequire(path.join(mobile, 'package.json'));
+// Prevent a broken native settings screen from being published as a successful web build.
+const typecheck = spawnSync('npm', ['run','typecheck'], { cwd:mobile, stdio:'inherit', env:process.env });
+if(typecheck.status!==0){ console.error('ReconFeed mobile TypeScript validation failed.');process.exit(typecheck.status||1); }
 const sharp = requireMobile('sharp');
 await sharp(path.join(mobile, 'assets/reconfeed-emblem.svg')).resize(1024, 1024).png().toFile(path.join(mobile, 'assets/icon.png'));
 await rm(path.join(root, 'dist'), { recursive: true, force: true });
