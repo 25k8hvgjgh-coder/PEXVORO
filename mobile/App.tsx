@@ -747,7 +747,40 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
  <TextInput value={name} onChangeText={setName} maxLength={80} placeholder="Display name" placeholderTextColor={theme.muted} style={s.input}/>
  <TextInput value={profileBioDraft} onChangeText={setProfileBioDraft} maxLength={80} multiline placeholder="Your bio (80 characters max)" placeholderTextColor={theme.muted} style={[s.input,{height:90}]}/>
  <Pressable style={s.outline} disabled={busy} onPress={saveFullProfile}><Text style={s.link}>{busy?'Saving…':'Save profile changes'}</Text></Pressable><View style={s.rule}/>
- <View style={[s.card,{gap:12,marginVertical:14}]}>
+ {profileSettingsOpen&&<View style={[s.card,{gap:13,marginVertical:14,borderColor:'#C6AA72',borderWidth:1}]}>
+  <Text style={s.heading}>≡ RECONFEED ACCOUNT CONTROL</Text>
+  <Text style={s.muted}>These settings save to your account. Personal and Business are profile categories; paid rewards, commercial music rights, passkeys and DM features are not enabled here.</Text>
+  <Text style={s.subheading}>ACCOUNT TYPE</Text>
+  <View style={s.row}>
+   {(['personal','business'] as const).map(type=><Pressable key={type} style={[s.chip,creatorSettings.account_type===type&&s.selected]} onPress={()=>setCreatorSettings(v=>({...v,account_type:type}))}><Text style={s.chipText}>{type==='business'?'Business':'Personal'}</Text></Pressable>)}
+  </View>
+  <Text style={s.subheading}>PUBLIC IDENTITY & LINKS</Text>
+  <TextInput value={creatorSettings.pronouns} onChangeText={value=>setCreatorSettings(v=>({...v,pronouns:value}))} maxLength={30} placeholder="Pronouns (optional)" placeholderTextColor={theme.muted} style={s.input}/>
+  <TextInput value={creatorSettings.website_url} onChangeText={value=>setCreatorSettings(v=>({...v,website_url:value}))} maxLength={200} autoCapitalize="none" placeholder="Website: https://…" placeholderTextColor={theme.muted} style={s.input}/>
+  <TextInput value={creatorSettings.instagram_handle} onChangeText={value=>setCreatorSettings(v=>({...v,instagram_handle:value.replace(/^@/,'')}))} maxLength={40} autoCapitalize="none" placeholder="Instagram username" placeholderTextColor={theme.muted} style={s.input}/>
+  <TextInput value={creatorSettings.youtube_url} onChangeText={value=>setCreatorSettings(v=>({...v,youtube_url:value}))} maxLength={200} autoCapitalize="none" placeholder="YouTube: https://…" placeholderTextColor={theme.muted} style={s.input}/>
+  <Text style={s.subheading}>PRIVACY & COMMENT CONTROLS</Text>
+  <Pressable accessibilityRole="switch" accessibilityState={{checked:creatorSettings.is_private}} style={s.outline} onPress={()=>setCreatorSettings(v=>({...v,is_private:!v.is_private}))}>
+   <Text style={s.link}>Private post visibility: {creatorSettings.is_private?'ON ✓':'OFF ✕'}</Text>
+  </Pressable>
+  <Text style={s.muted}>Private mode hides your posts from other ReconFeed accounts until an approval system is available. Previously shared public media links may remain accessible outside the app.</Text>
+  <Text style={s.subheading}>WHO MAY COMMENT?</Text>
+  <View style={s.row}>
+   {([{id:'everyone',name:'Everyone'},{id:'followers',name:'Followers'},{id:'none',name:'Nobody'}] as const).map(option=><Pressable key={option.id} style={[s.chip,creatorSettings.allow_comments===option.id&&s.selected]} onPress={()=>setCreatorSettings(v=>({...v,allow_comments:option.id}))}><Text style={s.chipText}>{option.name}</Text></Pressable>)}
+  </View>
+  <Text style={s.muted}>Direct messages, mentions and liked-video publicity controls require additional enforcement before being offered as working settings.</Text>
+  <Pressable disabled={settingsBusy} style={s.button} onPress={saveCreatorSettings}><Text style={s.buttonText}>{settingsBusy?'Saving…':'SAVE ACCOUNT SETTINGS'}</Text></Pressable>
+  <Text style={s.subheading}>BLOCKED ACCOUNTS ({blockedAccounts.length})</Text>
+  {blockedAccounts.length?blockedAccounts.map(row=><View key={row.blocked_id} style={[s.row,{justifyContent:'space-between'}]}>
+   <Text style={s.muted}>Account •••{row.blocked_id.slice(-6)}</Text>
+   <Pressable style={s.outline} onPress={()=>{void unblockCreator(row.blocked_id)}}><Text style={s.link}>Unblock</Text></Pressable>
+  </View>):<Text style={s.muted}>No blocked accounts.</Text>}
+  <Text style={s.subheading}>CREATOR STATS</Text>
+  <Text style={s.strong}>{creatorAnalytics.views.toLocaleString()} tracked views · {creatorAnalytics.completedViews.toLocaleString()} completed views</Text>
+  <Text style={s.strong}>{Math.round(creatorAnalytics.watchSeconds/60).toLocaleString()} watch minutes · {creatorAnalytics.shares.toLocaleString()} recorded shares</Text>
+  <Text style={s.muted}>Totals reflect voluntarily tracked watch events, not all possible plays. Analytics will improve as the beta gathers genuine viewing data.</Text>
+ </View>}
+<View style={[s.card,{gap:12,marginVertical:14}]}>
   <Text style={s.subheading}>FEED PERSONALIZATION & PRIVACY</Text>
   <Text style={s.muted}>ReconFeed can learn from videos you watch, finish, replay, share or skip. Your watch activity stays private to your account and can be cleared.</Text>
   <Pressable accessibilityRole="button" onPress={togglePersonalization} style={s.outline}>
