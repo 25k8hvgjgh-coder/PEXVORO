@@ -753,8 +753,8 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
    {!exploreResults.length&&!exploreCreators.length&&<Text style={s.muted}>No matching creators or posts. Try part of a username such as AngelicSlick, or check your connection.</Text>}
   </View>}
   <Modal visible={!!viewingCreator} animationType="slide" onRequestClose={()=>setViewingCreator(null)}>
-   <SafeAreaView style={s.safe}>
-    <ScrollView contentContainerStyle={{paddingBottom:20}}><Pressable accessibilityRole="button" style={s.profileCloseVideo} onPress={()=>{++creatorProfileRequest.current;setViewingCreator(null)}}><Text style={s.link}>← Back</Text></Pressable>
+   <SafeAreaView style={[s.safe,{backgroundColor:'#fff'}]}>
+    <ScrollView contentContainerStyle={{paddingBottom:20,backgroundColor:'#fff'}}><Pressable accessibilityRole="button" style={[s.profileCloseVideo,{backgroundColor:'#fff'}]} onPress={()=>{++creatorProfileRequest.current;setViewingCreator(null)}}><Text style={{color:'#111',fontSize:15,fontWeight:'700'}}>← Back</Text></Pressable>
      {viewingCreator&&<PublicCreatorHeader
       creator={viewingCreator}
       following={followingIds.includes(viewingCreator.id)}
