@@ -41,6 +41,24 @@ async function main() {
   );
   if (!feed.ok) failed = true;
 
+  // Probe the configured public media bucket without uploading or exposing user files.
+  try {
+    const storageProbe = await fetch(base + '/storage/v1/object/public/post-media/__reconfeed_smoke_probe_not_a_real_file__', {
+      headers: { apikey: key },
+      signal: AbortSignal.timeout(12000)
+    });
+    const storageText = await storageProbe.text();
+    if (storageProbe.status === 404 && !/bucket not found/i.test(storageText)) {
+      console.log('[PASS] Supabase post-media public bucket is reachable (probe object intentionally does not exist).');
+    } else if (/bucket not found/i.test(storageText)) {
+      console.warn('::warning::Supabase public Storage bucket post-media does not exist in the live project.');
+    } else {
+      console.warn('::warning::Could not conclusively verify public post-media bucket (HTTP ' + storageProbe.status + '). Check the bucket and its public-read setting in Supabase Storage.');
+    }
+  } catch (error) {
+    console.warn('::warning::Could not reach the post-media Storage endpoint: ' + String(error?.message || error));
+  }
+
   const privateColumns = await fetch(base + '/rest/v1/profiles?select=birth_date,gender&limit=1', {
     headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' },
     signal: AbortSignal.timeout(12000)
