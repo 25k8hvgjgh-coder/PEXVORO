@@ -5,14 +5,20 @@ on:
   push:
     branches: [main]
     paths:
+      - "mobile/**"
       - ".github/workflows/publish-eas-apk.yml"
+
+concurrency:
+  group: reconfeed-stable-android-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
-  publish-apk:
+  build-and-publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: mobile
@@ -26,7 +32,12 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-audit --no-fund
+
+      - name: Generate native app icon asset
+        run: |
+          npm install --no-save sharp
+          node -e "require('sharp')('assets/reconfeed-emblem.svg').resize(1024,1024).png().toFile('assets/icon.png')"
 
       - name: Set up Expo and EAS
         uses: expo/expo-github-action@v8
@@ -39,32 +50,56 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Download the EAS-signed ReconFeed 1.0.2 build
+      - name: Build current main as a signed preview APK
+        shell: bash
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          npx eas-cli build:download --build-id 82ab6e2c-03c6-4aea-ac49-461828765bed --non-interactive
-          APK_PATH="$(find /tmp/runner/eas-cli-nodejs/eas-build-run-cache "$RUNNER_TEMP" -type f -name '*.apk' -print -quit 2>/dev/null || true)"
-          if [ -z "$APK_PATH" ]; then
-            echo "::error::EAS build download finished but no APK file was found."
-            find /tmp/runner/eas-cli-nodejs/eas-build-run-cache "$RUNNER_TEMP" -maxdepth 5 -type f 2>/dev/null | sort | tail -80
+          set -euo pipefail
+          BUILD_LOG="$RUNNER_TEMP/reconfeed-eas-build.log"
+          set -o pipefail
+          npx eas-cli build --platform android --profile preview --non-interactive --wait 2>&1 | tee "$BUILD_LOG"
+          BUILD_ID="$(grep -Eo 'builds/[0-9a-fA-F-]{36}' "$BUILD_LOG" | tail -n 1 | cut -d/ -f2 || true)"
+          if [ -z "$BUILD_ID" ]; then
+            echo "::error::EAS build completed but the build ID could not be read from the log."
+            tail -100 "$BUILD_LOG"
+            exit 1
+          fi
+          echo "EAS_BUILD_ID=$BUILD_ID" >> "$GITHUB_ENV"
+          echo "Built EAS Android build $BUILD_ID"
+
+      - name: Download and validate the EAS-signed APK
+        shell: bash
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          DOWNLOAD_LOG="$RUNNER_TEMP/reconfeed-eas-download.log"
+          npx eas-cli build:download --build-id "$EAS_BUILD_ID" --non-interactive 2>&1 | tee "$DOWNLOAD_LOG"
+          APK_PATH="$(grep -Eo '/[^[:space:]]+\.apk' "$DOWNLOAD_LOG" | tail -n 1 || true)"
+          if [ -z "$APK_PATH" ] || [ ! -s "$APK_PATH" ]; then
+            APK_PATH="$(find /tmp/runner/eas-cli-nodejs/eas-build-run-cache "$RUNNER_TEMP" -type f -name "*_${EAS_BUILD_ID}.apk" -print -quit 2>/dev/null || true)"
+          fi
+          if [ -z "$APK_PATH" ] || [ ! -s "$APK_PATH" ]; then
+            echo "::error::The EAS download completed but the signed APK was not found."
+            tail -80 "$DOWNLOAD_LOG"
             exit 1
           fi
           cp "$APK_PATH" "$GITHUB_WORKSPACE/ReconFeed-beta.apk"
-          test -s "$GITHUB_WORKSPACE/ReconFeed-beta.apk"
           file "$GITHUB_WORKSPACE/ReconFeed-beta.apk"
           unzip -t "$GITHUB_WORKSPACE/ReconFeed-beta.apk" | tail -2
+          test -s "$GITHUB_WORKSPACE/ReconFeed-beta.apk"
 
-      - name: Publish signed APK download
+      - name: Publish the persistent-signature APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-eas-beta
           name: ReconFeed Android Beta (signed)
           body: |
-            ReconFeed Android beta 1.0.2, signed with the persistent EAS Android signing credential.
+            Latest ReconFeed Android beta. This APK is signed with the persistent EAS Android signing credential so future beta updates can install over this build.
 
             Download ReconFeed-beta.apk below. This is a beta build, not a Google Play release.
-            Older beta installations signed with the previous one-run key may need a one-time uninstall/reinstall. Sign in again after installing; server-side account data stays in Supabase.
+            Users who installed an earlier temporary-key beta may need a one-time uninstall/reinstall. Their server-side account data remains in Supabase; local app-only data may be lost.
           prerelease: true
           make_latest: false
           overwrite_files: true
