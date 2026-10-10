@@ -44,7 +44,7 @@ export default function CreatorProfileHeader({profile,email,stats,isBetaTester,p
      <Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={onChangePhoto} style={s.avatar}>
       {profile?.avatar_url?<Image source={{uri:profile.avatar_url}} style={s.avatarImage}/>:<Text style={s.avatarInitial}>{displayName.charAt(0).toUpperCase()}</Text>}
      </Pressable>
-     <Pressable accessibilityRole="button" accessibilityLabel="Create a post" onPress={onCreate} style={s.avatarAdd}><Text style={s.plus}>+</Text></Pressable>
+     <Pressable accessibilityRole="button" accessibilityLabel="Add a photo or video story" onPress={onCreate} style={s.avatarAdd}><Text style={s.plus}>+</Text></Pressable>
     </View>
    </View>
    <Text style={s.bio}>{profile?.bio||'Add a bio to tell your story.'}</Text>
