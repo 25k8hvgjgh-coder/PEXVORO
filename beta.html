@@ -97,7 +97,7 @@ footer{border-top:1px solid #a3af9255;padding:29px 0 42px;color:#b7c1b5;font-siz
  <form id="beta-form">
   <label for="email">Email address <span aria-hidden="true">*</span></label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="254" required>
   <label for="platform">What will you test on? <span aria-hidden="true">*</span></label><select id="platform" name="platform" required><option value="">Choose your device</option><option value="iphone">iPhone / iPad (web beta for now)</option><option value="android">Android</option><option value="both">iPhone and Android</option><option value="web">Browser / desktop</option></select>
-  <fieldset><legend>Political party <span aria-hidden="true">*</span></legend><div class="interests"><label class="chip"><input type="radio" name="political_party" value="republican" required> Republican</label><label class="chip"><input type="radio" name="political_party" value="democratic"> Democratic</label></div><p class="tiny">This private beta currently accepts Republican applicants only. This selection determines registration eligibility.</p></fieldset>
+  <fieldset><legend>Political party <span class="tiny">(optional)</span></legend><div class="interests"><label class="chip"><input type="radio" name="political_party" value="republican"> Republican</label><label class="chip"><input type="radio" name="political_party" value="democratic"> Democratic</label></div><p class="tiny">Your answer does not affect eligibility. If selected, it will prefill your account signup in this browser.</p></fieldset>
   <fieldset><legend>What interests you? <span class="tiny">(optional)</span></legend><div class="interests">
    <label class="chip"><input type="checkbox" name="interest" value="veterans"> Veterans</label>
    <label class="chip"><input type="checkbox" name="interest" value="trades"> Trades</label>
@@ -146,7 +146,7 @@ form.addEventListener('submit',async function(e){
  const body=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(body.error||'Signup could not be saved.');
  status.className='success';status.textContent='Your tester registration is saved. Next, create an account or sign in with the same email. Redirecting…';
- try{sessionStorage.setItem('reconfeed_beta_email',data.email.trim().toLowerCase())}catch(_e){}
+ try{sessionStorage.setItem('reconfeed_beta_email',data.email.trim().toLowerCase());if(data.political_party)sessionStorage.setItem('reconfeed_beta_party',data.political_party);else sessionStorage.removeItem('reconfeed_beta_party')}catch(_e){}
  window.setTimeout(()=>{window.location.assign('/app/?beta=1')},2600);
  form.reset();button.textContent='REQUEST RECEIVED';button.disabled=true;
  }catch(error){status.textContent=error.message||'Please try again.';button.textContent='JOIN FREE BETA TESTER LIST ↗';button.disabled=false}
