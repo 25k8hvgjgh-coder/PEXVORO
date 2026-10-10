@@ -39,7 +39,7 @@ export default function PostCollection({ client, userId, savedIds, onClose }: Pr
         <Pressable accessibilityRole="button" onPress={() => setRefresh(v => v + 1)} style={s.control}><Text style={s.link}>Refresh</Text></Pressable></View>
       {profile ? <View style={s.card}><Text style={s.link}>@{profile.username}</Text>{profile.bio ? <Text style={s.text}>{profile.bio}</Text> : null}</View> : null}
       {error ? <Text accessibilityRole="alert" style={s.error}>{error}</Text> : null}
-      {loading ? <ActivityIndicator color="#e0bd7b" /> : <FlatList data={posts} keyExtractor={p => p.id}
+      {loading ? <ActivityIndicator color="#C6AA72" /> : <FlatList data={posts} keyExtractor={p => p.id}
         ListEmptyComponent={<Text style={s.note}>{userId ? 'No visible posts from this creator yet.' : 'No saved posts available. Tap Save on a feed post to add it here.'}</Text>}
         renderItem={({ item: p }) => <View style={s.card}>
           {p.media_type === 'video' ? <Video source={{ uri: p.media_url }} style={s.media} resizeMode={ResizeMode.CONTAIN} useNativeControls /> : <Image source={{ uri: p.media_url }} style={s.media} resizeMode="contain" />}
@@ -49,9 +49,9 @@ export default function PostCollection({ client, userId, savedIds, onClose }: Pr
   </Modal>;
 }
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#0b0d09' }, header: { flexDirection: 'row', alignItems: 'center', padding: 8 },
-  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#f2eddf', fontWeight: '800', fontSize: 22 },
-  link: { color: '#e0bd7b', fontWeight: '800' }, card: { margin: 10, padding: 14, backgroundColor: '#1e251a', borderRadius: 7 },
-  text: { color: '#f2eddf', fontSize: 15, lineHeight: 22, marginTop: 10 }, note: { color: '#b8baa6', padding: 12 },
+  screen: { flex: 1, backgroundColor: '#090C0B' }, header: { flexDirection: 'row', alignItems: 'center', padding: 8, borderBottomWidth: 1, borderBottomColor: '#C6AA7270', backgroundColor: '#151c1d' },
+  control: { padding: 12, minHeight: 44 }, title: { flex: 1, color: '#F0EEE5', fontWeight: '800', fontSize: 22 },
+  link: { color: '#C6AA72', fontWeight: '800' }, card: { margin: 10, padding: 14, backgroundColor: '#222c29', borderRadius: 12, borderWidth: 1, borderColor: '#66784B' },
+  text: { color: '#F0EEE5', fontSize: 15, lineHeight: 22, marginTop: 10 }, note: { color: '#B7BDBB', padding: 12 },
   error: { color: '#ffb4b4', padding: 12 }, media: { width: '100%', aspectRatio: 9 / 12, borderRadius: 6 }
 });
