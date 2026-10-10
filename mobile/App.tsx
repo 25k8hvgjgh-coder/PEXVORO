@@ -799,6 +799,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={'View '+(p.caption||'post')} onPress={()=>setProfileSelected(p)} style={s.profileVideoTile}>
    {p.media_type==='image'?<Image source={{uri:p.media_url}} style={s.profileVideoThumbnail} resizeMode="cover"/>:<Video source={{uri:p.media_url}} style={s.profileVideoThumbnail} resizeMode={ResizeMode.COVER} shouldPlay={false} isMuted isLooping={false}/>}
    <View pointerEvents="none" style={s.profileTileShade}/>
+   {p.media_type==='video'?<View pointerEvents="none" style={{position:'absolute',top:10,left:10,backgroundColor:'#101810cc',paddingHorizontal:8,paddingVertical:4,borderRadius:6}}><Text style={{color:'#f0eee5',fontSize:10,fontWeight:'800'}}>▶ VIDEO</Text></View>:null}
    {p.pinned_at?<View pointerEvents="none" style={s.profilePinBadge}><Text style={s.profilePinText}>★ PINNED</Text></View>:null}
    <View pointerEvents="none" style={s.profileViewsBadge}><Text style={s.profileViewsText}>▶ {Number(profileViewCounts[p.id]||0).toLocaleString()}</Text></View>
    {profileEditOpen?<View style={s.profileTileEditTools}>
