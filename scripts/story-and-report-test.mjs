@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
+const [app,stories]=await Promise.all([read('mobile/App.tsx'),read('mobile/Stories.tsx')]);
+assert.match(app,/new Uint8Array\(bytes\),\{contentType:mime/,'tester screenshots must upload typed binary bytes');
+assert.match(app,/Screenshot was empty/,'reject zero-byte screenshots');
+assert.match(app,/const deviceContext=/,'attach diagnostics on submitted reports');
+assert.match(app,/pixel ratio/,'diagnostics must include screen density');
+assert.match(app,/we.ll include screen dimensions/,'notify user about diagnostic data');
+assert.match(stories,/imageFormat\(fileBuffer\)/,'do not falsely label unsupported images as JPEG');
+assert.match(stories,/upload\.data\?\.path/,'verify story storage upload');
+assert.match(stories,/\.delete\(\)\.eq\('id',active\.id\)/,'only active story may be removed');
+assert.match(stories,/\.eq\('user_id',session\.user\.id\)/,'story removal requires owner');
+assert.match(stories,/\.remove\(\[active\.media_path\]\)/,'remove story object when deleting record');
+assert.match(stories,/AppState\.currentState==='active'/,'avoid polling while backgrounded');
+console.log('Story lifecycle, screenshot upload and opt-in tester diagnostics contracts passed');

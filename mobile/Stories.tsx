@@ -1,8 +1,9 @@
 import React,{useCallback,useEffect,useState} from 'react';
-import {ActivityIndicator,Image,Modal,Platform,Pressable,SafeAreaView,ScrollView,StyleSheet,Text,TextInput,View} from 'react-native';
+import {ActivityIndicator,AppState,Image,Modal,Pressable,SafeAreaView,ScrollView,StyleSheet,Text,TextInput,View} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import {Audio,ResizeMode,Video} from 'expo-av';
 import type {Session,SupabaseClient} from '@supabase/supabase-js';
+import {imageFormat} from './profilePhoto';
 
 type Story={
  id:string;user_id:string;media_path:string;media_type:'video'|'image';
@@ -23,6 +24,8 @@ export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
  const [assetUrl,setAssetUrl]=useState('');
  const [error,setError]=useState('');
  const [loading,setLoading]=useState(false);
+ const [deleting,setDeleting]=useState(false);
+ const [confirmDelete,setConfirmDelete]=useState(false);
  const refresh=useCallback(async()=>{
   if(!client||!session)return;
   try{
@@ -44,12 +47,13 @@ export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
   let current=true;
   if(!client||!session){setStories([]);return}
   void refresh();
-  const timer=setInterval(()=>{if(current)void refresh()},60000);
-  return()=>{current=false;clearInterval(timer)};
+  const timer=setInterval(()=>{if(current&&AppState.currentState==='active')void refresh()},90000);
+  const foreground=AppState.addEventListener('change',state=>{if(current&&state==='active')void refresh()});
+  return()=>{current=false;clearInterval(timer);foreground.remove()};
  },[refresh,refreshToken]);
  async function view(story:Story){
   if(!client)return;
-  setActive(story);setAssetUrl('');setError('');setLoading(true);
+  setActive(story);setAssetUrl('');setError('');setConfirmDelete(false);setLoading(true);
   try{
    if(Date.parse(story.expires_at)<=Date.now())throw new Error('This story has expired.');
    const result=await client.storage.from('story-media').createSignedUrl(story.media_path,300);
@@ -57,6 +61,23 @@ export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
    setAssetUrl(result.data.signedUrl);
   }catch(e:any){setError(e.message||'Story could not open.');}
   finally{setLoading(false)}
+ }
+ async function deleteOwnStory(){
+  if(!client||!session||!active||active.user_id!==session.user.id||deleting)return;
+  setDeleting(true);setError('');
+  try{
+   const record=await client.from('stories').delete().eq('id',active.id)
+    .eq('user_id',session.user.id).select('id').single();
+   if(record.error)throw record.error;
+   // Remove the actual object too: a deleted story should not continue to
+   // consume a beta user's storage allowance.
+   const file=await client.storage.from('story-media').remove([active.media_path]);
+   if(file.error)console.warn('Deleted story media needs cleanup',file.error.message);
+   setActive(null);setAssetUrl('');setConfirmDelete(false);
+   setStories(previous=>previous.filter(s=>s.id!==record.data.id));
+   void refresh();
+  }catch(e:any){setError(e.message||'Could not delete this story. Try again.');}
+  finally{setDeleting(false)}
  }
  if(!session)return null;
  return <View style={s.strip} accessibilityLabel="Stories from people you follow">
@@ -76,6 +97,13 @@ export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
     <View style={s.viewerHead}><Text style={s.heading} numberOfLines={1}>@{active?.profile?.username||'creator'} · Story</Text><Pressable accessibilityRole="button" onPress={()=>{setActive(null);setAssetUrl('')}} style={s.close}><Text style={s.closeText}>✕ Close</Text></Pressable></View>
     {loading?<ActivityIndicator color={gold} style={{flex:1}}/>:assetUrl&&active?.media_type==='video'?<Video source={{uri:assetUrl}} shouldPlay isLooping resizeMode={ResizeMode.CONTAIN} useNativeControls style={s.viewerMedia}/>:assetUrl?<Image source={{uri:assetUrl}} resizeMode="contain" style={s.viewerMedia}/>:<Text style={s.warning}>{error||'Story unavailable'}</Text>}
     {!!active?.caption&&<Text style={s.viewerCaption}>{active.caption}</Text>}
+    {active?.user_id===session.user.id?<View style={{padding:12,gap:8}}>
+     {confirmDelete?<View style={s.buttons}>
+      <Pressable accessibilityRole="button" onPress={()=>setConfirmDelete(false)} style={s.button}><Text style={s.buttonLabel}>Cancel</Text></Pressable>
+      <Pressable accessibilityRole="button" disabled={deleting} onPress={()=>void deleteOwnStory()} style={[s.button,{borderColor:'#C65A5A'}]}><Text style={s.buttonLabel}>{deleting?'Removing…':'Delete this Story'}</Text></Pressable>
+     </View>:<Pressable accessibilityRole="button" onPress={()=>setConfirmDelete(true)} style={[s.button,{maxHeight:46}]}><Text style={s.buttonLabel}>Remove my Story</Text></Pressable>}
+    </View>:null}
+    {!!error&&<Text accessibilityRole="alert" style={s.warning}>{error}</Text>}
     <Text style={s.note}>Stories disappear from followers' feeds 24 hours after posting.</Text>
    </SafeAreaView>
   </Modal>
@@ -118,20 +146,26 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
    if(asset.fileSize&&asset.fileSize>LIMIT)throw new Error('Stories must be under 24 MB. Choose a smaller photo or shorter clip.');
    const response=await fetch(asset.uri);
    if(!response.ok)throw new Error('Could not read this file. Choose it again.');
-   const bytes=new Uint8Array(await response.arrayBuffer());
+   const fileBuffer=await response.arrayBuffer();
+   const bytes=new Uint8Array(fileBuffer);
    if(!bytes.byteLength||bytes.byteLength>LIMIT)throw new Error('This story is empty or over the 24 MB limit.');
    const kind: 'image'|'video'=asset.type==='video'?'video':'image';
    const guessed=(asset.fileName?.split('.').pop()||(kind==='video'?'mp4':'jpg')).toLowerCase().replace(/[^a-z0-9]/g,'');
    const allowed=kind==='video'?['mp4','mov','webm']:['jpg','jpeg','png','webp','gif'];
-   const ext=allowed.includes(guessed)?guessed:(kind==='video'?'mp4':'jpg');
+   // Verify photo magic bytes instead of trusting a misleading .HEIC/.JPG
+   // filename. Don't store unreadable photos with a false JPEG MIME type.
+   const detected=kind==='image'?imageFormat(fileBuffer):null;
+   const ext=detected?.extension||(allowed.includes(guessed)?guessed:'mp4');
    const types:Record<string,string>={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',mov:'video/quicktime',webm:'video/webm'};
+   const fileType=detected?.type||types[ext];
    const path=session.user.id+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,9)+'.'+ext;
-   let upload=await client.storage.from('story-media').upload(path,bytes,{upsert:false,contentType:types[ext]});
+   let upload=await client.storage.from('story-media').upload(path,bytes,{upsert:false,contentType:fileType});
    if(upload.error&&isTemporary(upload.error)){
     await new Promise(done=>setTimeout(done,500));
-    upload=await client.storage.from('story-media').upload(path,bytes,{upsert:false,contentType:types[ext]});
+    upload=await client.storage.from('story-media').upload(path,bytes,{upsert:false,contentType:fileType});
    }
    if(upload.error)throw upload.error;
+   if(!upload.data?.path)throw new Error('Story upload could not be confirmed. Please retry.');
    uploadedPath=upload.data.path;
    const record=await client.from('stories').insert({user_id:session.user.id,media_path:uploadedPath,media_type:kind,caption:caption.trim().slice(0,300)});
    if(record.error)throw record.error;
