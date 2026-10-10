@@ -1,4 +1,4 @@
-const allowed = new Set(["text-video", "image-video", "image", "video-transform"]);
+const allowed = new Set(["text-video", "image"]);
 const send = (res, status, body) => res.status(status).json(body);
 const DEFAULT_SUPABASE_URL = "https://ojprsyvkzgyphpsvksgx.supabase.co";
 const DEFAULT_SUPABASE_KEY = "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW";
@@ -92,12 +92,14 @@ export default async function handler(req, res) {
   if (prompt.length < 8 || prompt.length > 1500) return send(res, 400, { error: "Prompt must be between 8 and 1,500 characters." });
 
   const imageOnly = workflow === "image";
-  const model = String((imageOnly ? process.env.REPLICATE_IMAGE_MODEL : process.env.REPLICATE_VIDEO_MODEL) || "").trim();
+  const model = String(imageOnly
+    ? (process.env.REPLICATE_IMAGE_MODEL || "black-forest-labs/flux-schnell")
+    : (process.env.REPLICATE_VIDEO_MODEL || "runwayml/gen4-turbo")).trim();
   if (!/^[a-z0-9_-]+\/[a-z0-9_.-]+$/i.test(model)) {
-    return send(res, 503, { error: "A compatible generation model is not configured for this workflow." });
+    return send(res, 503, { error: "The configured generation model identifier is invalid." });
   }
   const duration = Number(body.duration || 5);
-  if (!imageOnly && ![5, 10, 15].includes(duration)) return send(res, 400, { error: "Duration must be 5, 10, or 15 seconds." });
+  if (!imageOnly && ![5, 10].includes(duration)) return send(res, 400, { error: "Duration must be 5 or 10 seconds for the current video model." });
   const aspect = ["9:16", "16:9", "1:1"].includes(body.aspectRatio) ? body.aspectRatio : "9:16";
   const input = { prompt, aspect_ratio: aspect };
   if (!imageOnly) input.duration = duration;
