@@ -44,16 +44,22 @@ async function main() {
   // Probe the configured public media bucket without uploading or exposing user files.
   try {
     const storageProbe = await fetch(base + '/storage/v1/object/public/post-media/__reconfeed_smoke_probe_not_a_real_file__', {
-      headers: { apikey: key },
+      headers: { apikey: key, Authorization: 'Bearer ' + key },
       signal: AbortSignal.timeout(12000)
     });
     const storageText = await storageProbe.text();
-    if (storageProbe.status === 404 && !/bucket not found/i.test(storageText)) {
+    let storageDetail = storageText;
+    try {
+      const parsed = JSON.parse(storageText);
+      storageDetail = String(parsed.error || parsed.message || parsed.statusCode || storageText);
+    } catch {}
+    storageDetail = storageDetail.slice(0, 180);
+    if (storageProbe.status === 404 && !/bucket not found/i.test(storageDetail)) {
       console.log('[PASS] Supabase post-media public bucket is reachable (probe object intentionally does not exist).');
-    } else if (/bucket not found/i.test(storageText)) {
+    } else if (/bucket not found/i.test(storageDetail)) {
       console.warn('::warning::Supabase public Storage bucket post-media does not exist in the live project.');
     } else {
-      console.warn('::warning::Could not conclusively verify public post-media bucket (HTTP ' + storageProbe.status + '). Check the bucket and its public-read setting in Supabase Storage.');
+      console.warn('::warning::Could not conclusively verify public post-media bucket (HTTP ' + storageProbe.status + '): ' + storageDetail + '. Check Storage bucket and public-read settings.');
     }
   } catch (error) {
     console.warn('::warning::Could not reach the post-media Storage endpoint: ' + String(error?.message || error));
