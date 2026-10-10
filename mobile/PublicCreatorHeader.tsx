@@ -1,5 +1,6 @@
 import React from 'react';
 import {Image,Linking,Pressable,StyleSheet,Text,View} from 'react-native';
+import {olive} from './oliveTheme';
 
 type Creator={
  display_name?:string|null;username?:string|null;avatar_url?:string|null;
@@ -34,23 +35,23 @@ export default function PublicCreatorHeader({creator,following,onFollow,onShare}
  </View>;
 }
 const s=StyleSheet.create({
- header:{paddingHorizontal:14,paddingTop:18,paddingBottom:20,backgroundColor:'#fff'},
+ header:{paddingHorizontal:14,paddingTop:18,paddingBottom:20,backgroundColor:olive.bg},
  identityRow:{flexDirection:'row',alignItems:'flex-start',gap:8},
  identityText:{flex:1,minWidth:0},
- name:{fontSize:22,fontWeight:'900',color:'#080808',lineHeight:28},
- handle:{color:'#858585',fontSize:14,fontWeight:'600',marginTop:3},
+ name:{fontSize:22,fontWeight:'900',color:olive.text,lineHeight:28},
+ handle:{color:olive.muted,fontSize:14,fontWeight:'600',marginTop:3},
  stats:{flexDirection:'row',gap:20,marginTop:20},
  stat:{alignItems:'flex-start'},
- count:{fontSize:21,fontWeight:'900',color:'#111'},statLabel:{fontSize:12,color:'#8a8a8a',marginTop:1},
+ count:{fontSize:21,fontWeight:'900',color:olive.text},statLabel:{fontSize:12,color:olive.muted,marginTop:1},
  avatarWrap:{position:'relative',marginTop:4,marginBottom:5},
- avatar:{height:96,width:96,borderRadius:48,backgroundColor:'#dde2e5',alignItems:'center',justifyContent:'center',overflow:'hidden'},
- avatarImage:{height:'100%',width:'100%',borderRadius:48},avatarInitial:{fontSize:42,color:'#333',fontWeight:'900'},
- followPlus:{position:'absolute',right:-3,bottom:-4,width:33,height:33,borderRadius:17,backgroundColor:'#00b7df',borderWidth:3,borderColor:'#fff',alignItems:'center',justifyContent:'center'},
- plusText:{fontSize:26,color:'#fff',fontWeight:'900',lineHeight:27},
- bio:{fontSize:14,lineHeight:21,fontWeight:'600',color:'#151515',marginTop:11},
- meta:{fontSize:12,color:'#555',fontWeight:'700',marginTop:5},
- website:{color:'#246398',fontWeight:'800',fontSize:12,marginTop:7},
+ avatar:{height:96,width:96,borderRadius:48,backgroundColor:olive.raised,alignItems:'center',justifyContent:'center',overflow:'hidden'},
+ avatarImage:{height:'100%',width:'100%',borderRadius:48},avatarInitial:{fontSize:42,color:olive.text,fontWeight:'900'},
+ followPlus:{position:'absolute',right:-3,bottom:-4,width:33,height:33,borderRadius:17,backgroundColor:olive.accent,borderWidth:3,borderColor:olive.bg,alignItems:'center',justifyContent:'center'},
+ plusText:{fontSize:26,color:olive.deep,fontWeight:'900',lineHeight:27},
+ bio:{fontSize:14,lineHeight:21,fontWeight:'600',color:olive.text,marginTop:11},
+ meta:{fontSize:12,color:olive.muted,fontWeight:'700',marginTop:5},
+ website:{color:olive.gold,fontWeight:'800',fontSize:12,marginTop:7},
  actions:{flexDirection:'row',gap:9,marginTop:17},
- pill:{minHeight:42,paddingHorizontal:16,paddingVertical:9,borderWidth:1,borderColor:'#dedede',borderRadius:23,backgroundColor:'#fff',alignItems:'center',justifyContent:'center'},
- pillText:{fontSize:13,fontWeight:'700',color:'#151515',textAlign:'center'}
+ pill:{minHeight:42,paddingHorizontal:16,paddingVertical:9,borderWidth:1,borderColor:olive.border,borderRadius:23,backgroundColor:olive.surface,alignItems:'center',justifyContent:'center'},
+ pillText:{fontSize:13,fontWeight:'700',color:olive.text,textAlign:'center'}
 });
