@@ -35,6 +35,21 @@ jobs:
           print(f"Checking inline script ({len(inline[-1])} characters)")
           PY
           node --check /tmp/pexvoro-inline.js
+      - name: Validate ReconFeed home-screen installation assets
+        run: |
+          node --check sw.js
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const manifest = JSON.parse(fs.readFileSync('manifest.webmanifest', 'utf8'));
+          if (manifest.name !== 'ReconFeed' || manifest.display !== 'standalone') {
+            throw new Error('PWA manifest name/display is incorrect');
+          }
+          for (const icon of manifest.icons || []) {
+            const path = icon.src.replace(/^\//, '');
+            if (!fs.existsSync(path)) throw new Error('Missing PWA icon: ' + path);
+          }
+          console.log('PWA manifest and all configured icons are present.');
+          NODE
       - name: Type-check native mobile app
         working-directory: mobile
         run: |
