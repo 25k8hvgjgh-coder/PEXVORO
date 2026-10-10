@@ -200,7 +200,7 @@ RETURNS uuid
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $rf_reserve$
 DECLARE actor_id uuid; hourly_count integer; daily_count integer; job_id uuid;
 BEGIN
   actor_id := auth.uid();
@@ -220,14 +220,14 @@ BEGIN
   VALUES (actor_id, p_workflow, 'starting') RETURNING id INTO job_id;
   RETURN job_id;
 END;
-$;
+$rf_reserve$;
 
 CREATE OR REPLACE FUNCTION public.finalize_ai_generation(p_job_id uuid, p_prediction_id text, p_status text)
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $rf_finalize$
 DECLARE actor_id uuid; updated_count integer;
 BEGIN
   actor_id := auth.uid();
@@ -235,13 +235,7 @@ BEGIN
   IF p_status IS NULL OR p_status NOT IN ('starting','queued','processing','succeeded','failed','canceled') THEN
     RAISE EXCEPTION 'Unsupported AI status.';
   END IF;
-  IF p_prediction_id IS NOT NULL AND (length(p_prediction_id) < 6 OR length(p_prediction_id) > 100 OR p_prediction_id !~ '^[A-Za-z0-9_-]+
--- but must not be available to anonymous users or other authenticated users via PostgREST.
-REVOKE ALL PRIVILEGES ON TABLE public.profiles FROM PUBLIC, anon, authenticated;
-REVOKE SELECT (birth_date, gender) ON TABLE public.profiles FROM PUBLIC, anon, authenticated;
-GRANT SELECT (id, username, display_name, bio, avatar_url, created_at) ON TABLE public.profiles TO anon, authenticated;
-GRANT UPDATE (display_name, bio, avatar_url) ON TABLE public.profiles TO authenticated;
-) THEN
+  IF p_prediction_id IS NOT NULL AND (length(p_prediction_id) < 6 OR length(p_prediction_id) > 100 OR p_prediction_id !~ '^[A-Za-z0-9_-]+$') THEN
     RAISE EXCEPTION 'Invalid provider prediction ID.';
   END IF;
   UPDATE public.ai_generation_jobs
@@ -250,7 +244,7 @@ GRANT UPDATE (display_name, bio, avatar_url) ON TABLE public.profiles TO authent
   GET DIAGNOSTICS updated_count = ROW_COUNT;
   RETURN updated_count = 1;
 END;
-$;
+$rf_finalize$;
 REVOKE EXECUTE ON FUNCTION public.reserve_ai_generation(text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.reserve_ai_generation(text) TO authenticated;
 REVOKE EXECUTE ON FUNCTION public.finalize_ai_generation(uuid, text, text) FROM PUBLIC, anon;
