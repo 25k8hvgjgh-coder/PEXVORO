@@ -29,8 +29,7 @@ export default async function handler(req,res) {
     if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email) || email.length > 254 || email.length < 6)
       return res.status(400).json({error:'Enter a valid email address.'});
     if(!VALID_PLATFORMS.has(platform)) return res.status(400).json({error:'Choose the device you want to test.'});
-    if(!['republican','democratic'].includes(politicalParty)) return res.status(400).json({error:'Choose Republican or Democratic to continue.'});
-    if(politicalParty === 'democratic') return res.status(403).json({error:'Registration is unavailable for the selected political party.'});
+    if(politicalParty && !['republican','democratic'].includes(politicalParty)) return res.status(400).json({error:'Choose a valid optional political-party response.'});
     if(interests.length > 6 || interests.some(x => !VALID_INTERESTS.has(x))) return res.status(400).json({error:'Select up to six valid interests.'});
     if(body.confirm_adult !== true || body.consent !== true || body.accept_guidelines !== true)
       return res.status(400).json({error:'Confirm you are 18+, consent to beta email contact, and accept the tester guidelines.'});
