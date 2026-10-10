@@ -1,6 +1,7 @@
 import React from 'react';
 import {Pressable,SafeAreaView,ScrollView,StyleSheet,Text,View} from 'react-native';
 import ProfileIcon,{type ProfileIconName} from './ProfileIcon';
+import {olive} from './oliveTheme';
 
 export type SettingsAction=
  'manage_posts'|'content_preferences'|'live'|'notifications'|'wellbeing'|'family'
@@ -92,7 +93,7 @@ export default function SettingsPrivacyPage({onBack,onSelect,isPrivate,commentVi
      {group.items.map((item,i)=>{
       const value=item.id==='private'?(isPrivate?'On':'Off'):item.id==='comments'?(commentVisibility==='none'?'Nobody':commentVisibility==='followers'?'Followers':'Everyone'):undefined;
       return <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={item.name} style={[s.item,i===0&&s.firstItem,i===group.items.length-1&&s.lastItem]} onPress={()=>onSelect(item.id)}>
-       <View style={s.symbolBox}>{item.icon?<ProfileIcon name={item.icon} size={20} color="#a6a6a6"/>:<Text style={s.symbol}>{item.symbol}</Text>}</View>
+       <View style={s.symbolBox}>{item.icon?<ProfileIcon name={item.icon} size={20} color={olive.muted}/>:<Text style={s.symbol}>{item.symbol}</Text>}</View>
        <Text style={s.itemLabel} numberOfLines={2}>{item.name}</Text>
        {!!value&&<Text style={s.valueText}>{value}</Text>}
        <Text style={s.chevron}>›</Text>
@@ -105,22 +106,22 @@ export default function SettingsPrivacyPage({onBack,onSelect,isPrivate,commentVi
  </SafeAreaView>;
 }
 const s=StyleSheet.create({
- safe:{flex:1,backgroundColor:'#f3f3f3'},
- nav:{height:56,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:13,backgroundColor:'#f3f3f3'},
+ safe:{flex:1,backgroundColor:olive.bg},
+ nav:{height:56,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:13,backgroundColor:olive.bg},
  back:{width:44,height:48,justifyContent:'center',alignItems:'flex-start'},
- backText:{fontSize:42,fontWeight:'300',lineHeight:47,color:'#111'},
- navTitle:{fontSize:18,color:'#101010',fontWeight:'700'},
+ backText:{fontSize:42,fontWeight:'300',lineHeight:47,color:olive.text},
+ navTitle:{fontSize:18,color:olive.text,fontWeight:'700'},
  scroll:{paddingBottom:60},
- pageTitle:{fontSize:31,fontWeight:'900',letterSpacing:-0.9,color:'#090909',paddingHorizontal:21,paddingTop:10,paddingBottom:18},
+ pageTitle:{fontSize:31,fontWeight:'900',letterSpacing:-0.9,color:olive.text,paddingHorizontal:21,paddingTop:10,paddingBottom:18},
  section:{marginBottom:20},
- sectionTitle:{fontSize:15,color:'#858585',fontWeight:'600',paddingHorizontal:21,paddingVertical:12},
- groupCard:{marginHorizontal:8,borderRadius:7,overflow:'hidden',backgroundColor:'#fff'},
- item:{flexDirection:'row',alignItems:'center',backgroundColor:'#fff',minHeight:62,paddingLeft:17,paddingRight:14},
+ sectionTitle:{fontSize:15,color:olive.muted,fontWeight:'600',paddingHorizontal:21,paddingVertical:12},
+ groupCard:{marginHorizontal:8,borderRadius:12,overflow:'hidden',backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border},
+ item:{flexDirection:'row',alignItems:'center',backgroundColor:olive.surface,minHeight:62,paddingLeft:17,paddingRight:14},
  firstItem:{paddingTop:3},lastItem:{paddingBottom:3},
  symbolBox:{width:25,marginRight:11,justifyContent:'center',alignItems:'center'},
- symbol:{fontSize:22,fontWeight:'700',color:'#a6a6a6',textAlign:'center'},
- itemLabel:{color:'#101010',fontSize:16,fontWeight:'600',flex:1,letterSpacing:-.15},
- valueText:{fontSize:14,color:'#858585',marginLeft:5,marginRight:7},
- chevron:{fontSize:29,color:'#949494',fontWeight:'300',lineHeight:34,marginLeft:5},
- footer:{textAlign:'center',fontSize:12,color:'#777',lineHeight:20,marginHorizontal:21,marginTop:13}
+ symbol:{fontSize:22,fontWeight:'700',color:olive.muted,textAlign:'center'},
+ itemLabel:{color:olive.text,fontSize:16,fontWeight:'600',flex:1,letterSpacing:-.15},
+ valueText:{fontSize:14,color:olive.muted,marginLeft:5,marginRight:7},
+ chevron:{fontSize:29,color:olive.muted,fontWeight:'300',lineHeight:34,marginLeft:5},
+ footer:{textAlign:'center',fontSize:12,color:olive.muted,lineHeight:20,marginHorizontal:21,marginTop:13}
 });
