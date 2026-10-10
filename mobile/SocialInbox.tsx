@@ -25,12 +25,16 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
  const load=useCallback(async()=>{
   const version=++loaded.current;
   try{
+   // Scope an open conversation at the database, before LIMIT. A busy inbox
+   // must not push an older one-to-one reply out of the latest 120 messages.
+   let messageQuery=client.from('direct_messages').select('id,sender_id,recipient_id,body,reply_to_id,created_at');
+   if(peer)messageQuery=messageQuery.or(
+    `and(sender_id.eq.${userId},recipient_id.eq.${peer.id}),and(sender_id.eq.${peer.id},recipient_id.eq.${userId})`
+   );
    const [fromMe,toMe,allMessages]=await Promise.all([
     client.from('follows').select('following_id').eq('follower_id',userId).limit(500),
     client.from('follows').select('follower_id').eq('following_id',userId).limit(500),
-    client.from('direct_messages').select('id,sender_id,recipient_id,body,reply_to_id,created_at')
-     .order('created_at',{ascending:false}).limit(peer?120:250)
-     .then(r=>r)
+    messageQuery.order('created_at',{ascending:false}).limit(peer?120:250)
    ]);
    if(fromMe.error||toMe.error||allMessages.error)throw fromMe.error||toMe.error||allMessages.error;
    if(!mounted.current||version!==loaded.current)return;
