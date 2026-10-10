@@ -731,35 +731,86 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
  </Pressable>
  <Text style={s.muted}>Add accurate tags to help discovery. Repetitive spam and extreme hashtag stuffing can send posts for recommendation review. Automatic speech transcription and licensed sounds are not yet supported.</Text>
  <Pressable style={s.button} disabled={busy} onPress={publish}><Text style={s.buttonText}>{busy?'Deploying…':'⌖ DEPLOY POST'}</Text></Pressable><View style={s.rule}/><Text style={s.subheading}>AI CONCEPT LAB</Text><ScrollView horizontal showsHorizontalScrollIndicator={false}>{[{id:'text-video',label:'Text → video'},{id:'image',label:'Image from prompt'}].map(x=><Pressable key={x.id} onPress={()=>setWorkflow(x.id)} style={[s.chip,workflow===x.id&&s.selected]}><Text style={s.chipText}>{x.label}</Text></Pressable>)}</ScrollView><TextInput value={prompt} onChangeText={setPrompt} multiline placeholder="Describe your scene or edit…" placeholderTextColor={theme.muted} style={[s.input,{height:100}]}/><Pressable style={s.outline} onPress={generate} disabled={busy}><Text style={s.link}>{busy?'Working…':'⌖ Generate concept'}</Text></Pressable>{!!aiStatus&&<Text style={s.muted}>{aiStatus}</Text>}{!!aiUrl&&<View style={s.card}><Text style={s.strong}>Your output</Text>{workflow==='image'?<Image source={{uri:aiUrl}} style={s.preview}/>:<Video source={{uri:aiUrl}} style={s.media} useNativeControls/>}<Pressable onPress={()=>{setAsset({uri:aiUrl,type:workflow==='image'?'image':'video',width:0,height:0} as ImagePicker.ImagePickerAsset)}}><Text style={s.link}>Use output in post</Text></Pressable></View>}</ScrollView>;
- const profileView=()=> <ScrollView keyboardShouldPersistTaps="handled"><Text style={s.sectionEyebrow}>YOUR RECONFEED / PROFILE</Text>{!session?<ImageBackground source={{uri:'https://images.pexels.com/photos/876345/pexels-photo-876345.jpeg?auto=compress&cs=tinysrgb&w=1000'}} style={s.loginHero} imageStyle={s.sectionHeroImage}><View style={s.loginHeroInner}><Image source={require('./assets/icon.png')} style={s.loginEmblem}/><Text style={s.loginMotto}>MORE THAN A SCROLL.\n<Text style={{color:theme.purple}}>IT'S A BROTHERHOOD.</Text></Text></View></ImageBackground>:<Text style={s.screenDisplayTitle}>PROFILE</Text>}{session?<><View style={s.profileHero}>
-  <View style={s.profileAvatar}>{profile?.avatar_url?<Image source={{uri:profile.avatar_url}} style={{width:'100%',height:'100%',borderRadius:44}}/>:<Text style={s.profileAvatarText}>{(profile?.display_name||session.user.email||'R')[0].toUpperCase()}</Text>}</View>
-  <Text style={s.profileName}>{profile?.display_name||session.user.email}</Text>
-  {isBetaTester&&<View style={{paddingHorizontal:14,paddingVertical:6,marginTop:7,borderWidth:1,borderColor:'#C6AA72',backgroundColor:'#334632',borderRadius:16}}><Text style={{color:'#F0EEE5',fontWeight:'900',fontSize:12,letterSpacing:1.2}}>✦ VERIFIED BETA TESTER</Text></View>}
-  <Text style={s.profileHandle}>@{profile?.username||'creator'} {creatorSettings.pronouns?'· '+creatorSettings.pronouns:''}</Text>
-  <View style={s.profileStatRow}><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.following.toLocaleString()}</Text><Text style={s.profileStatLabel}>Following</Text></View><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.followers.toLocaleString()}</Text><Text style={s.profileStatLabel}>Followers</Text></View><View style={s.profileStat}><Text style={s.profileStatNumber}>{profileStats.likes.toLocaleString()}</Text><Text style={s.profileStatLabel}>Likes</Text></View></View>
-  <Text style={s.profileBio}>{profile?.bio||'VETERAN ROOTS  |  REAL STORIES  |  GOOD PEOPLE'}</Text>
- {creatorSettings.website_url?<Pressable accessibilityRole="link" onPress={()=>{void Linking.openURL(creatorSettings.website_url)}}><Text style={s.link}>⌁ {creatorSettings.website_url} ↗</Text></Pressable>:null}
- <Text style={[s.muted,{fontSize:11}]}>{creatorSettings.account_type==='business'?'BUSINESS ACCOUNT':'CREATOR ACCOUNT'} · {creatorSettings.is_private?'POSTS RESTRICTED':'PUBLIC POSTS'}</Text>
+ const profileView=()=> <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.profileScreenContent}>
+{!session?<><Text style={s.sectionEyebrow}>JOIN THE RECONFEED COMMUNITY</Text><ImageBackground source={{uri:'https://images.pexels.com/photos/876345/pexels-photo-876345.jpeg?auto=compress&cs=tinysrgb&w=1000'}} style={s.loginHero} imageStyle={s.sectionHeroImage}><View style={s.loginHeroInner}><Image source={require('./assets/icon.png')} style={s.loginEmblem}/><Text style={s.loginMotto}>MORE THAN A SCROLL.\n<Text style={{color:theme.purple}}>IT'S A BROTHERHOOD.</Text></Text></View></ImageBackground></>:null}
+{session?<>
+ <View style={s.profileTopBar}>
+  <Pressable style={s.profileTopIcon} accessibilityRole="button" accessibilityLabel="Edit your profile" onPress={()=>{setProfileEditOpen(v=>!v);setProfileSettingsOpen(false)}}>
+   <Text style={s.profileTopIconText}>✎</Text>
+  </Pressable>
+  <View style={s.profileTopBrand}><Text style={s.profileTopBrandText}>RECON<Text style={{color:'#C6AA72'}}>FEED</Text></Text><Text style={s.profileTopBrandSub}>CREATOR PROFILE</Text></View>
+  <View style={{flexDirection:'row',gap:5}}>
+   <Pressable style={s.profileTopIcon} accessibilityRole="button" accessibilityLabel="Find other creators" onPress={()=>setTab('Discover')}><Text style={s.profileTopIconText}>♧</Text></Pressable>
+   <Pressable style={s.profileTopIcon} accessibilityRole="button" accessibilityLabel="Share your profile" onPress={()=>{void shareProfile(profile?.username||'')}}><Text style={s.profileTopIconText}>↗</Text></Pressable>
+   <Pressable style={s.profileTopIcon} accessibilityRole="button" accessibilityLabel="Open profile settings" onPress={()=>{setProfileSettingsOpen(v=>!v);setProfileEditOpen(false)}}><Text style={s.profileTopIconText}>☰</Text></Pressable>
+  </View>
  </View>
- <View style={[s.row,{justifyContent:'center',gap:10,marginVertical:10}]}>
-  <Pressable accessibilityRole="button" style={s.profileEditShortcut} onPress={()=>setProfileSettingsOpen(v=>!v)}><Text style={s.profileEditText}>{profileSettingsOpen?'CLOSE SETTINGS':'≡ SETTINGS'}</Text></Pressable>
-  <Pressable accessibilityRole="button" style={s.profileEditShortcut} onPress={()=>{void shareProfile(profile?.username||'')}}><Text style={s.profileEditText}>↗ SHARE PROFILE</Text></Pressable>
+ <View style={s.profileHeaderBlock}>
+  <View style={s.profileIdentity}>
+   <View style={s.profileIdentityText}>
+    <Text style={s.profileIdentityName} numberOfLines={2}>{profile?.display_name||session.user.email?.split('@')[0]||'ReconFeed Creator'}</Text>
+    <Text style={s.profileIdentityHandle}>@{profile?.username||'creator'}</Text>
+    {isBetaTester&&<View style={s.profileBadge}><Text style={s.profileBadgeText}>✦ VERIFIED BETA TESTER</Text></View>}
+   </View>
+   <Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={()=>{setProfileEditOpen(true);void chooseProfilePhoto()}} style={s.profileIdentityAvatar}>
+    {profile?.avatar_url?<Image source={{uri:profile.avatar_url}} style={s.profileIdentityAvatarImage}/>:<Text style={s.profileIdentityAvatarInitial}>{(profile?.display_name||session.user.email||'R')[0].toUpperCase()}</Text>}
+    <View style={s.profileAvatarAdd}><Text style={s.profileAvatarAddText}>+</Text></View>
+   </Pressable>
+  </View>
+  <View style={s.profileNumbers}>
+   <Pressable onPress={()=>setTab('Discover')} style={s.profileNumberBox} accessibilityRole="button" accessibilityLabel="Find accounts to follow"><Text style={s.profileNumberValue}>{profileStats.following.toLocaleString()}</Text><Text style={s.profileNumberLabel}>Following</Text></Pressable>
+   <View style={s.profileNumberBox}><Text style={s.profileNumberValue}>{profileStats.followers.toLocaleString()}</Text><Text style={s.profileNumberLabel}>Followers</Text></View>
+   <View style={s.profileNumberBox}><Text style={s.profileNumberValue}>{profileStats.likes.toLocaleString()}</Text><Text style={s.profileNumberLabel}>Likes</Text></View>
+  </View>
+  <Text style={s.profileMainBio}>{profile?.bio||'Real people. Real stories. Built different.'}</Text>
+  {creatorSettings.pronouns?<Text style={s.profileMetaLine}>{creatorSettings.pronouns}</Text>:null}
+  {creatorSettings.website_url?<Pressable accessibilityRole="link" onPress={()=>{void Linking.openURL(creatorSettings.website_url)}}><Text style={s.profileLink}>⌁ {creatorSettings.website_url} ↗</Text></Pressable>:null}
+  <Text style={s.profileMetaLine}>{creatorSettings.account_type==='business'?'BUSINESS':'CREATOR'} ACCOUNT  ·  {creatorSettings.is_private?'PRIVATE POSTS':'PUBLIC POSTS'}  ·  VETERAN OWNED PLATFORM</Text>
+  <View style={s.profileActionRow}>
+   <Pressable style={s.profileActionPill} accessibilityRole="button" onPress={()=>{setProfileEditOpen(v=>!v);setProfileSettingsOpen(false)}}><Text style={s.profileActionLabel}>✎  EDIT PROFILE</Text></Pressable>
+   <Pressable style={s.profileActionPill} accessibilityRole="button" onPress={()=>{setProfileSettingsOpen(v=>!v);setProfileEditOpen(false)}}><Text style={s.profileActionLabel}>⚙  CREATOR STUDIO</Text></Pressable>
+  </View>
  </View>
- <View style={s.profileGalleryHeader}><Text style={s.profileGalleryTitle}>▦   YOUR CONTENT</Text><Text style={s.profileGallerySub}>{profileStats.posts} posts</Text></View>
- <View style={[s.row,{justifyContent:'space-around',marginVertical:10}]}>
-  {([{id:'videos',label:'▶ Videos'},{id:'photos',label:'▧ Photos'},{id:'saved',label:'☆ Favorites'},{id:'liked',label:'♡ Liked'}] as const).map(item=>
-    <Pressable key={item.id} accessibilityRole="button" style={[s.chip,profileGridTab===item.id&&s.selected]} onPress={()=>{
-      setProfileGridTab(item.id);
-      if(item.id==='saved')setCollection({saved:true});
-      if(item.id==='liked')setCollection({saved:false,liked:true});
-    }}><Text style={s.chipText}>{item.label}</Text></Pressable>
-  )}
+ <View style={s.profileContentTabs}>
+ {([{id:'videos',symbol:'▦',label:'Videos'},{id:'photos',symbol:'▧',label:'Photos'},{id:'saved',symbol:'☆',label:'Favorites'},{id:'liked',symbol:'♡',label:'Liked'}] as const).map(item=>
+ <Pressable accessibilityRole="tab" accessibilityState={{selected:profileGridTab===item.id}} accessibilityLabel={item.label} key={item.id} onPress={()=>{
+  setProfileGridTab(item.id);setProfileGridLimit(12);
+  if(item.id==='saved')setCollection({saved:true});
+  if(item.id==='liked')setCollection({saved:false,liked:true});
+ }} style={[s.profileContentTab,profileGridTab===item.id&&s.profileContentTabActive]}><Text style={[s.profileContentTabIcon,profileGridTab===item.id&&s.profileContentTabIconActive]}>{item.symbol}</Text></Pressable>)}
  </View>
- <View style={s.profileGallery}>{profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':profileGridTab==='videos'?p.media_type==='video':true).length?profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':profileGridTab==='videos'?p.media_type==='video':true).map(p=><Pressable key={p.id} accessibilityRole="button" onPress={()=>setCollection({userId:session.user.id,saved:false})} style={s.galleryTile}>{p.media_type==='image'?<Image source={{uri:p.media_url}} style={s.galleryTileImage}/>:<View style={s.galleryVideo}><Text style={s.galleryPlay}>▶</Text><Text style={s.galleryVideoCaption} numberOfLines={2}>{p.caption||'Video post'}</Text></View>}<Pressable onPress={()=>{void togglePinPost(p.id,!!p.pinned_at)}} accessibilityRole="button" accessibilityLabel={p.pinned_at?'Unpin post':'Pin post'} style={{position:'absolute',bottom:5,left:5,paddingHorizontal:8,paddingVertical:6,backgroundColor:'#30383D',borderRadius:5,zIndex:2}}><Text style={{color:'#F0EEE5',fontSize:10,fontWeight:'900'}}>{p.pinned_at?'★ PINNED':'☆ PIN'}</Text></Pressable><Pressable onPress={()=>deleteOwnPost(p.id)} accessibilityRole="button" accessibilityLabel="Delete this post" style={{position:'absolute',top:5,right:5,paddingHorizontal:9,paddingVertical:6,backgroundColor:'#B83235',borderRadius:5,zIndex:2}}><Text style={{color:'#fff',fontSize:10,fontWeight:'900'}}>✕ DELETE</Text></Pressable></Pressable>):<View style={s.noGallery}><Text style={s.noGalleryText}>{profileLoading?'Loading your posts…':'Your videos and photos will appear here after you publish.'}</Text><Pressable onPress={()=>setTab('Create')}><Text style={s.noGalleryAction}>＋ CREATE YOUR FIRST POST</Text></Pressable></View>}</View><View style={s.row}><Pressable style={s.chip} onPress={()=>setCollection({userId:session.user.id,saved:false})}><Text style={s.chipText}>My posts</Text></Pressable><Pressable style={s.chip} onPress={()=>setCollection({saved:true})}><Text style={s.chipText}>Saved posts ({savedPostIds.length})</Text></Pressable><Pressable style={s.chip} onPress={()=>{setMarketThread(null);setInboxOpen(true)}}><Text style={s.chipText}>Market messages</Text></Pressable></View><Text style={s.subheading}>EDIT YOUR PROFILE</Text><Text style={s.muted}>Your name, avatar, pronouns and bio help people find and recognize you. Other public links are under Settings.</Text><Pressable onPress={chooseProfilePhoto} style={s.outline}><Text style={s.link}>◉ Choose custom profile picture</Text></Pressable>{profileAvatarDraft&&<Image source={{uri:profileAvatarDraft.uri}} style={{width:100,height:100,borderRadius:50,alignSelf:'center',marginVertical:12}}/>}
+ <View style={s.profileGallery}>
+ {profileGridTab==='saved'||profileGridTab==='liked'?<View style={s.profileTabEmpty}><Text style={s.profileEmptyTitle}>{profileGridTab==='saved'?'YOUR FAVORITES':'LIKED VIDEOS'}</Text><Text style={s.profileEmptyBody}>{profileGridTab==='saved'?'Saved posts are private to you.':'Liked videos are private by default.'}</Text><Pressable accessibilityRole="button" onPress={()=>setCollection(profileGridTab==='saved'?{saved:true}:{saved:false,liked:true})} style={s.profileTabButton}><Text style={s.profileActionLabel}>OPEN COLLECTION ↗</Text></Pressable></View>
+ :profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':p.media_type==='video').length
+ ? profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':p.media_type==='video').slice(0,profileGridLimit).map(p=>
+  <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={'View '+(p.caption||'post')} onPress={()=>setProfileSelected(p)} style={s.profileVideoTile}>
+   {p.media_type==='image'?<Image source={{uri:p.media_url}} style={s.profileVideoThumbnail} resizeMode="cover"/>:<Video source={{uri:p.media_url}} style={s.profileVideoThumbnail} resizeMode={ResizeMode.COVER} shouldPlay={false} isMuted isLooping={false}/>}
+   <View pointerEvents="none" style={s.profileTileShade}/>
+   {p.pinned_at?<View pointerEvents="none" style={s.profilePinBadge}><Text style={s.profilePinText}>★ PINNED</Text></View>:null}
+   <View pointerEvents="none" style={s.profileViewsBadge}><Text style={s.profileViewsText}>▶ {Number(profileViewCounts[p.id]||0).toLocaleString()}</Text></View>
+   {profileEditOpen?<View style={s.profileTileEditTools}>
+    <Pressable accessibilityRole="button" accessibilityLabel={p.pinned_at?'Unpin post':'Pin post'} onPress={()=>{void togglePinPost(p.id,!!p.pinned_at)}} style={s.profileTileTool}><Text style={s.profileTileToolText}>{p.pinned_at?'UNPIN':'☆ PIN'}</Text></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel="Delete post" onPress={()=>deleteOwnPost(p.id)} style={[s.profileTileTool,{backgroundColor:'#8c2c2c'}]}><Text style={s.profileTileToolText}>DELETE</Text></Pressable>
+   </View>:null}
+  </Pressable>
+ )
+ : <View style={s.profileTabEmpty}><Text style={s.profileEmptyTitle}>{profileLoading?'LOADING YOUR POSTS…':profileGridTab==='photos'?'YOUR PHOTOS WILL APPEAR HERE':'YOUR VIDEO GRID IS WAITING'}</Text><Text style={s.profileEmptyBody}>Record your first story to start building your ReconFeed profile.</Text><Pressable onPress={()=>setTab('Create')} style={s.profileTabButton}><Text style={s.profileActionLabel}>＋ CREATE A POST</Text></Pressable></View>}
+ </View>
+ {(['videos','photos'] as string[]).includes(profileGridTab)&&profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':p.media_type==='video').length>profileGridLimit?
+ <Pressable accessibilityRole="button" style={s.profileLoadMore} onPress={()=>setProfileGridLimit(n=>n+12)}><Text style={s.profileActionLabel}>SHOW MORE POSTS ↓</Text></Pressable>:null}
+ <Modal visible={!!profileSelected} animationType="slide" onRequestClose={()=>setProfileSelected(null)}>
+  <SafeAreaView style={s.safe}><Pressable style={s.profileCloseVideo} onPress={()=>setProfileSelected(null)}><Text style={s.profileActionLabel}>← BACK TO PROFILE</Text></Pressable>
+   {profileSelected?.media_type==='video'?<Video key={profileSelected.id} source={{uri:profileSelected.media_url}} shouldPlay isLooping useNativeControls resizeMode={ResizeMode.CONTAIN} style={{width:'100%',flex:1,backgroundColor:'#050806'}}/>:profileSelected?<Image source={{uri:profileSelected.media_url}} style={{flex:1,width:'100%'}} resizeMode="contain"/>:null}
+   <Text style={[s.muted,{padding:14}]}>{profileSelected?.caption||''}</Text>
+  </SafeAreaView>
+ </Modal>
+ <View style={s.profileBelowGrid}>
+<View style={s.row}><Pressable style={s.chip} onPress={()=>setCollection({userId:session.user.id,saved:false})}><Text style={s.chipText}>My posts</Text></Pressable><Pressable style={s.chip} onPress={()=>setCollection({saved:true})}><Text style={s.chipText}>Saved posts ({savedPostIds.length})</Text></Pressable><Pressable style={s.chip} onPress={()=>{setMarketThread(null);setInboxOpen(true)}}><Text style={s.chipText}>Market messages</Text></Pressable></View>{profileEditOpen&&<View style={s.profileEditorSheet}><Text style={s.subheading}>EDIT YOUR PROFILE</Text><Text style={s.muted}>Your name, avatar, pronouns and bio help people find and recognize you. Other public links are under Settings.</Text><Pressable onPress={chooseProfilePhoto} style={s.outline}><Text style={s.link}>◉ Choose custom profile picture</Text></Pressable>{profileAvatarDraft&&<Image source={{uri:profileAvatarDraft.uri}} style={{width:100,height:100,borderRadius:50,alignSelf:'center',marginVertical:12}}/>}
  <TextInput value={profileUsernameDraft} onChangeText={setProfileUsernameDraft} maxLength={24} autoCapitalize="none" placeholder="@username" placeholderTextColor={theme.muted} style={s.input}/>
  <TextInput value={name} onChangeText={setName} maxLength={80} placeholder="Display name" placeholderTextColor={theme.muted} style={s.input}/>
  <TextInput value={profileBioDraft} onChangeText={setProfileBioDraft} maxLength={80} multiline placeholder="Your bio (80 characters max)" placeholderTextColor={theme.muted} style={[s.input,{height:90}]}/>
  <Pressable style={s.outline} disabled={busy} onPress={saveFullProfile}><Text style={s.link}>{busy?'Saving…':'Save profile changes'}</Text></Pressable><View style={s.rule}/>
+</View>}
  {profileSettingsOpen&&<View style={[s.card,{gap:13,marginVertical:14,borderColor:'#C6AA72',borderWidth:1}]}>
   <Text style={s.heading}>≡ RECONFEED ACCOUNT CONTROL</Text>
   <Text style={s.muted}>These settings save to your account. Personal and Business are profile categories; paid rewards, commercial music rights, passkeys and DM features are not enabled here.</Text>
