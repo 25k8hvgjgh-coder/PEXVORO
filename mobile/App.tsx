@@ -10,6 +10,7 @@ import * as Updates from 'expo-updates';
 import MarketplaceInbox,{MarketThread} from './MarketplaceInbox';
 import PostCollection from './PostCollection';
 import {rankFeedPosts, type FeedEvent} from './feedRanking';
+import {createFeedEventQueue} from './feedEventQueue';
 import {normalizeBlockedKeywords,parseCreatorTags,allowedForFeed} from './contentSignals';
 const url=process.env.EXPO_PUBLIC_SUPABASE_URL||'';
 const key=process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY||'';
@@ -38,6 +39,7 @@ export default function App(){
  const [inboxOpen,setInboxOpen]=useState(false),[marketThread,setMarketThread]=useState<MarketThread|null>(null),[collection,setCollection]=useState<{userId?:string;saved:boolean}|null>(null);
  const feedRequest=useRef(0);
  const watchRef=useRef<{postId:string;lastPositionMs:number;watchedMs:number;durationMs:number;startedAt:number;written:boolean}|null>(null);
+ const feedQueueRef=useRef<ReturnType<typeof createFeedEventQueue>|null>(null);
  const marketRequest=useRef(0);
  const pendingInteractions=useRef(new Set<string>());
  const [activePostId,setActivePostId]=useState<string|null>(null); const [muted,setMuted]=useState(false); const [appActive,setAppActive]=useState(true); const viewabilityConfig=useRef({itemVisiblePercentThreshold:75}).current; const onViewableItemsChanged=useRef(({viewableItems}:any)=>{const next=viewableItems?.[0]?.item?.id;if(next)setActivePostId(next)}).current;
@@ -134,6 +136,7 @@ export default function App(){
    {text:'Clear history',onPress:()=>{void(async()=>{
     try{
      watchRef.current=null;
+     await feedQueueRef.current?.clear();
      const timestamp=new Date().toISOString();
      const [deleted,updated]=await Promise.all([
       supabase.from('feed_events').delete().eq('user_id',session.user.id),
@@ -178,7 +181,23 @@ export default function App(){
  const accountRef=useRef<string|undefined>(undefined);accountRef.current=session?.user.id;
  useEffect(()=>{if(!supabase)return;let active=true;supabase.auth.getSession().then(({data,error})=>{if(error)console.warn('Session restore failed',error.message);if(active)setSession(data.session)}).catch(()=>{if(active)showAlert('Connection unavailable','Could not restore your session. Check your connection.')});const {data}=supabase.auth.onAuthStateChange((event,s)=>{if(active){setSession(s);if(event==='PASSWORD_RECOVERY'){setRecovering(true);setTab('Profile')}}});return()=>{active=false;data.subscription.unsubscribe()}},[]);
  useEffect(()=>{let cancelled=false;const timer=setTimeout(()=>{void(async()=>{if(!Updates.isEnabled)return;try{const check=await Updates.checkForUpdateAsync();if(cancelled||!check.isAvailable)return;showAlert('ReconFeed update available','A new update is available. Download it now?',[{text:'Not now',style:'cancel'},{text:'Download update',onPress:()=>{void(async()=>{try{const downloaded=await Updates.fetchUpdateAsync();if(cancelled||!downloaded.isNew)return;showAlert('Update ready','The update is downloaded. Restart ReconFeed to apply it now?',[{text:'Later',style:'cancel'},{text:'Restart now',onPress:()=>{void Updates.reloadAsync().catch((error)=>console.warn('ReconFeed update restart failed',error))}}])}catch(error){console.warn('ReconFeed update download failed',error);showAlert('Update unavailable','ReconFeed could not download the update. Try again later.')}})()}}])}catch(error){console.warn('ReconFeed update check failed',error)}})()},1200);return()=>{cancelled=true;clearTimeout(timer)}},[]);
- useEffect(()=>{const sub=AppState.addEventListener('change',state=>{const active=state==='active';setAppActive(active);if(active)supabase?.auth.startAutoRefresh();else supabase?.auth.stopAutoRefresh()});return()=>sub.remove()},[]);
+ useEffect(()=>{const sub=AppState.addEventListener('change',state=>{
+  const active=state==='active';setAppActive(active);
+  if(active){supabase?.auth.startAutoRefresh();void feedQueueRef.current?.flush()}
+  else{supabase?.auth.stopAutoRefresh();void feedQueueRef.current?.flush()}
+ });return()=>sub.remove()},[]);
+ useEffect(()=>{
+  if(!supabase||!session?.user.id){feedQueueRef.current?.dispose();feedQueueRef.current=null;return}
+  const queue=createFeedEventQueue({
+   userId:session.user.id,
+   storage:AsyncStorage,
+   insert:async events=>{const response=await supabase.from('feed_events').insert(events);return {error:response.error}}
+  });
+  feedQueueRef.current=queue;
+  void queue.hydrate().then(()=>queue.flush());
+  const flushInterval=setInterval(()=>{void queue.flush()},7000);
+  return()=>{clearInterval(flushInterval);if(feedQueueRef.current===queue)feedQueueRef.current=null;queue.dispose()};
+ },[session?.user.id]);
 
  useEffect(()=>{++feedRequest.current;++marketRequest.current;setActivePostId(null);if(tab==='Market')void loadMarketplace();else if(tab==='For You'||tab==='Following')void loadFeed();return()=>{++feedRequest.current;++marketRequest.current}},[tab,session?.user.id]);
  useEffect(()=>{setNotInterested([]);setSavedPostIds([]);setProfile(null);setName('');setPassword('');setCommentTarget(null);setCommentItems([]);setInboxOpen(false);setMarketThread(null);setCollection(null);setAiUrl('');setAiStatus('');setCaption('');setAsset(null);setMarketMode('browse');setMarketAck(false);setResearchLoaded(false);setResearchSaved(false);setResearchFeatures([]);setResearchPrice('free');setResearchIdentity('both');setResearchNeed('');setResearchWilling(false)},[session?.user.id]);
@@ -317,11 +336,11 @@ export default function App(){
  }
  async function recordFeedAction(postId:string,eventType:'share'|'not_interested'){
   if(!supabase||!session||(eventType!=='not_interested'&&!personalizationEnabled))return;
-  try{
-   const event={user_id:session.user.id,post_id:postId,event_type:eventType,watched_ms:0,duration_ms:0};
-   const r=await supabase.from('feed_events').insert(event);
-   if(r.error)console.warn('Feed preference unavailable',r.error.message);
-  }catch(err){console.warn('Could not save feed action')}
+  const queue=feedQueueRef.current;
+  if(!queue)return;
+  queue.enqueue(postId,eventType);
+  // Explicit choices should be synced promptly; passive viewing signals are batched.
+  void queue.flush();
  }
  function flushVideoWatch(){
   const view=watchRef.current;
@@ -329,12 +348,11 @@ export default function App(){
   view.written=true;
   watchRef.current=null;
   if(!session||!supabase||!personalizationEnabled||view.durationMs<100||view.watchedMs<200)return;
-  const e={
-   user_id:session.user.id,post_id:view.postId,event_type:'watch',
-   watched_ms:Math.round(Math.min(view.watchedMs,3600000)),
-   duration_ms:Math.round(Math.min(view.durationMs,3600000))
-  };
-  void supabase.from('feed_events').insert(e).then(({error})=>{if(error)console.warn('Watch feedback unavailable',error.message)});
+  const queue=feedQueueRef.current;
+  if(queue){
+   queue.enqueue(view.postId,'watch',view.watchedMs,view.durationMs);
+   if(queue.size()>=10)void queue.flush();
+  }
  }
  function trackPlayback(postId:string,status:any){
   if(!session||!personalizationEnabled||!status?.isLoaded||!appActive)return;
