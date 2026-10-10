@@ -260,7 +260,30 @@ export default function App(){
 
  const accountRef=useRef<string|undefined>(undefined);accountRef.current=session?.user.id;
  useEffect(()=>{if(!supabase)return;let active=true;supabase.auth.getSession().then(({data,error})=>{if(error)console.warn('Session restore failed',error.message);if(active)setSession(data.session)}).catch(()=>{if(active)showAlert('Connection unavailable','Could not restore your session. Check your connection.')});const {data}=supabase.auth.onAuthStateChange((event,s)=>{if(active){setSession(s);if(event==='PASSWORD_RECOVERY'){setRecovering(true);setTab('Profile')}}});return()=>{active=false;data.subscription.unsubscribe()}},[]);
- useEffect(()=>{let cancelled=false;const timer=setTimeout(()=>{void(async()=>{if(!Updates.isEnabled)return;try{const check=await Updates.checkForUpdateAsync();if(cancelled||!check.isAvailable)return;showAlert('ReconFeed update available','A new update is available. Download it now?',[{text:'Not now',style:'cancel'},{text:'Download update',onPress:()=>{void(async()=>{try{const downloaded=await Updates.fetchUpdateAsync();if(cancelled||!downloaded.isNew)return;showAlert('Update ready','The update is downloaded. Restart ReconFeed to apply it now?',[{text:'Later',style:'cancel'},{text:'Restart now',onPress:()=>{void Updates.reloadAsync().catch((error)=>console.warn('ReconFeed update restart failed',error))}}])}catch(error){console.warn('ReconFeed update download failed',error);showAlert('Update unavailable','ReconFeed could not download the update. Try again later.')}})()}}])}catch(error){console.warn('ReconFeed update check failed',error)}})()},1200);return()=>{cancelled=true;clearTimeout(timer)}},[]);
+ // Fetch compatible updates automatically for all signed ReconFeed builds.
+ // Downloads are applied on the next launch (or immediately if the user agrees
+ // to restart), so account forms and uploads are never interrupted silently.
+ useEffect(()=>{
+  let cancelled=false,checking=false,lastCheck=0;
+  async function syncReconFeedUpdate(){
+   if(Platform.OS==='web'||!Updates.isEnabled||checking||Date.now()-lastCheck<5*60*1000)return;
+   checking=true;lastCheck=Date.now();
+   try{
+    const check=await Updates.checkForUpdateAsync();
+    if(cancelled||!check.isAvailable)return;
+    const downloaded=await Updates.fetchUpdateAsync();
+    if(cancelled||!downloaded.isNew)return;
+    showAlert('ReconFeed update ready','The latest update has downloaded for your device. It will install automatically the next time you open ReconFeed, or you can restart now.',[
+     {text:'Later',style:'cancel'},
+     {text:'Restart now',onPress:()=>{void Updates.reloadAsync().catch(error=>console.warn('ReconFeed update restart failed',error))}}
+    ]);
+   }catch(error){console.warn('ReconFeed automatic update check failed',error)}
+   finally{checking=false}
+  }
+  const timer=setTimeout(()=>{void syncReconFeedUpdate()},1500);
+  const sub=AppState.addEventListener('change',state=>{if(state==='active')void syncReconFeedUpdate()});
+  return()=>{cancelled=true;clearTimeout(timer);sub.remove()};
+ },[]);
  useEffect(()=>{const sub=AppState.addEventListener('change',state=>{
   const active=state==='active';setAppActive(active);
   if(active){supabase?.auth.startAutoRefresh();void feedQueueRef.current?.flush()}
