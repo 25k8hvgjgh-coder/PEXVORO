@@ -51,6 +51,7 @@ export default function App(){
  const [authReady,setAuthReady]=useState(!supabase);
  const exploreScrollRef=useRef<ScrollView>(null);
  const exploreResultsOffset=useRef(0);
+ const pendingExploreJump=useRef(false);
  const [activeExploreCategory,setActiveExploreCategory]=useState('Trending');
  const compact=screenWidth<380;
  const wide=screenWidth>=700;
@@ -462,7 +463,7 @@ export default function App(){
    if(/^[a-z0-9_]{2,25}$/.test(tag))clauses.push('topic_tags.cs.{'+tag+'}');
    const postReq=safe
     ?supabase.from('posts').select('id,user_id,caption,media_url,media_type,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles!posts_user_id_fkey(username,display_name,avatar_url)').eq('visibility','public').or(clauses.join(',')).order('created_at',{ascending:false}).limit(35)
-    :Promise.resolve({data:[],error:null});
+    :supabase.from('posts').select('id,user_id,caption,media_url,media_type,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status,created_at,profiles!posts_user_id_fkey(username,display_name,avatar_url)').eq('visibility','public').order('created_at',{ascending:false}).limit(30);
    const [creatorsFound,postsFound]=await Promise.all([creatorReq,postReq]);
    if(request!==exploreSearchRequest.current)return;
    // Creator discovery must still work even if video loading fails.
@@ -493,7 +494,13 @@ export default function App(){
    console.warn('Creator discovery failed',safeErrorMessage(error));
    setExploreCreators([]);setExploreResults([]);
    showAlert('Search temporarily unavailable','Creator directory could not load. Try again or check your connection.');
-  }finally{if(request===exploreSearchRequest.current)setExploreBusy(false)}
+  }finally{if(request===exploreSearchRequest.current){
+   setExploreBusy(false);
+   if(pendingExploreJump.current){
+    pendingExploreJump.current=false;
+    setTimeout(()=>exploreScrollRef.current?.scrollTo({y:exploreResultsOffset.current||330,animated:true}),175);
+   }
+  }}
  }
  useEffect(()=>{
   if(tab!=='Discover')return;
@@ -836,9 +843,8 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <View style={s.exploreHeading}><Text style={s.screenDisplayTitle}>EXPLORE</Text><Text style={s.exploreSub}>MILITARY ROOTS  /  REAL WORK  /  REAL PEOPLE</Text></View>
   <View style={s.exploreSearchRow}><Text style={s.exploreSearchIcon}>⌕</Text><TextInput value={search} onChangeText={setSearch} onSubmitEditing={()=>{void runExploreSearch(search)}} returnKeyType="search" placeholder="Search creators, tags, or videos..." placeholderTextColor="#aab6a4" style={s.exploreSearch}/><Pressable accessibilityRole="button" accessibilityLabel="Search" onPress={()=>{void runExploreSearch(search)}} style={s.exploreSearchGo}><Text style={s.exploreSearchGoText}>↗</Text></Pressable></View>
   <View style={s.exploreGrid}>{exploreCategories.map(item=><Pressable accessibilityRole="button" accessibilityLabel={'Browse '+item.label} key={item.label} style={[s.exploreTile,activeExploreCategory===item.label&&{borderWidth:2,borderColor:theme.purple}]} onPress={()=>{
-  setActiveExploreCategory(item.label);setSearch(item.query);setExploreSearched(true);
+  setActiveExploreCategory(item.label);setSearch(item.query);setExploreSearched(true);pendingExploreJump.current=true;
   if(search===item.query)void runExploreSearch(item.query);
-  setTimeout(()=>exploreScrollRef.current?.scrollTo({y:exploreResultsOffset.current||280,animated:true}),250);
  }}><ImageBackground source={{uri:item.image}} style={s.exploreTileImage} imageStyle={{borderRadius:10}}><View style={s.exploreTileOverlay}><Text style={s.exploreTileLabel}>{item.label}</Text><Text style={s.exploreTileArrow}>↗</Text></View></ImageBackground></Pressable>)}</View>
   {exploreBusy&&<ActivityIndicator color={theme.purple} style={{marginVertical:18}}/>}
   {exploreSearched&&!exploreBusy&&<View onLayout={event=>{exploreResultsOffset.current=event.nativeEvent.layout.y}} style={{paddingVertical:16,gap:12}}>
