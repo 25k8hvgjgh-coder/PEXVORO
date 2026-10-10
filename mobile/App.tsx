@@ -481,15 +481,17 @@ export default function App(){
   ]);
  }
  async function chooseProfilePhoto(){
-  if(profileEditOpen){setProfileEditOpen(false);if(Platform.OS!=='web')await new Promise(resolve=>setTimeout(resolve,300));}
-
   if(!session)return;
   try{
    const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:true,aspect:[1,1],quality:.7,exif:false,base64:false});
-   if(!result.canceled&&result.assets?.[0]){setProfileAvatarDraft(result.assets[0]);setProfilePhotoOpen(true)};
+   if(result.canceled||!result.assets?.[0])return;
+   setProfileAvatarDraft(result.assets[0]);
+   // Keep the editor open: the photo, username, name and bio are saved together.
+   // Outside the editor, use the dedicated photo preview-and-save sheet.
+   if(!profileEditOpen)setProfilePhotoOpen(true);
   }catch(error:any){showAlert('Profile photo unavailable',safeErrorMessage(error))}
  }
- async function saveProfilePhoto(){
+  async function saveProfilePhoto(){
   if(!supabase||!session||!profileAvatarDraft||profilePhotoPending.current)return;
   const userId=session.user.id;const selected=profileAvatarDraft;
   profilePhotoPending.current=true;setProfilePhotoBusy(true);
@@ -515,8 +517,10 @@ export default function App(){
    const result=await supabase.from('profiles').update(update).eq('id',session.user.id).select('id,username,display_name,bio,avatar_url').single();
    if(result.error)throw result.error;
    if(!result.data)throw new Error('Your profile was not saved. Please retry.');
+   // The update response is the source of truth; avoid a second load racing
+   // with the edited form and replacing it with cached profile fields.
+   setProfile((previous:any)=>({...previous,...result.data}));
    setProfileAvatarDraft(null);
-   await loadProfile();
    setProfileEditOpen(false);
    showAlert('Profile updated','Your photo, username, name and bio have been saved.');
   }catch(error:any){showAlert('Could not update profile',error?.code==='23505'?'That username is already taken. Choose another.':safeErrorMessage(error))}
