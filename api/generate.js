@@ -28,13 +28,15 @@ async function authenticatedUser(req) {
   return user && typeof user.id === "string" ? user : null;
 }
 
-async function rpc(name, args, userToken) {
-  const { url, key } = supabaseConfig();
+async function rpc(name, args) {
+  const { url } = supabaseConfig();
+  const serverKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  if (!serverKey) return { ok: false, status: 503, data: { message: "SUPABASE_SERVICE_ROLE_KEY is not configured." } };
   const response = await fetch(url + "/rest/v1/rpc/" + name, {
     method: "POST",
     headers: {
-      apikey: key,
-      Authorization: "Bearer " + userToken,
+      apikey: serverKey,
+      Authorization: "Bearer " + serverKey,
       "Content-Type": "application/json",
       Accept: "application/json"
     },
@@ -95,7 +97,7 @@ export default async function handler(req, res) {
 
   // Reserve a per-user job before calling the paid provider; this also applies hourly/daily quotas.
   let reservation;
-  try { reservation = await rpc("reserve_ai_generation", { p_workflow: workflow }, userToken); }
+  try { reservation = await rpc("reserve_ai_generation", { p_user_id: user.id, p_workflow: workflow }); }
   catch { return send(res, 503, { error: "Could not reserve an AI generation. Try again shortly." }); }
   if (!reservation.ok) {
     const message = String(reservation.data?.message || reservation.data?.details || "");
@@ -117,7 +119,7 @@ export default async function handler(req, res) {
     let data = {};
     try { data = JSON.parse(raw); } catch {}
     if (!upstream.ok || !data.id) {
-      await rpc("finalize_ai_generation", { p_job_id: jobId, p_prediction_id: null, p_status: "failed" }, userToken).catch(() => {});
+      await rpc("finalize_ai_generation", { p_user_id: user.id, p_job_id: jobId, p_prediction_id: null, p_status: "failed" }).catch(() => {});
       if (!upstream.ok) {
         console.error("Replicate generation error", upstream.status, String(data.detail || data.title || "provider error").slice(0, 180));
         return send(res, upstream.status === 429 ? 429 : 502, { error: upstream.status === 429 ? "AI provider rate limit reached. Try again later." : "The AI provider rejected this request. Check the configured model and its input schema." });
@@ -126,17 +128,18 @@ export default async function handler(req, res) {
     }
     const status = providerStatus(data.status);
     const saved = await rpc("finalize_ai_generation", {
+      p_user_id: user.id,
       p_job_id: jobId,
       p_prediction_id: String(data.id),
       p_status: status
-    }, userToken);
+    });
     if (!saved.ok || saved.data !== true) {
       console.error("AI job finalization failed", saved.status, String(saved.data?.message || "").slice(0, 180));
       return send(res, 503, { error: "The provider accepted the request but the job could not be saved. Contact support with job ID " + jobId + "." });
     }
     return send(res, 202, { id: jobId, status, output: data.output || null, workflow });
   } catch (e) {
-    await rpc("finalize_ai_generation", { p_job_id: jobId, p_prediction_id: null, p_status: "failed" }, userToken).catch(() => {});
+    await rpc("finalize_ai_generation", { p_user_id: user.id, p_job_id: jobId, p_prediction_id: null, p_status: "failed" }).catch(() => {});
     console.error("Replicate connection error", e?.message || "unknown");
     return send(res, 502, { error: "Could not complete the AI provider request. Try again later." });
   }
