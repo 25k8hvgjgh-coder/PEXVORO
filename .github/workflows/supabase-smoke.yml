@@ -1,0 +1,34 @@
+name: Supabase live smoke test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/supabase-smoke.js"
+      - ".github/workflows/supabase-smoke.yml"
+      - "mobile/App.tsx"
+      - "schema.sql"
+      - "supabase/**"
+
+permissions:
+  contents: read
+
+jobs:
+  public-api-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Probe live Supabase public reads without logging row data
+        run: node scripts/supabase-smoke.js
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://ojprsyvkzgyphpsvksgx.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW
