@@ -2,7 +2,7 @@
 // Submissions use the public Supabase RPC, which never exposes stored addresses.
 const VALID_PLATFORMS = new Set(['iphone','android','both','web']);
 const VALID_INTERESTS = new Set(['veterans','trades','trucks','outdoors','creators','marketplace']);
-const URL = 'https://ojprsyvkzgyphpsvksgx.supabase.co';
+const SUPABASE_URL = 'https://ojprsyvkzgyphpsvksgx.supabase.co';
 const PUBLIC_KEY = 'sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW';
 
 export default async function handler(req,res) {
@@ -31,7 +31,7 @@ export default async function handler(req,res) {
     if(interests.length > 6 || interests.some(x => !VALID_INTERESTS.has(x))) return res.status(400).json({error:'Select up to six valid interests.'});
     if(body.confirm_adult !== true || body.consent !== true || body.accept_guidelines !== true)
       return res.status(400).json({error:'Confirm you are 18+, consent to beta email contact, and accept the tester guidelines.'});
-    const response = await fetch(URL + '/rest/v1/rpc/join_reconfeed_beta',{
+    const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/join_reconfeed_beta',{
       method:'POST',headers:{'apikey':PUBLIC_KEY,'Content-Type':'application/json','Accept':'application/json'},
       body:JSON.stringify({p_email:email,p_platform:platform,p_interests:interests,p_source:source,p_confirm_adult:true,p_consent:true,p_trap:''})
     });
