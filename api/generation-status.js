@@ -26,13 +26,15 @@ async function authenticatedUser(req) {
   return user && typeof user.id === "string" ? user : null;
 }
 
-async function rpc(name, args, userToken) {
-  const { url, key } = supabaseConfig();
+async function rpc(name, args) {
+  const { url } = supabaseConfig();
+  const serverKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  if (!serverKey) return { ok: false, status: 503, data: { message: "SUPABASE_SERVICE_ROLE_KEY is not configured." } };
   const response = await fetch(url + "/rest/v1/rpc/" + name, {
     method: "POST",
     headers: {
-      apikey: key,
-      Authorization: "Bearer " + userToken,
+      apikey: serverKey,
+      Authorization: "Bearer " + serverKey,
       "Content-Type": "application/json",
       Accept: "application/json"
     },
@@ -69,10 +71,12 @@ export default async function handler(req, res) {
 
   const id = String(req.query?.id || "").trim();
   if (!/^[0-9a-f-]{36}$/i.test(id)) return res.status(400).json({ error: "A valid ReconFeed generation job ID is required." });
-  const { url, key } = supabaseConfig();
+  const { url } = supabaseConfig();
+  const serverKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  if (!serverKey) return res.status(503).json({ error: "AI job storage is not configured. The server owner must add SUPABASE_SERVICE_ROLE_KEY." });
   try {
-    const response = await fetch(url + "/rest/v1/ai_generation_jobs?id=eq." + encodeURIComponent(id) + "&select=id,provider_prediction_id,workflow,status&limit=1", {
-      headers: { apikey: key, Authorization: "Bearer " + userToken, Accept: "application/json" },
+    const response = await fetch(url + "/rest/v1/ai_generation_jobs?id=eq." + encodeURIComponent(id) + "&user_id=eq." + encodeURIComponent(user.id) + "&select=id,provider_prediction_id,workflow,status&limit=1", {
+      headers: { apikey: serverKey, Authorization: "Bearer " + serverKey, Accept: "application/json" },
       signal: AbortSignal.timeout(10000)
     });
     if (!response.ok) return res.status(503).json({ error: "Could not retrieve your generation job." });
@@ -93,10 +97,11 @@ export default async function handler(req, res) {
     const status = providerStatus(data.status);
     if (status !== job.status) {
       const updated = await rpc("finalize_ai_generation", {
+        p_user_id: user.id,
         p_job_id: job.id,
         p_prediction_id: job.provider_prediction_id,
         p_status: status
-      }, userToken);
+      });
       if (!updated.ok) console.warn("Could not update AI job status", updated.status);
     }
     return res.status(200).json({
