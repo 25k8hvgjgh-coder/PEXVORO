@@ -20,6 +20,7 @@ const supabase=url&&key?createClient(url,key,{auth:{storage:AsyncStorage,persist
 const theme={bg:'#090C0B',panel:'#171d1b',line:'#596958',text:'#F0EEE5',muted:'#B7BDBB',purple:'#a9bf78',pink:'#C6AA72',accent:'#66784B'};
 type Post={id:string;user_id:string;caption:string;media_url:string;media_type:string;format?:string;created_at:string;profiles:any;likes:{count:number}[];comments?:{count:number}[]};
 type Tab='For You'|'Following'|'Discover'|'Market'|'Create'|'Profile';
+const initialProfileQuery=Platform.OS==='web'?(()=>{try{return new URLSearchParams(String((globalThis as any).location?.search||'')).get('profile')?.slice(0,40)||''}catch{return ''}})():'';
 const communityTerms=['veteran','military','outdoors','truck','country life','build','fitness','creator','freedom','service','community'];
 function communityScore(caption:string,format?:string){const text=(String(caption||'')+' '+String(format||'')).toLowerCase();return communityTerms.reduce((score,term)=>score+(text.includes(term)?1:0),0)}
 function showAlert(title:string,message?:string,buttons?:Array<{text?:string;style?:string;onPress?:()=>void}>){
@@ -48,7 +49,7 @@ export default function App(){
  const marketRequest=useRef(0);
  const pendingInteractions=useRef(new Set<string>());
  const [activePostId,setActivePostId]=useState<string|null>(null); const [muted,setMuted]=useState(false); const [appActive,setAppActive]=useState(true); const viewabilityConfig=useRef({itemVisiblePercentThreshold:75}).current; const onViewableItemsChanged=useRef(({viewableItems}:any)=>{const next=viewableItems?.[0]?.item?.id;if(next)setActivePostId(next)}).current;
- const [session,setSession]=useState<Session|null>(null),[tab,setTab]=useState<Tab>(Platform.OS==='web'&&String((globalThis as any).location?.search||'').includes('beta=1')?'Profile':'For You'),[posts,setPosts]=useState<Post[]>([]),[marketListings,setMarketListings]=useState<any[]>([]),[marketTitle,setMarketTitle]=useState(''),[marketDescription,setMarketDescription]=useState(''),[marketPrice,setMarketPrice]=useState(''),[marketCategory,setMarketCategory]=useState('All'),[marketCondition,setMarketCondition]=useState('Good'),[marketLocation,setMarketLocation]=useState(''),[marketAck,setMarketAck]=useState(false),[marketMode,setMarketMode]=useState<'browse'|'sell'>('browse'),[marketSearch,setMarketSearch]=useState(''),[loading,setLoading]=useState(false),[search,setSearch]=useState(''),[email,setEmail]=useState<string>(()=>{if(Platform.OS!=='web'||!String((globalThis as any).location?.search||'').includes('beta=1'))return '';try{return String((globalThis as any).sessionStorage?.getItem('reconfeed_beta_email')||'').trim().toLowerCase()}catch(_error){return ''}}),[password,setPassword]=useState(''),[name,setName]=useState(''),[gender,setGender]=useState(''),[caption,setCaption]=useState(''),[asset,setAsset]=useState<ImagePicker.ImagePickerAsset|null>(null),[prompt,setPrompt]=useState(''),[workflow,setWorkflow]=useState('text-video'),[aiUrl,setAiUrl]=useState(''),[aiStatus,setAiStatus]=useState(''),[busy,setBusy]=useState(false),[profile,setProfile]=useState<any>(null),[commentTarget,setCommentTarget]=useState<Post|null>(null),[commentText,setCommentText]=useState(''),[commentItems,setCommentItems]=useState<any[]>([]),[commentsBusy,setCommentsBusy]=useState(false),[notInterested,setNotInterested]=useState<string[]>([]),[savedPostIds,setSavedPostIds]=useState<string[]>([]);
+ const [session,setSession]=useState<Session|null>(null),[tab,setTab]=useState<Tab>(Platform.OS==='web'&&String((globalThis as any).location?.search||'').includes('beta=1')?'Profile':initialProfileQuery?'Discover':'For You'),[posts,setPosts]=useState<Post[]>([]),[marketListings,setMarketListings]=useState<any[]>([]),[marketTitle,setMarketTitle]=useState(''),[marketDescription,setMarketDescription]=useState(''),[marketPrice,setMarketPrice]=useState(''),[marketCategory,setMarketCategory]=useState('All'),[marketCondition,setMarketCondition]=useState('Good'),[marketLocation,setMarketLocation]=useState(''),[marketAck,setMarketAck]=useState(false),[marketMode,setMarketMode]=useState<'browse'|'sell'>('browse'),[marketSearch,setMarketSearch]=useState(''),[loading,setLoading]=useState(false),[search,setSearch]=useState(initialProfileQuery),[email,setEmail]=useState<string>(()=>{if(Platform.OS!=='web'||!String((globalThis as any).location?.search||'').includes('beta=1'))return '';try{return String((globalThis as any).sessionStorage?.getItem('reconfeed_beta_email')||'').trim().toLowerCase()}catch(_error){return ''}}),[password,setPassword]=useState(''),[name,setName]=useState(''),[gender,setGender]=useState(''),[caption,setCaption]=useState(''),[asset,setAsset]=useState<ImagePicker.ImagePickerAsset|null>(null),[prompt,setPrompt]=useState(''),[workflow,setWorkflow]=useState('text-video'),[aiUrl,setAiUrl]=useState(''),[aiStatus,setAiStatus]=useState(''),[busy,setBusy]=useState(false),[profile,setProfile]=useState<any>(null),[commentTarget,setCommentTarget]=useState<Post|null>(null),[commentText,setCommentText]=useState(''),[commentItems,setCommentItems]=useState<any[]>([]),[commentsBusy,setCommentsBusy]=useState(false),[notInterested,setNotInterested]=useState<string[]>([]),[savedPostIds,setSavedPostIds]=useState<string[]>([]);
  const [recovering,setRecovering]=useState(Platform.OS==='web'&&String((globalThis as any).location?.hash||'').includes('type=recovery')),[newPassword,setNewPassword]=useState('');
  const [captureMode,setCaptureMode]=useState<'photo'|'video'>('video'),[captureSeconds,setCaptureSeconds]=useState(15);
  const [profileStats,setProfileStats]=useState({following:0,followers:0,posts:0,likes:0});
@@ -82,6 +83,7 @@ export default function App(){
  const [viewingCreatorPosts,setViewingCreatorPosts]=useState<any[]>([]);
  const [creatorProfileLoading,setCreatorProfileLoading]=useState(false);
  const [profileBioDraft,setProfileBioDraft]=useState('');
+ const [profileUsernameDraft,setProfileUsernameDraft]=useState('');
  const [profileAvatarDraft,setProfileAvatarDraft]=useState<ImagePicker.ImagePickerAsset|null>(null);
  const [postPrivacy,setPostPrivacy]=useState<'public'|'followers'|'private'>('public');
  const [tagDraft,setTagDraft]=useState('');
@@ -296,7 +298,7 @@ export default function App(){
   const link='https://reconfeed.com/app/?profile='+encodeURIComponent(username.trim().replace(/^@/,''));
   try{await Share.share({message:'Find me on ReconFeed: '+link,url:link})}catch(error){console.warn('Profile sharing unavailable')}
  }
- async function loadProfile(){if(!supabase||!session)return;const r=await supabase.from('profiles').select('id,username,display_name,bio,avatar_url,created_at').eq('id',session.user.id).maybeSingle();if(accountRef.current===session.user.id){setProfile(r.data);setName(r.data?.display_name||'');setProfileBioDraft(r.data?.bio||'')}}
+ async function loadProfile(){if(!supabase||!session)return;const r=await supabase.from('profiles').select('id,username,display_name,bio,avatar_url,created_at').eq('id',session.user.id).maybeSingle();if(accountRef.current===session.user.id){setProfile(r.data);setName(r.data?.display_name||'');setProfileBioDraft(r.data?.bio||'');setProfileUsernameDraft(r.data?.username||'')}}
  async function runExploreSearch(term:string){
   if(!supabase){setExploreBusy(false);setExploreSearched(true);setExploreResults([]);setExploreCreators([]);return}
   const request=++exploreSearchRequest.current;
@@ -355,6 +357,8 @@ export default function App(){
   if(!supabase)return;
   setViewingCreator(creator);setViewingCreatorPosts([]);setCreatorProfileLoading(true);
   try{
+   const linkInfo=await supabase.from('profile_settings').select('pronouns,website_url').eq('user_id',creator.id).maybeSingle();
+   if(!linkInfo.error&&linkInfo.data)setViewingCreator(prev=>prev?.id===creator.id?{...prev,...linkInfo.data}:prev);
    const response=await supabase.from('posts')
     .select('id,caption,media_type,media_url,created_at,topic_tags,audio_label,overlay_text,transcript,content_rating,recommendation_status')
     .eq('user_id',creator.id).eq('visibility','public')
@@ -392,7 +396,9 @@ export default function App(){
   if(!supabase||!session||busy)return;
   setBusy(true);
   try{
-   const update:any={display_name:name.trim().slice(0,80)||profile?.display_name,bio:profileBioDraft.trim().slice(0,80)};
+   const username=profileUsernameDraft.trim().toLowerCase();
+   if(!/^[a-z0-9_.]{3,24}$/.test(username))throw new Error('Username must be 3–24 characters: lowercase letters, numbers, underscores or periods.');
+   const update:any={username,display_name:name.trim().slice(0,80)||profile?.display_name,bio:profileBioDraft.trim().slice(0,80)};
    if(profileAvatarDraft){
     const asset=profileAvatarDraft;
     const result=await fetch(asset.uri);
@@ -660,9 +666,12 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
      {viewingCreator&&<View style={s.profileHero}>
       <View style={s.profileAvatar}>{viewingCreator.avatar_url?<Image source={{uri:viewingCreator.avatar_url}} style={{width:'100%',height:'100%',borderRadius:44}}/>:<Text style={s.profileAvatarText}>{(viewingCreator.display_name||viewingCreator.username||'?')[0].toUpperCase()}</Text>}</View>
       <Text style={s.profileName}>{viewingCreator.display_name||viewingCreator.username}</Text>
-      <Text style={s.profileHandle}>@{viewingCreator.username}</Text>
+      <Text style={s.profileHandle}>@{viewingCreator.username} {viewingCreator.pronouns?'· '+viewingCreator.pronouns:''}</Text>
       <Text style={s.profileBio}>{viewingCreator.bio||'ReconFeed creator'}</Text>
       {session?.user.id!==viewingCreator.id&&<Pressable style={s.button} accessibilityRole="button" onPress={()=>{void follow({user_id:viewingCreator.id} as Post)}}><Text style={s.buttonText}>+ Follow creator</Text></Pressable>}
+      <Pressable style={s.outline} onPress={()=>{void shareProfile(viewingCreator.username)}}><Text style={s.link}>↗ Share profile</Text></Pressable>
+      {viewingCreator.website_url?<Pressable accessibilityRole="link" onPress={()=>{void Linking.openURL(viewingCreator.website_url)}}><Text style={s.link}>⌁ {viewingCreator.website_url}</Text></Pressable>:null}
+      {session?.user.id!==viewingCreator.id&&session&&<Pressable style={s.outline} onPress={()=>{void blockCreator(viewingCreator.id)}}><Text style={[s.link,{color:'#B83235'}]}>⊘ Block creator</Text></Pressable>}
       {session?.user.id===viewingCreator.id&&<Text style={s.muted}>This is your profile.</Text>}
      </View>}
      <Text style={s.subheading}>PUBLIC POSTS ({viewingCreatorPosts.length})</Text>
@@ -734,6 +743,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   )}
  </View>
  <View style={s.profileGallery}>{profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':profileGridTab==='videos'?p.media_type==='video':true).length?profilePosts.filter(p=>profileGridTab==='photos'?p.media_type==='image':profileGridTab==='videos'?p.media_type==='video':true).map(p=><Pressable key={p.id} accessibilityRole="button" onPress={()=>setCollection({userId:session.user.id,saved:false})} style={s.galleryTile}>{p.media_type==='image'?<Image source={{uri:p.media_url}} style={s.galleryTileImage}/>:<View style={s.galleryVideo}><Text style={s.galleryPlay}>▶</Text><Text style={s.galleryVideoCaption} numberOfLines={2}>{p.caption||'Video post'}</Text></View>}<Pressable onPress={()=>{void togglePinPost(p.id,!!p.pinned_at)}} accessibilityRole="button" accessibilityLabel={p.pinned_at?'Unpin post':'Pin post'} style={{position:'absolute',bottom:5,left:5,paddingHorizontal:8,paddingVertical:6,backgroundColor:'#30383D',borderRadius:5,zIndex:2}}><Text style={{color:'#F0EEE5',fontSize:10,fontWeight:'900'}}>{p.pinned_at?'★ PINNED':'☆ PIN'}</Text></Pressable><Pressable onPress={()=>deleteOwnPost(p.id)} accessibilityRole="button" accessibilityLabel="Delete this post" style={{position:'absolute',top:5,right:5,paddingHorizontal:9,paddingVertical:6,backgroundColor:'#B83235',borderRadius:5,zIndex:2}}><Text style={{color:'#fff',fontSize:10,fontWeight:'900'}}>✕ DELETE</Text></Pressable></Pressable>):<View style={s.noGallery}><Text style={s.noGalleryText}>{profileLoading?'Loading your posts…':'Your videos and photos will appear here after you publish.'}</Text><Pressable onPress={()=>setTab('Create')}><Text style={s.noGalleryAction}>＋ CREATE YOUR FIRST POST</Text></Pressable></View>}</View><View style={s.row}><Pressable style={s.chip} onPress={()=>setCollection({userId:session.user.id,saved:false})}><Text style={s.chipText}>My posts</Text></Pressable><Pressable style={s.chip} onPress={()=>setCollection({saved:true})}><Text style={s.chipText}>Saved posts ({savedPostIds.length})</Text></Pressable><Pressable style={s.chip} onPress={()=>{setMarketThread(null);setInboxOpen(true)}}><Text style={s.chipText}>Market messages</Text></Pressable></View><Text style={s.subheading}>EDIT YOUR PROFILE</Text><Text style={s.muted}>Your name, avatar, pronouns and bio help people find and recognize you. Other public links are under Settings.</Text><Pressable onPress={chooseProfilePhoto} style={s.outline}><Text style={s.link}>◉ Choose custom profile picture</Text></Pressable>{profileAvatarDraft&&<Image source={{uri:profileAvatarDraft.uri}} style={{width:100,height:100,borderRadius:50,alignSelf:'center',marginVertical:12}}/>}
+ <TextInput value={profileUsernameDraft} onChangeText={setProfileUsernameDraft} maxLength={24} autoCapitalize="none" placeholder="@username" placeholderTextColor={theme.muted} style={s.input}/>
  <TextInput value={name} onChangeText={setName} maxLength={80} placeholder="Display name" placeholderTextColor={theme.muted} style={s.input}/>
  <TextInput value={profileBioDraft} onChangeText={setProfileBioDraft} maxLength={80} multiline placeholder="Your bio (80 characters max)" placeholderTextColor={theme.muted} style={[s.input,{height:90}]}/>
  <Pressable style={s.outline} disabled={busy} onPress={saveFullProfile}><Text style={s.link}>{busy?'Saving…':'Save profile changes'}</Text></Pressable><View style={s.rule}/>
