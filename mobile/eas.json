@@ -9,7 +9,8 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://ojprsyvkzgyphpsvksgx.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW",
+        "EXPO_PUBLIC_API_BASE_URL": "https://reconfeed.com"
       },
       "channel": "development"
     },
@@ -20,14 +21,16 @@
       },
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://ojprsyvkzgyphpsvksgx.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW",
+        "EXPO_PUBLIC_API_BASE_URL": "https://reconfeed.com"
       },
       "channel": "preview"
     },
     "production": {
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://ojprsyvkzgyphpsvksgx.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW",
+        "EXPO_PUBLIC_API_BASE_URL": "https://reconfeed.com"
       },
       "channel": "production",
       "android": {
@@ -44,12 +47,14 @@
       },
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://ojprsyvkzgyphpsvksgx.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW",
+        "EXPO_PUBLIC_API_BASE_URL": "https://reconfeed.com"
       },
       "channel": "development"
     }
   },
   "submit": {
     "production": {}
-  }
+  },
+  "expo": {}
 }
