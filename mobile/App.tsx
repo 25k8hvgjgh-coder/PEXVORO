@@ -285,11 +285,17 @@ export default function App(){
   setLoading(true);
   try{
    const userId=session?.user.id;
+   const isFollowing=tab==='Following';
+   const feedSelect='id,user_id,caption,media_url,media_type,format,created_at,profiles(username,display_name),likes(count),comments(count)';
+   // Begin the public For You request immediately; don't wait for preference queries.
+   const publicFeedPromise=!isFollowing
+    ?supabase.from('posts').select(feedSelect).eq('visibility','public').order('created_at',{ascending:false}).limit(100)
+    :Promise.resolve(null);
    const [followRes,historyRes,likesRes,saveRes]=userId?await Promise.all([
     supabase.from('follows').select('following_id').eq('follower_id',userId).limit(300),
     personalizationEnabled?supabase.from('feed_events').select('post_id,event_type,watched_ms,duration_ms,created_at').eq('user_id',userId).order('created_at',{ascending:false}).limit(180):Promise.resolve({data:[]}),
-    supabase.from('likes').select('post_id').eq('user_id',userId).limit(160),
-    supabase.from('saved_posts').select('post_id').eq('user_id',userId).limit(160)
+    personalizationEnabled?supabase.from('likes').select('post_id').eq('user_id',userId).limit(160):Promise.resolve({data:[]}),
+    personalizationEnabled?supabase.from('saved_posts').select('post_id').eq('user_id',userId).limit(160):Promise.resolve({data:[]})
    ]):[{data:[]},{data:[]},{data:[]},{data:[]}];
    if(request!==feedRequest.current)return;
    // Recommendation features degrade gracefully if history collection is unavailable.
@@ -300,14 +306,11 @@ export default function App(){
    const history=(historyRes.data||[]) as FeedEvent[];
    const liked=(likesRes.data||[]).map((v:any)=>v.post_id as string);
    const saved=(saveRes.data||[]).map((v:any)=>v.post_id as string);
-   const isFollowing=tab==='Following';
    if(isFollowing&&!userId){setPosts([]);return}
    if(isFollowing&&!followed.length){setPosts([]);return}
-   let query=supabase.from('posts')
-    .select('id,user_id,caption,media_url,media_type,format,created_at,profiles(username,display_name),likes(count),comments(count)')
-    .order('created_at',{ascending:false}).limit(100);
-   if(isFollowing)query=query.in('user_id',followed);
-   else query=query.eq('visibility','public');
+   const followingPromise=isFollowing
+    ?supabase.from('posts').select(feedSelect).in('user_id',followed).order('created_at',{ascending:false}).limit(100)
+    :Promise.resolve(null);
    const oldIds=personalizationEnabled?[...new Set([...history.map(h=>h.post_id),...saved,...liked])].slice(0,85):[];
    const olderPosts=oldIds.length
     ?supabase.from('posts').select('id,user_id,caption,format').in('id',oldIds).limit(85)
@@ -315,8 +318,8 @@ export default function App(){
    const followedSamples=personalizationEnabled&&followed.length
     ?supabase.from('posts').select('id,user_id,caption,format').in('user_id',followed.slice(0,50)).eq('visibility','public').order('created_at',{ascending:false}).limit(40)
     :Promise.resolve({data:[],error:null});
-   const [fresh,prior,followedContent]=await Promise.all([query,olderPosts,followedSamples]);
-   if(fresh.error)throw fresh.error;
+   const [fresh,prior,followedContent]=await Promise.all([isFollowing?followingPromise:publicFeedPromise,olderPosts,followedSamples]);
+   if(!fresh||fresh.error)throw (fresh?.error||new Error('Could not load feed'));
    if((prior as any).error)console.warn('History topic enrichment unavailable',(prior as any).error.message);
    if((followedContent as any).error)console.warn('Followed creator topics unavailable',(followedContent as any).error.message);
    if(request!==feedRequest.current)return;
