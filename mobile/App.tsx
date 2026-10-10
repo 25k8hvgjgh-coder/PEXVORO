@@ -10,6 +10,7 @@ import * as Updates from 'expo-updates';
 import MarketplaceInbox,{MarketThread} from './MarketplaceInbox';
 import PostCollection from './PostCollection';
 import {rankFeedPosts, type FeedEvent} from './feedRanking';
+import {normalizeBlockedKeywords,parseCreatorTags,allowedForFeed} from './contentSignals';
 const url=process.env.EXPO_PUBLIC_SUPABASE_URL||'';
 const key=process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY||'';
 const api=(process.env.EXPO_PUBLIC_API_BASE_URL||'').replace(/\/$/,'');
@@ -59,6 +60,54 @@ export default function App(){
  const [profileBioDraft,setProfileBioDraft]=useState('');
  const [profileAvatarDraft,setProfileAvatarDraft]=useState<ImagePicker.ImagePickerAsset|null>(null);
  const [postPrivacy,setPostPrivacy]=useState<'public'|'followers'|'private'>('public');
+ const [tagDraft,setTagDraft]=useState('');
+ const [audioLabelDraft,setAudioLabelDraft]=useState('');
+ const [overlayTextDraft,setOverlayTextDraft]=useState('');
+ const [transcriptDraft,setTranscriptDraft]=useState('');
+ const [creatorMature,setCreatorMature]=useState(false);
+ const [blockedKeywords,setBlockedKeywords]=useState<string[]>([]);
+ const [blockedKeywordsDraft,setBlockedKeywordsDraft]=useState('');
+ const [hideMatureContent,setHideMatureContent]=useState(false);
+ const [prefsLoaded,setPrefsLoaded]=useState(false);
+ const [recommendationsResetAt,setRecommendationsResetAt]=useState<string|null>(null);
+ const [prefsBusy,setPrefsBusy]=useState(false);
+ useEffect(()=>{
+  let active=true;
+  setPrefsLoaded(false);
+  if(!supabase||!session){setBlockedKeywords([]);setBlockedKeywordsDraft('');setHideMatureContent(false);setRecommendationsResetAt(null);setPrefsLoaded(true);return()=>{active=false}}
+  void(async()=>{
+   try{
+    const result=await supabase.from('feed_preferences').select('blocked_keywords,hide_mature_content,recommendations_reset_at').eq('user_id',session.user.id).maybeSingle();
+    if(result.error)throw result.error;
+    if(!active)return;
+    const normalized=normalizeBlockedKeywords((result.data?.blocked_keywords||[]) as string[]);
+    setBlockedKeywords(normalized);
+    setBlockedKeywordsDraft(normalized.join(', '));
+    setHideMatureContent(!!result.data?.hide_mature_content);
+    setRecommendationsResetAt(result.data?.recommendations_reset_at||null);
+   }catch(error:any){console.warn('Field Preferences temporarily unavailable',safeErrorMessage(error))}
+   finally{if(active)setPrefsLoaded(true)}
+  })();
+  return()=>{active=false};
+ },[session?.user.id]);
+ async function saveFieldPreferences(){
+  if(!supabase||!session||prefsBusy)return;
+  const entries=blockedKeywordsDraft.split(/[,\n]/g);
+  if(entries.length>40||entries.some(x=>x.trim().length>40)){showAlert('Preferences limit','Use no more than 40 words or phrases, each up to 40 characters.');return}
+  const normalized=normalizeBlockedKeywords(entries);
+  setPrefsBusy(true);
+  try{
+   const result=await supabase.from('feed_preferences').upsert({
+    user_id:session.user.id,blocked_keywords:normalized,hide_mature_content:hideMatureContent,updated_at:new Date().toISOString()
+   },{onConflict:'user_id'});
+   if(result.error)throw result.error;
+   setBlockedKeywords(normalized);
+   setBlockedKeywordsDraft(normalized.join(', '));
+   showAlert('Field Preferences saved','Your keyword and mature-content filters now apply to your feed.');
+  }catch(error:any){showAlert('Could not save preferences',safeErrorMessage(error))}
+  finally{setPrefsBusy(false)}
+ }
+
  const [isBetaTester,setIsBetaTester]=useState(false);
  const [personalizationEnabled,setPersonalizationEnabled]=useState(false);
  useEffect(()=>{
@@ -83,10 +132,16 @@ export default function App(){
    {text:'Clear history',onPress:()=>{void(async()=>{
     try{
      watchRef.current=null;
-     const result=await supabase.from('feed_events').delete().eq('user_id',session.user.id);
-     if(result.error)throw result.error;
+     const timestamp=new Date().toISOString();
+     const [deleted,updated]=await Promise.all([
+      supabase.from('feed_events').delete().eq('user_id',session.user.id),
+      supabase.from('feed_preferences').upsert({user_id:session.user.id,blocked_keywords:blockedKeywords,hide_mature_content:hideMatureContent,recommendations_reset_at:timestamp,updated_at:timestamp},{onConflict:'user_id'})
+     ]);
+     if(deleted.error)throw deleted.error;
+     if(updated.error)throw updated.error;
+     setRecommendationsResetAt(timestamp);
      setNotInterested([]);
-     showAlert('History cleared','Your recommendation activity was removed.');
+     showAlert('For You refreshed','Watch history was cleared and older likes, saves and follows will not shape your new For You recommendations. Your existing follows and saved posts are preserved.');
      if(tab==='For You'||tab==='Following')void loadFeed();
     }catch(error:any){showAlert('Could not clear history',safeErrorMessage(error))}
    })()}}
