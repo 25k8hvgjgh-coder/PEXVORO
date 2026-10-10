@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090C0B">
 <meta name="description" content="Join the free ReconFeed 18+ beta tester interest list. Help test the veteran-owned, blue-collar, truck, outdoor and creator community on iPhone, Android or the web.">
 <meta property="og:type" content="website">
@@ -72,6 +72,34 @@ footer{border-top:1px solid #a3af9255;padding:29px 0 42px;color:#b7c1b5;font-siz
 .guideline-panel li{font-size:12px;line-height:1.65;color:#e6eade;margin:8px 0}
 .guideline-panel strong{color:#F0EEE5}
 .guideline-panel .guideline-action{border-top:1px solid #C6AA726b;padding-top:12px;margin-top:13px}
+
+/* Beta tester form adapts to narrow phone widths and landscape tablets. */
+html,body{width:100%;max-width:100%;overflow-x:clip}
+.wrap,.grid>.panel,.hero-inner{min-width:0}
+input[type="email"],select,textarea{max-width:100%;font-size:16px}
+.actions .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+footer{padding-bottom:max(42px,env(safe-area-inset-bottom,0px))}
+@media(max-width:540px){
+ .wrap{width:calc(100% - 24px)}
+ .nav{gap:8px;min-height:62px}
+ .brand{min-width:0;gap:6px;font-size:clamp(18px,5.7vw,22px)}
+ .brand img{width:40px;height:40px}
+ .navlink{font-size:10px;letter-spacing:0;text-align:right}
+ .hero-inner{padding:42px 0}
+ h1{font-size:clamp(36px,10.4vw,57px);line-height:1.05;overflow-wrap:break-word}
+ h2{font-size:clamp(26px,8.4vw,36px)}
+ .grid{gap:15px;padding:22px 0 40px}
+ .panel{padding:17px}
+ .actions .btn{flex:1 1 100%;min-height:48px}
+ .step>div{min-width:0}
+}
+@media(max-width:350px){
+ h1{font-size:clamp(33px,10.4vw,39px)}
+ .navlink{font-size:9px}
+ .panel{padding:13px}
+ .chip{font-size:11px}
+}
+
 </style>
 </head>
 <body>

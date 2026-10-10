@@ -19,6 +19,8 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm run typecheck
+      - name: Check responsive website and app layout contracts
+        run: node ../scripts/responsive-layout-test.mjs
       - name: Verify profile photo preparation and upload
         run: node ../scripts/profile-photo-test.mjs
       - name: Build the browser app and landing page

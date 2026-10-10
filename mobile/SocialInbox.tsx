@@ -70,7 +70,7 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
  useEffect(()=>{
   setLoading(true);setMessages([]);setReplyTo(null);setAllowed(false);setError('');
   void load();
-  const interval=setInterval(()=>{if(AppState.currentState==='active')void load()},5000);
+  const interval=setInterval(()=>{if(AppState.currentState==='active'&&!sendPending.current)void load()},7000);
   return()=>{clearInterval(interval);++loaded.current};
  },[load]);
 
@@ -96,10 +96,10 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
  function avatar(item:DirectPeer){return item.avatar_url?<Image source={{uri:item.avatar_url}} style={s.avatar}/>:<View style={[s.avatar,s.avatarEmpty]}><Text style={s.avatarText}>{(item.display_name||item.username||'?')[0].toUpperCase()}</Text></View>}
  return <Modal visible animationType="slide" onRequestClose={onClose}>
   <SafeAreaView style={s.screen}>
-   <KeyboardAvoidingView style={s.screen} behavior={Platform.OS==='ios'?'padding':undefined}>
+   <KeyboardAvoidingView style={[s.screen,{maxWidth:780,width:'100%',alignSelf:'center'}]} behavior={Platform.OS==='ios'?'padding':undefined}>
     <View style={s.header}>
      <Pressable accessibilityRole="button" accessibilityLabel={peer?'Back to messages':'Close messages'} onPress={()=>peer?setPeer(null):onClose()} style={s.control}><Text style={s.link}>{peer?'← Inbox':'Close'}</Text></Pressable>
-     <Text style={s.title} numberOfLines={1}>{peer?(peer.display_name||peer.username||'Message'):'ReconFeed Inbox'}</Text>
+     <Text style={[s.title,{minWidth:0,flexShrink:1}]} numberOfLines={1}>{peer?(peer.display_name||peer.username||'Message'):'ReconFeed Inbox'}</Text>
      <Pressable accessibilityRole="button" accessibilityLabel="Refresh messages" onPress={()=>void load()} style={s.control}><Text style={s.link}>Refresh</Text></Pressable>
     </View>
     {error?<Text accessibilityRole="alert" style={s.error}>{error}</Text>:null}
@@ -131,7 +131,7 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
      <Text style={s.note}>Tap an account to open a private conversation. When two users follow each other, they can message and reply. You can also find people in Friends or Followers.</Text>
      {contacts.length===0&&!loading?<Text style={s.note}>No connections yet. Visit Friends, follow another creator, and have them follow you back.</Text>:null}
      {contacts.map(item=><Pressable key={item.id} accessibilityRole="button" accessibilityLabel={'Message @'+item.username} onPress={()=>openContact(item)} style={s.contact}>
-      {avatar(item)}<View style={{flex:1,gap:4}}><Text style={s.label}>{item.display_name||item.username}</Text><Text style={s.note}>@{item.username||'creator'} · {item.youFollow&&item.followsYou?'✓ Mutual follow':item.followsYou?'Follows you':'Following'}</Text>
+      {avatar(item)}<View style={{flex:1,gap:4}}><Text style={s.label} numberOfLines={1}>{item.display_name||item.username}</Text><Text style={s.note}>@{item.username||'creator'} · {item.youFollow&&item.followsYou?'✓ Mutual follow':item.followsYou?'Follows you':'Following'}</Text>
        {item.last?<Text numberOfLines={1} style={s.preview}>{item.last.sender_id===userId?'You: ':''}{item.last.body}</Text>:null}
       </View><Text style={s.link}>›</Text>
      </Pressable>)}

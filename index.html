@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0c08">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0c08">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ReconFeed"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="ReconFeed is a veteran-owned, 18+ social community for real stories, veterans, creators, trucks, outdoors, and people from every walk of life.">
 <meta property="og:title" content="ReconFeed — Real People. Real Stories. Built Different."><meta property="og:description" content="Join the veteran-owned ReconFeed community or sign up for free beta testing. Adults 18+. Military roots, blue-collar life, trucks, outdoors and real stories.">
@@ -156,6 +156,40 @@ h1 span{background:linear-gradient(150deg,#deeabf,#8fa877 46%,#536a3c);-webkit-b
 .beta-callout p{font-size:13px;color:#d9e2d9;margin:0;line-height:1.7}
 .beta-callout .btn{flex:none;max-width:300px}
 @media(max-width:740px){.beta-callout{flex-direction:column;align-items:stretch}.beta-callout .btn{max-width:none}.nav-links{gap:8px}.nav-links a{font-size:10px}.nav-links a:last-child{color:#e3d09a}.nav-links a:nth-child(3){display:none}}
+
+/* Device-fit hardening: compact Safari/Chrome, tablet, and safe-area devices. */
+html,body{width:100%;max-width:100%;overflow-x:clip}
+img,svg,video{max-width:100%}
+.shell,.hero,.hero>div,.hero-art,.beta-callout>div,.community-panel,.download-card{min-width:0}
+.hero h1,.section h2,.ref-campaign h2,.download-card h3{overflow-wrap:break-word}
+.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+footer{padding-bottom:max(42px,env(safe-area-inset-bottom,0px))}
+@media(max-width:540px){
+ .shell{width:calc(100% - 24px)}
+ nav{gap:8px;padding:9px 8px}
+ nav>.btn{min-width:0;padding:10px 9px;font-size:10px;letter-spacing:0}
+ .brand{gap:7px}
+ .brand-symbol{width:38px;height:38px}
+ .wordmark{font-size:clamp(19px,6vw,25px)}
+ .hero{padding-left:0;padding-right:0;padding-bottom:30px}
+ .hero h1{font-size:clamp(38px,10.7vw,58px);line-height:1.03;-webkit-text-stroke:0}
+ .hero .eyebrow{font-size:9px;letter-spacing:.65px;line-height:1.65}
+ .hero-art{width:100%;min-height:340px}
+ .phone{max-width:66vw;height:min(395px,112vw)}
+ .beta-callout{padding:17px}
+ .feature-rail{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ref-campaign h2{font-size:clamp(37px,11vw,54px)}
+ .hero-actions .btn{min-width:0;flex:1 1 140px}
+ .download-card{padding:19px;min-height:0}
+}
+@media(max-width:350px){
+ .hero h1{font-size:clamp(35px,11.2vw,40px)}
+ nav>.btn{font-size:9px;padding-inline:7px}
+ .ref-campaign-text{padding-inline:16px}
+ .screen-card{flex-basis:170px}
+ .trust{gap:7px 12px;letter-spacing:.25px}
+}
+
 </style>
 </head><body>
 <div class="site-top"><div class="shell"><nav aria-label="Primary navigation"><a class="brand" href="/" aria-label="ReconFeed home"><span class="brand-symbol"><img src="/assets/reconfeed-emblem.svg" alt=""></span><span class="wordmark">Recon<span>Feed</span></span></a><div class="nav-links"><a href="#home">Home</a><a href="#features">Features</a><a href="#community">Community</a><a href="#get-the-app">Download</a><a href="/beta.html">Free Beta Testers</a></div><a class="btn btn-primary btn-small" href="/app/">GET THE APP ↗</a></nav>
