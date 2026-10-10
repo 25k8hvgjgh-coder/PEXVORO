@@ -12,9 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.reconfeed.app",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Choose photos and videos to share or edit in ReconFeed.",
-        "NSCameraUsageDescription": "Record content to share in ReconFeed.",
-        "NSMicrophoneUsageDescription": "Record audio with your videos.",
+        "NSPhotoLibraryUsageDescription": "Choose photos or videos for a post, profile photo or issue report. ReconFeed uploads only when you submit.",
+        "NSCameraUsageDescription": "Use your camera only when you choose to take a photo or record a video.",
+        "NSMicrophoneUsageDescription": "Use your microphone only to record sound when you choose to capture a video.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -22,22 +22,35 @@
       "package": "com.reconfeed.app",
       "permissions": [
         "CAMERA",
-        "RECORD_AUDIO",
-        "READ_MEDIA_IMAGES",
-        "READ_MEDIA_VIDEO"
+        "RECORD_AUDIO"
       ],
-      "versionCode": 30,
+      "versionCode": 31,
       "adaptiveIcon": {
         "backgroundColor": "#090b08",
         "foregroundImage": "./assets/icon.png"
-      }
+      },
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS",
+        "android.permission.READ_SMS",
+        "android.permission.READ_CALL_LOG"
+      ]
     },
     "plugins": [
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow ReconFeed to select photos and videos.",
-          "cameraPermission": "Allow ReconFeed to record content."
+          "photosPermission": "Choose photos or videos for a post, profile photo or issue report. ReconFeed uploads only when you submit.",
+          "cameraPermission": "Use your camera only when you choose to take a photo or record a video.",
+          "microphonePermission": "Use your microphone only to record sound when you choose to capture a video."
         }
       ]
     ],

@@ -1,7 +1,8 @@
 import 'react-native-url-polyfill/auto';
 import React,{useEffect,useRef,useState} from 'react';
 import {ActivityIndicator,Alert,AppState,FlatList,Image,ImageBackground,Pressable,RefreshControl,SafeAreaView,ScrollView,Share,Linking,StatusBar,Platform,StyleSheet,Text,TextInput,View,useWindowDimensions} from 'react-native';
-import {Video,ResizeMode} from 'expo-av';
+import {Audio,Video,ResizeMode} from 'expo-av';
+import {capturePermission} from './capturePermissions';
 import {Modal} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -99,7 +100,7 @@ export default function App(){
  const [testerIssueCategory,setTesterIssueCategory]=useState('Bug');
  const [testerIssueBusy,setTesterIssueBusy]=useState(false);
  const [testerScreenshot,setTesterScreenshot]=useState<ImagePicker.ImagePickerAsset|null>(null);
- async function chooseTesterScreenshot(){try{if(Platform.OS!=='web'){const permission=await ImagePicker.requestMediaLibraryPermissionsAsync();if(!permission.granted){showAlert('Photo access','Allow photo library access to attach a screenshot.');return}}const p=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:false,quality:0.8});if(!p.canceled&&p.assets[0])setTesterScreenshot(p.assets[0])}catch(e:any){showAlert('Screenshot unavailable',safeErrorMessage(e))}}
+ async function chooseTesterScreenshot(){try{const p=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:false,quality:0.8,exif:false,base64:false});if(!p.canceled&&p.assets[0])setTesterScreenshot(p.assets[0])}catch(e:any){showAlert('Screenshot unavailable',safeErrorMessage(e))}}
  const [reportTarget,setReportTarget]=useState<Post|null>(null);
  const [reportBusy,setReportBusy]=useState(false);
  const [viewingCreator,setViewingCreator]=useState<any>(null);
@@ -159,20 +160,23 @@ export default function App(){
 
  const [isBetaTester,setIsBetaTester]=useState(false);
  const [personalizationEnabled,setPersonalizationEnabled]=useState(false);
+ const personalizationRef=useRef(false);personalizationRef.current=personalizationEnabled;
  useEffect(()=>{
   let active=true;
+  setPersonalizationEnabled(false);personalizationRef.current=false;
   if(!session?.user.id){setPersonalizationEnabled(false);return()=>{active=false}}
-  void AsyncStorage.getItem('reconfeed_personalization_'+session.user.id)
-   .then(value=>{if(active)setPersonalizationEnabled(value!=='off')})
+  void AsyncStorage.getItem('reconfeed_personalization_consent_v2_'+session.user.id)
+   .then(value=>{if(active)setPersonalizationEnabled(value==='on')})
    .catch(()=>{if(active)setPersonalizationEnabled(false)});
   return()=>{active=false};
  },[session?.user.id]);
  function togglePersonalization(){
   if(!session)return;
   const value=!personalizationEnabled;
-  if(!value)watchRef.current=null;
+  personalizationRef.current=value;
+  if(!value){watchRef.current=null;void feedQueueRef.current?.clear()}
   setPersonalizationEnabled(value);
-  void AsyncStorage.setItem('reconfeed_personalization_'+session.user.id,value?'on':'off').catch(()=>{});
+  void AsyncStorage.setItem('reconfeed_personalization_consent_v2_'+session.user.id,value?'on':'off').catch(()=>{});
  }
  function clearRecommendationHistory(){
   if(!supabase||!session)return;
@@ -244,7 +248,7 @@ export default function App(){
   const queue=createFeedEventQueue({
    userId:session.user.id,
    storage:AsyncStorage,
-   insert:async events=>{const response=await supabase.from('feed_events').insert(events);return {error:response.error}}
+   insert:async events=>{const allowed=events.filter(event=>event.event_type==='not_interested'||personalizationRef.current);if(!allowed.length)return {error:null};const response=await supabase.from('feed_events').insert(allowed);return {error:response.error}}
   });
   feedQueueRef.current=queue;
   void queue.hydrate().then(()=>queue.flush());
@@ -417,8 +421,8 @@ export default function App(){
  }
  async function chooseProfilePhoto(){
   if(!session)return;
-  try{if(Platform.OS!=='web'){const permission=await ImagePicker.requestMediaLibraryPermissionsAsync();if(!permission.granted){showAlert('Photo access','Allow photo library access to choose a profile photo.');return}}
-   const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:true,aspect:[1,1],quality:.7});
+  try{
+   const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:true,aspect:[1,1],quality:.7,exif:false,base64:false});
    if(!result.canceled&&result.assets?.[0])setProfileAvatarDraft(result.assets[0]);
   }catch(error:any){showAlert('Profile photo unavailable',safeErrorMessage(error))}
  }
@@ -616,13 +620,20 @@ export default function App(){
  async function requestAccountEmail(recovery:boolean){if(busy||!supabase)return;const address=email.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)){showAlert('Email required','Enter your email address first.');return}setBusy(true);try{const redirectTo=(api||'https://reconfeed.com')+'/app/';const r=recovery?await supabase.auth.resetPasswordForEmail(address,{redirectTo}):await supabase.auth.resend({type:'signup',email:address,options:{emailRedirectTo:redirectTo}});if(r.error)throw r.error;showAlert('Email requested',recovery?'If this account exists, a password reset email has been requested. Open its link to choose a new password.':'If this account needs confirmation, a new confirmation email has been requested. Already confirmed? Choose Sign in.')}catch(e:any){showAlert('Email unavailable',e.code==='over_email_send_rate_limit'?'Email sending is temporarily limited. Wait before trying again.':safeErrorMessage(e))}finally{setBusy(false)}}
  async function saveRecoveredPassword(){if(busy||!supabase)return;if(newPassword.length<12){showAlert('Stronger password required','Use at least 12 characters.');return}setBusy(true);try{const r=await supabase.auth.updateUser({password:newPassword});if(r.error)throw r.error;setNewPassword('');setRecovering(false);setTab('Profile');showAlert('Password updated','Your new password is saved.')}catch(e:any){showAlert('Password reset failed',safeErrorMessage(e))}finally{setBusy(false)}}
  async function auth(signup:boolean){if(busy)return;if(!supabase){showAlert('Setup required','Add the Supabase URL and public anon key to the mobile environment.');return}if(!email.trim()||password.length<6){showAlert('Check details','Enter an email and a password with at least 6 characters.');return}if(signup&&password.length<12){showAlert('Stronger password required','Use at least 12 characters for a new ReconFeed account. Existing accounts can still sign in with their current password.');return}if(signup&&!['MALE','FEMALE','Other'].includes(gender)){showAlert('Choose gender','Choose MALE, FEMALE, or Other to continue.');return}setBusy(true);try{const r=signup?await supabase.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:(api||'https://reconfeed.com')+'/app/',data:{display_name:name||email.split('@')[0],gender}}}):await supabase.auth.signInWithPassword({email:email.trim(),password});if(r.error)throw r.error;if(signup&&!r.data.session)showAlert('Account request received','If this is a new account, check your email for confirmation. If you already confirmed this email, use Sign in with your original password or Forgot password.');else setTab('For You')}catch(e:any){showAlert('Account error',e.code==='invalid_credentials'?'Email or password did not match. Use your original account password, or choose Forgot password.':e.code==='over_email_send_rate_limit'?'Email sending is temporarily limited. Wait before requesting another email.':safeErrorMessage(e))}finally{setBusy(false)}}
- async function choose(){const p=await ImagePicker.requestMediaLibraryPermissionsAsync();if(!p.granted){showAlert('Permission needed','Allow media library access in settings.');return}const r=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images','videos'],quality:.9,videoMaxDuration:90});if(!r.canceled)setAsset(r.assets[0])}
+ async function choose(){try{
+  const r=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images','videos'],quality:.9,videoMaxDuration:90,videoExportPreset:ImagePicker.VideoExportPreset.MediumQuality,exif:false,base64:false});
+  if(!r.canceled&&r.assets?.[0])setAsset(r.assets[0]);
+ }catch(e:any){showAlert('Gallery unavailable',safeErrorMessage(e))}}
  async function capture(){try{
-  const p=await ImagePicker.requestCameraPermissionsAsync();
-  if(!p.granted){showAlert('Camera permission','Allow camera access to record a video or take a photo.');return}
-  const result=await ImagePicker.launchCameraAsync({mediaTypes:captureMode==='video'?['videos']:['images'],quality:.9,videoMaxDuration:captureSeconds});
+  if(Platform.OS!=='web'){
+   const permission=await capturePermission(captureMode,{camera:ImagePicker.requestCameraPermissionsAsync,microphone:Audio.requestPermissionsAsync});
+   if(!permission.allowed){
+    showAlert('Permission declined','ReconFeed cannot use your '+permission.feature+' without permission. You can keep browsing or choose an existing file. Change permissions in your phone settings.',[{text:'Not now',style:'cancel'},{text:'Open settings',onPress:()=>{void Linking.openSettings()}}]);return;
+   }
+  }
+  const result=await ImagePicker.launchCameraAsync({mediaTypes:captureMode==='video'?['videos']:['images'],quality:.9,videoMaxDuration:captureSeconds,exif:false,base64:false});
   if(!result.canceled&&result.assets?.[0])setAsset(result.assets[0]);
- }catch(e:any){showAlert('Camera unavailable',e?.message||'Try selecting media from your library instead.')}}
+ }catch(e:any){showAlert('Camera unavailable',safeErrorMessage(e))}}
 
  async function publish(){if(!supabase||!session){showAlert('Sign in required','Sign in before publishing.');setTab('Profile');return}if(!asset){showAlert('Choose media','Select a photo or video first.');return}const maxBytes=24*1024*1024;if(asset.fileSize&&asset.fileSize>maxBytes){showAlert('File too large','This beta currently supports uploads up to 24 MB. Choose a smaller photo/video or compress the video, then try again.');return}setBusy(true);try{const connection=await supabase.from('profiles').select('id').eq('id',session.user.id).maybeSingle();if(connection.error){const msg=String(connection.error.message||'');if(/fetch|network|timeout|connection/i.test(msg))throw new Error('ReconFeed cannot reach the server. Check the phone’s Wi-Fi or mobile data, then try again.');throw connection.error}const response=await fetch(asset.uri);if(!response.ok)throw new Error('Could not read the selected media from this phone. Please choose it again.');const binary=await response.arrayBuffer();if(binary.byteLength>maxBytes){throw new Error('This file is over the 24 MB upload limit. Choose a smaller file or compress the video.')}const ext=(asset.fileName?.split('.').pop()||(asset.type==='video'?'mp4':'jpg')).toLowerCase().replace(/[^a-z0-9]/g,'');const path=session.user.id+'/'+Date.now()+'.'+ext;// Supabase currently caps the post-media bucket at 25 MB. Use a safe 24 MB application limit.
 const mimeByExt:Record<string,string>={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',mov:'video/quicktime',webm:'video/webm'};
@@ -735,7 +746,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <View style={s.cameraBottom}>
    <View style={s.captureModes}>{[15,60,90].map(seconds=><Pressable key={seconds} onPress={()=>{setCaptureMode('video');setCaptureSeconds(seconds)}}><Text style={[s.captureMode,captureMode==='video'&&captureSeconds===seconds&&s.captureModeActive]}>{seconds}s</Text></Pressable>)}<Pressable onPress={()=>setCaptureMode('photo')}><Text style={[s.captureMode,captureMode==='photo'&&s.captureModeActive]}>Photo</Text></Pressable></View>
    <View style={s.captureActions}><Pressable onPress={choose} accessibilityRole="button" accessibilityLabel="Select gallery media" style={s.galleryButton}><Text style={s.galleryIcon}>▧</Text><Text style={s.galleryLabel}>GALLERY</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel={captureMode==='photo'?'Take photo with grenade-shaped shutter':'Record video with grenade-shaped button'} accessibilityHint="Opens the device camera" onPress={capture} style={s.recordOuter}><View style={s.grenadePinRing}/><View style={s.grenadePinStem}/><View style={s.grenadeLever}/><View style={s.grenadeBody}><View style={s.grenadeSeamHorizontal}/><View style={s.grenadeSeamVertical}/><View style={s.recordInner}/></View><Text style={s.grenadeLabel}>{captureMode==='photo'?'SNAP':'REC'}</Text></Pressable><Pressable onPress={()=>setTab('Profile')} accessibilityRole="button" accessibilityLabel="Open profile" style={s.galleryButton}><Text style={s.galleryIcon}>◈</Text><Text style={s.galleryLabel}>PROFILE</Text></Pressable></View>
-   <Text style={s.captureHint}>GRENADE RECORD CONTROL · Device camera · {captureMode==='photo'?'Photo':captureSeconds+'s max'}</Text>
+   <Text style={s.muted}>Camera and microphone require your permission. Capture stays on your device until you tap Publish.</Text><Text style={s.captureHint}>GRENADE RECORD CONTROL · Device camera · {captureMode==='photo'?'Photo':captureSeconds+'s max'}</Text>
   </View>
  </ImageBackground><Pressable style={s.picker} onPress={choose}><Text style={s.link}>▤ Load media</Text><Text style={s.muted}>{asset?.fileName|| (asset?'Media selected':'Up to 90 seconds')}</Text></Pressable>{asset?.type==='image'&&<Image source={{uri:asset.uri}} style={s.preview}/>}
  {asset?.type==='video'&&<View style={s.card}><Text style={s.subheading}>VIDEO PREVIEW · REVIEW BEFORE POSTING</Text><Video key={asset.uri} source={{uri:asset.uri}} style={{width:'100%',height:310,backgroundColor:'#000'}} useNativeControls resizeMode={ResizeMode.CONTAIN}/></View>}
@@ -896,8 +907,12 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <Text style={s.muted}>Totals reflect voluntarily tracked watch events, not all possible plays. Analytics will improve as the beta gathers genuine viewing data.</Text>
  </View>}
 <View style={[s.card,{gap:12,marginVertical:14}]}>
+  <Text style={s.subheading}>DEVICE PERMISSIONS & YOUR DATA</Text>
+  <Text style={s.muted}>Camera access is requested only when you tap Record or Photo. Video with sound also needs microphone permission. The system photo picker lets you choose files; selecting or recording media does not upload it until you tap Publish, Save profile changes or Submit issue.</Text>
+  <Text style={s.muted}>ReconFeed does not access phone contacts, SMS, call history or device location. You can deny permissions and still browse. Account details, content you submit, likes, follows, messages and reports are stored to run those features. Public posts and profile photos are shareable; tester screenshots are private to their reporter and the owner.</Text>
+  <Pressable accessibilityRole="button" onPress={()=>{if(Platform.OS==='web')showAlert('Browser permissions','Use your browser site settings to review permissions. Selecting a file only gives ReconFeed access to that file.');else void Linking.openSettings()}} style={s.outline}><Text style={s.link}>Manage camera, microphone & photo permissions</Text></Pressable>
   <Text style={s.subheading}>FEED PERSONALIZATION & PRIVACY</Text>
-  <Text style={s.muted}>ReconFeed can learn from videos you watch, finish, replay, share or skip. Your watch activity stays private to your account and can be cleared.</Text>
+  <Text style={s.muted}>Optional viewing-history personalization is OFF until you turn it on. Turning it off stops new watch/share tracking and clears unsent events. Likes, follows and your explicit Not interested choices still work. You can clear previously saved recommendation history below.</Text>
   <Pressable accessibilityRole="button" onPress={togglePersonalization} style={s.outline}>
    <Text style={s.link}>Personalized For You: {personalizationEnabled?'ON ✓':'OFF ✕'}</Text>
   </Pressable>
