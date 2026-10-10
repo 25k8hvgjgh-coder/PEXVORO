@@ -171,3 +171,9 @@ create index if not exists marketplace_orders_seller_idx on public.marketplace_o
 alter table public.marketplace_orders enable row level security;
 drop policy if exists "Buyers and sellers read own orders" on public.marketplace_orders;
 create policy "Buyers and sellers read own orders" on public.marketplace_orders for select to authenticated using (buyer_id = (select auth.uid()) or seller_id = (select auth.uid()));
+
+-- Restrict client-visible profile columns. Birth date and gender are collected for age/UX checks
+-- but must not be available to anonymous users or other authenticated users via PostgREST.
+REVOKE ALL PRIVILEGES ON TABLE public.profiles FROM anon, authenticated;
+GRANT SELECT (id, username, display_name, bio, avatar_url, created_at) ON TABLE public.profiles TO anon, authenticated;
+GRANT UPDATE (display_name, bio, avatar_url) ON TABLE public.profiles TO authenticated;
