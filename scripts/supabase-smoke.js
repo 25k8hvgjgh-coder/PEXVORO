@@ -85,6 +85,53 @@ async function main() {
     console.warn('::warning::Could not reach AI status endpoint: ' + String(error?.message || error));
   }
 
+  // Verify the public site has the deployment changes; these checks never log page contents.
+  try {
+    const homeResponse = await fetch('https://reconfeed.com/', { signal: AbortSignal.timeout(12000) });
+    if (!homeResponse.ok) {
+      await homeResponse.body?.cancel();
+      console.warn('::warning::Public ReconFeed homepage returned HTTP ' + homeResponse.status + '.');
+    } else {
+      const html = await homeResponse.text();
+      const hasStableApk = html.includes('https://github.com/25k8hvgjgh-coder/PEXVORO/releases/download/android-eas-beta/ReconFeed-beta.apk');
+      const hasManifestLink = html.includes('/manifest.webmanifest');
+      const hasServiceWorker = html.includes("navigator.serviceWorker.register('/sw.js')");
+      if (hasStableApk && hasManifestLink && hasServiceWorker) {
+        console.log('[PASS] Public homepage is serving the stable APK link and home-screen support.');
+      } else {
+        console.warn('::warning::Public homepage is reachable, but its HTML does not yet contain all current install-link/PWA changes. Vercel deployment may be stale.');
+      }
+    }
+
+    const manifestResponse = await fetch('https://reconfeed.com/manifest.webmanifest', { signal: AbortSignal.timeout(12000) });
+    if (manifestResponse.ok) {
+      const liveManifest = await manifestResponse.json();
+      if (liveManifest.name === 'ReconFeed' && liveManifest.display === 'standalone') {
+        console.log('[PASS] Public PWA manifest is live.');
+      } else {
+        console.warn('::warning::Public PWA manifest is reachable but does not match the expected ReconFeed install manifest.');
+      }
+    } else {
+      await manifestResponse.body?.cancel();
+      console.warn('::warning::Public PWA manifest returned HTTP ' + manifestResponse.status + '.');
+    }
+
+    const swResponse = await fetch('https://reconfeed.com/sw.js', { signal: AbortSignal.timeout(12000) });
+    if (!swResponse.ok) {
+      await swResponse.body?.cancel();
+      console.warn('::warning::Public home-screen service worker returned HTTP ' + swResponse.status + '.');
+    } else {
+      const worker = await swResponse.text();
+      if (worker.includes("addEventListener('fetch'") && worker.includes('reconfeed-shell-v1')) {
+        console.log('[PASS] Public home-screen service worker is live.');
+      } else {
+        console.warn('::warning::Public service worker response does not match the expected install shell.');
+      }
+    }
+  } catch (error) {
+    console.warn('::warning::Could not complete the public website deployment checks: ' + String(error?.message || error));
+  }
+
   if (failed) process.exit(1);
 }
 
