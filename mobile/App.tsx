@@ -16,6 +16,7 @@ import ProfileConnections from './ProfileConnections';
 import ProfileIcon,{type ProfileIconName} from './ProfileIcon';
 import CreatorProfileHeader from './CreatorProfileHeader';
 import ProfileMenuOverview from './ProfileMenuOverview';
+import PublicCreatorHeader from './PublicCreatorHeader';
 import {rankFeedPosts, type FeedEvent, type RankingContext} from './feedRanking';
 import {createFeedEventQueue} from './feedEventQueue';
 import {normalizeBlockedKeywords,parseCreatorTags,allowedForFeed} from './contentSignals';
@@ -752,13 +753,12 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <Modal visible={!!viewingCreator} animationType="slide" onRequestClose={()=>setViewingCreator(null)}>
    <SafeAreaView style={s.safe}>
     <ScrollView contentContainerStyle={{paddingBottom:20}}><Pressable accessibilityRole="button" style={s.profileCloseVideo} onPress={()=>{++creatorProfileRequest.current;setViewingCreator(null)}}><Text style={s.link}>← Back</Text></Pressable>
-     {viewingCreator&&<View style={s.profileHeaderBlock}>
-      <View style={s.profileIdentity}><View style={s.profileIdentityText}><Text style={s.profileIdentityName}>{viewingCreator.display_name||viewingCreator.username}</Text><Text style={s.profileIdentityHandle}>@{viewingCreator.username}</Text></View><View style={s.profileAvatarWrap}><View style={s.profileIdentityAvatar}>{viewingCreator.avatar_url?<Image source={{uri:viewingCreator.avatar_url}} style={s.profileIdentityAvatarImage}/>:<Text style={s.profileIdentityAvatarInitial}>{(viewingCreator.display_name||viewingCreator.username||'?')[0]}</Text>}</View>{!followingIds.includes(viewingCreator.id)?<Pressable accessibilityRole="button" accessibilityLabel="Follow creator" onPress={()=>void follow({user_id:viewingCreator.id} as Post)} style={s.profileAvatarAdd}><Text style={s.profileAvatarAddText}>+</Text></Pressable>:null}</View></View>
-      <View style={s.profileNumbers}><View style={s.profileNumberBox}><Text style={s.profileNumberValue}>{Number(viewingCreator.following||0).toLocaleString()}</Text><Text style={s.profileNumberLabel}>Following</Text></View><View style={s.profileNumberBox}><Text style={s.profileNumberValue}>{Number(viewingCreator.followers||0).toLocaleString()}</Text><Text style={s.profileNumberLabel}>Followers</Text></View></View>
-      {viewingCreator.bio?<Text style={s.profileMainBio}>{viewingCreator.bio}</Text>:null}{viewingCreator.pronouns?<Text style={s.profileMetaLine}>{viewingCreator.pronouns}</Text>:null}
-      {viewingCreator.website_url?<Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(viewingCreator.website_url)}><Text style={s.profileLink}>⌁ {viewingCreator.website_url}</Text></Pressable>:null}
-      <View style={s.profileActionRow}><Pressable style={s.profileActionPill} accessibilityRole="button" onPress={()=>{if(followingIds.includes(viewingCreator.id))showAlert('Unfollow creator?','Remove this account from your Following feed?',[{text:'Cancel',style:'cancel'},{text:'Unfollow',onPress:()=>void follow({user_id:viewingCreator.id} as Post,true)}]);else void follow({user_id:viewingCreator.id} as Post)}}><Text style={s.profileActionLabel}>{followingIds.includes(viewingCreator.id)?'✓ Following':'+ Follow'}</Text></Pressable><Pressable style={s.profileActionPill} accessibilityRole="button" onPress={()=>void shareProfile(viewingCreator.username)}><Text style={s.profileActionLabel}>Share profile ↗</Text></Pressable></View>
-     </View>}
+     {viewingCreator&&<PublicCreatorHeader
+      creator={viewingCreator}
+      following={followingIds.includes(viewingCreator.id)}
+      onFollow={()=>{if(followingIds.includes(viewingCreator.id))showAlert('Unfollow creator?','Remove this account from your Following feed?',[{text:'Cancel',style:'cancel'},{text:'Unfollow',onPress:()=>void follow({user_id:viewingCreator.id} as Post,true)}]);else void follow({user_id:viewingCreator.id} as Post)}}
+      onShare={()=>void shareProfile(viewingCreator.username)}
+     />}
      <View style={[s.profileContentTabs,{justifyContent:'center'}]}><View style={{padding:12}}><ProfileIcon name="grid"/></View></View>
      {creatorProfileLoading?<ActivityIndicator color={theme.purple}/>:<View style={s.profileTileGrid}>{viewingCreatorPosts.length?viewingCreatorPosts.map(p=><Pressable key={p.id} accessibilityRole="button" accessibilityLabel={'View '+(p.caption||'post')} onPress={()=>{++creatorProfileRequest.current;setViewingCreator(null);setExploreSelected(p)}} style={s.profileVideoTile}>{p.media_type==='image'?<Image source={{uri:p.media_url}} style={s.profileVideoThumbnail}/>:<Video source={{uri:p.media_url}} style={s.profileVideoThumbnail} resizeMode={ResizeMode.COVER} shouldPlay={false} isMuted/>}</Pressable>):<View style={s.profileTabEmpty}><Text style={s.profileEmptyBody}>No public posts available.</Text></View>}</View>}
      {session&&viewingCreator?<Pressable accessibilityRole="button" style={s.outline} onPress={()=>void blockCreator(viewingCreator.id)}><Text style={s.link}>Block creator</Text></Pressable>:null}
