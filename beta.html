@@ -96,6 +96,9 @@ footer{border-top:1px solid #a3af9255;padding:29px 0 42px;color:#b7c1b5;font-siz
  <p>Sign up to receive ReconFeed beta testing invitations and updates. This form takes about 30 seconds.</p>
  <form id="beta-form">
   <label for="email">Email address <span aria-hidden="true">*</span></label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="254" required>
+  <label for="beta-password">Account password <span aria-hidden="true">*</span></label>
+  <input id="beta-password" name="beta-password" type="password" minlength="12" maxlength="128" autocomplete="new-password" placeholder="Create a password (12+ characters)" required>
+  <p class="tiny">Your password is submitted directly to ReconFeed's authentication provider over HTTPS, never to the tester-interest database. You may need to confirm your email before signing in.</p>
   <label for="platform">What will you test on? <span aria-hidden="true">*</span></label><select id="platform" name="platform" required><option value="">Choose your device</option><option value="iphone">iPhone / iPad (web beta for now)</option><option value="android">Android</option><option value="both">iPhone and Android</option><option value="web">Browser / desktop</option></select>
   <fieldset><legend>What interests you? <span class="tiny">(optional)</span></legend><div class="interests">
    <label class="chip"><input type="checkbox" name="interest" value="veterans"> Veterans</label>
@@ -124,7 +127,7 @@ footer{border-top:1px solid #a3af9255;padding:29px 0 42px;color:#b7c1b5;font-siz
   <label class="agreement"><input id="guidelines" type="checkbox" required>I have read and agree to the ReconFeed Beta Tester Field Guidelines above.</label>
   <button class="btn submit" id="join-button" type="submit">JOIN FREE BETA TESTER LIST ↗</button>
   <div id="status" role="status" aria-live="polite"></div>
-  <p class="tiny">The form stores your email, device, interests and signup source to arrange testing. Your guidelines acknowledgment is required to submit. This does not create your ReconFeed account; use the same email after the automatic redirect. Never share your password here.</p>
+  <p class="tiny">The form stores your email, device, interests and signup source; your password goes directly to the authentication service to request account creation. We never store it in the tester application. If email verification is required, you must confirm before signing in.</p>
  </form>
 </div>
 </div>
@@ -144,9 +147,26 @@ form.addEventListener('submit',async function(e){
  const response=await fetch('/api/beta-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
  const body=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(body.error||'Signup could not be saved.');
- status.className='success';status.textContent='Tester application received. Redirecting to ReconFeed account signup. Use the SAME email and confirm it to unlock your Beta Tester label.';\n try{sessionStorage.setItem('reconfeed_beta_email',data.email.trim().toLowerCase())}catch(_e){}\n window.setTimeout(()=>{window.location.assign('/app/?beta=1')},1700);
+ // Create a genuine Supabase Auth account with the same email. Never send or store password in the tester API.
+ const rawPassword=document.getElementById('beta-password').value;
+ const authResponse=await fetch('https://ojprsyvkzgyphpsvksgx.supabase.co/auth/v1/signup',{
+  method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW'},
+  body:JSON.stringify({email:data.email,password:rawPassword,data:{display_name:data.email.split('@')[0]},email_redirect_to:'https://reconfeed.com/app/?beta=1'})
+ });
+ // Erase sensitive form text on success or error; never persist it in page storage.
+ document.getElementById('beta-password').value='';
+ const authResult=await authResponse.json().catch(()=>({}));
+ if(!authResponse.ok){
+  if(authResponse.status===422||authResponse.status===400){
+   status.className='success';status.textContent='Your beta form is saved. If you already have a ReconFeed account, sign in with the SAME email. Otherwise check the signup details or retry account creation on the next screen.';
+  }else{
+   throw new Error('Your tester form was saved, but account creation could not be completed. Please finish signup inside ReconFeed.');
+  }
+ }else{
+  status.className='success';status.textContent='Your tester form is saved and your account request was submitted. Check your email for verification, then sign in with the same address. Redirecting…';
+ }\n try{sessionStorage.setItem('reconfeed_beta_email',data.email.trim().toLowerCase())}catch(_e){}\n window.setTimeout(()=>{window.location.assign('/app/?beta=1')},2600);
  form.reset();button.textContent='REQUEST RECEIVED';button.disabled=true;
- }catch(error){status.textContent=error.message||'Please try again.';button.textContent='JOIN FREE BETA TESTER LIST ↗';button.disabled=false}
+ }catch(error){status.textContent=error.message||'Please try again.';button.textContent='JOIN FREE BETA TESTER LIST ↗';button.disabled=false;document.getElementById('beta-password').value=''}
 });
 document.getElementById('share-campaign').addEventListener('click',async function(){
  const url='https://reconfeed.com/beta.html?utm_source=friendshare';
