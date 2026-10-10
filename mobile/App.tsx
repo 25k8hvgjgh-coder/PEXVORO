@@ -224,7 +224,7 @@ export default function App(){
   finally{setBusy(false)}
  }
  async function recordFeedAction(postId:string,eventType:'share'|'not_interested'){
-  if(!supabase||!session||(eventType!=='not_interested'&&!personalizationEnabled))return;
+  if(!supabase||!session||!personalizationEnabled)return;
   try{
    const event={user_id:session.user.id,post_id:postId,event_type:eventType,watched_ms:0,duration_ms:0};
    const r=await supabase.from('feed_events').insert(event);
@@ -289,13 +289,17 @@ export default function App(){
     .order('created_at',{ascending:false}).limit(100);
    if(isFollowing)query=query.in('user_id',followed);
    else query=query.eq('visibility','public');
-   const oldIds=[...new Set(history.map(h=>h.post_id))].slice(0,85);
+   const oldIds=personalizationEnabled?[...new Set([...history.map(h=>h.post_id),...saved,...liked])].slice(0,85):[];
    const olderPosts=oldIds.length
     ?supabase.from('posts').select('id,user_id,caption,format').in('id',oldIds).limit(85)
     :Promise.resolve({data:[],error:null});
-   const [fresh,prior]=await Promise.all([query,olderPosts]);
+   const followedSamples=personalizationEnabled&&followed.length
+    ?supabase.from('posts').select('id,user_id,caption,format').in('user_id',followed.slice(0,50)).eq('visibility','public').order('created_at',{ascending:false}).limit(40)
+    :Promise.resolve({data:[],error:null});
+   const [fresh,prior,followedContent]=await Promise.all([query,olderPosts,followedSamples]);
    if(fresh.error)throw fresh.error;
    if((prior as any).error)console.warn('History topic enrichment unavailable',(prior as any).error.message);
+   if((followedContent as any).error)console.warn('Followed creator topics unavailable',(followedContent as any).error.message);
    if(request!==feedRequest.current)return;
    const ranked=rankFeedPosts((fresh.data||[]) as Post[],{
     mode:isFollowing?'Following':'For You',
@@ -303,7 +307,7 @@ export default function App(){
     likedPostIds:personalizationEnabled?liked:[],
     savedPostIds:personalizationEnabled?saved:[],
     history,
-    historyPosts:prior.data||[],
+    historyPosts:[...(prior.data||[]),...(followedContent.data||[])],
     hiddenIds:notInterested
    });
    setPosts(ranked);
