@@ -8,7 +8,7 @@ type Props = { client: SupabaseClient; session: Session; initialThread: MarketTh
 
 export default function MarketplaceInbox({ client, session, initialThread, onClose }: Props) {
   const [thread, setThread] = useState<MarketThread | null>(initialThread);
-  const [messages, setField Comms] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [peers, setPeers] = useState<Record<string, string>>({});
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [body, setBody] = useState('');
