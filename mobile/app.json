@@ -26,10 +26,6 @@
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO"
       ],
-      "adaptiveIcon": {
-        "backgroundColor": "#090b08",
-        "foregroundImage": "./assets/icon.png"
-      },
       "versionCode": 28
     },
     "plugins": [
@@ -53,7 +49,6 @@
       "eas": {
         "projectId": "cb631cf4-5781-426a-a5f9-9d3c52abf8dc"
       }
-    },
-    "icon": "./assets/icon.png"
+    }
   }
 }
