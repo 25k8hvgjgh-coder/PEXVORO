@@ -9,6 +9,8 @@ on:
       - "api/**"
       - "manifest.webmanifest"
       - "vercel.json"
+      - "mobile/**"
+      - "scripts/build-web.mjs"
       - "scripts/production-smoke.mjs"
       - ".github/workflows/production-smoke.yml"
 

@@ -1,5 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --prefix mobile --include=dev",
+  "buildCommand": "node scripts/build-web.mjs",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/app", "destination": "/app/index.html" }
+  ],
   "functions": {
     "api/generate.js": {
       "maxDuration": 60

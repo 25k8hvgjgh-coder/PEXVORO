@@ -1,1 +1,15 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+node_modules/
+.expo/
+.vercel/
+.env*
+!.env.example
+dist/
+mobile/android/
+mobile/ios/
+mobile/assets/icon.png
+supabase/.temp/
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+*.log
