@@ -317,7 +317,7 @@ export default function App(){
   const link='https://reconfeed.com/app/?profile='+encodeURIComponent(username.trim().replace(/^@/,''));
   try{await Share.share({message:'Find me on ReconFeed: '+link,url:link})}catch(error){console.warn('Profile sharing unavailable')}
  }
- async function loadProfile(){if(!supabase||!session)return;const r=await supabase.from('profiles').select('id,username,display_name,bio,avatar_url,created_at').eq('id',session.user.id).maybeSingle();if(accountRef.current===session.user.id){setProfile(r.data);setName(r.data?.display_name||'');setProfileBioDraft(r.data?.bio||'');setProfileUsernameDraft(r.data?.username||'')}}
+ async function loadProfile(){if(!supabase||!session)return;const r=await supabase.from('profiles').select('id,username,display_name,bio,avatar_url,created_at,is_beta_tester').eq('id',session.user.id).maybeSingle();if(accountRef.current===session.user.id){setProfile(r.data);setName(r.data?.display_name||'');setProfileBioDraft(r.data?.bio||'');setProfileUsernameDraft(r.data?.username||'')}}
  async function runExploreSearch(term:string){
   if(!supabase){setExploreBusy(false);setExploreSearched(true);setExploreResults([]);setExploreCreators([]);return}
   const request=++exploreSearchRequest.current;
@@ -763,7 +763,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
    <View style={s.profileIdentityText}>
     <Text style={s.profileIdentityName} numberOfLines={2}>{profile?.display_name||session.user.email?.split('@')[0]||'ReconFeed Creator'}</Text>
     <Text style={s.profileIdentityHandle}>@{profile?.username||'creator'}</Text>
-    {isBetaTester&&<View style={s.profileBadge}><Text style={s.profileBadgeText}>✦ VERIFIED BETA TESTER</Text></View>}
+    {(isBetaTester||profile?.is_beta_tester===true)&&<View style={s.profileBadge}><Text style={s.profileBadgeText}>✦ VERIFIED BETA TESTER</Text></View>}
    </View>
    <Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={()=>{setProfileEditOpen(true);void chooseProfilePhoto()}} style={s.profileIdentityAvatar}>
     {profile?.avatar_url?<Image source={{uri:profile.avatar_url}} style={s.profileIdentityAvatarImage}/>:<Text style={s.profileIdentityAvatarInitial}>{(profile?.display_name||session.user.email||'R')[0].toUpperCase()}</Text>}
