@@ -186,7 +186,7 @@ async function main() {
       const hasStableApk = html.includes('https://github.com/25k8hvgjgh-coder/PEXVORO/releases/download/android-eas-beta/ReconFeed-beta.apk');
       const hasManifestLink = html.includes('/manifest.webmanifest');
       const hasServiceWorker = html.includes("navigator.serviceWorker.register('/sw.js')");
-      const hasSafeIosCopy = html.includes('iPhone beta coming soon') &&
+      const hasSafeIosCopy = html.includes('Native TestFlight is not available yet') &&
         !html.includes('https://expo.dev/accounts/azzholejr06/projects/reconfeed/builds');
       if (hasStableApk && hasManifestLink && hasServiceWorker && hasSafeIosCopy) {
         console.log('[PASS] Public homepage is serving the stable APK link, home-screen support, and accurate iPhone beta status.');
@@ -214,7 +214,7 @@ async function main() {
       console.warn('::warning::Public home-screen service worker returned HTTP ' + swResponse.status + '.');
     } else {
       const worker = await swResponse.text();
-      if (worker.includes("addEventListener('fetch'") && worker.includes('reconfeed-shell-v2')) {
+      if (worker.includes("addEventListener('fetch'") && worker.includes('reconfeed-shell-reference-v4')) {
         console.log('[PASS] Public home-screen service worker is live.');
       } else {
         console.warn('::warning::Public service worker response does not match the expected install shell.');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reconfeed-shell-reference-v3';
+const CACHE_NAME = 'reconfeed-shell-reference-v4';
 const PRECACHE_URLS = [
   '/',
   '/manifest.webmanifest',
@@ -45,10 +45,10 @@ self.addEventListener('fetch', (event) => {
     );
   } else if (isShellAsset) {
     event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-        if (response && response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+      fetch(request).then((response) => {
+        if (response && response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone())).catch(()=>{});
         return response;
-      }))
+      }).catch(async()=> (await caches.match(request)) || Response.error())
     );
   }
 });

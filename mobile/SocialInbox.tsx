@@ -3,11 +3,11 @@ import {ActivityIndicator,AppState,FlatList,Image,KeyboardAvoidingView,Modal,Pla
 import type {Session,SupabaseClient} from '@supabase/supabase-js';
 
 export type DirectPeer={id:string;username?:string|null;display_name?:string|null;avatar_url?:string|null};
-type DirectMessage={id:string;sender_id:string;recipient_id:string;body:string;reply_to_id:string|null;created_at:string};
-type Contact=DirectPeer & {followsYou:boolean;youFollow:boolean;last?:DirectMessage};
-type Props={client:SupabaseClient;session:Session;initialPeer?:DirectPeer|null;onClose:()=>void;onProfile?:(peer:DirectPeer)=>void};
+type DirectMessage={id:string;sender_id:string;recipient_id:string;body:string;reply_to_id:string|null;created_at:string;read_at:string|null};
+type Contact=DirectPeer & {followsYou:boolean;youFollow:boolean;last?:DirectMessage;unread:number};
+type Props={client:SupabaseClient;session:Session;initialPeer?:DirectPeer|null;onClose:()=>void;onProfile?:(peer:DirectPeer)=>void;onUnreadChange?:()=>void};
 
-export default function SocialInbox({client,session,initialPeer,onClose,onProfile}:Props){
+export default function SocialInbox({client,session,initialPeer,onClose,onProfile,onUnreadChange}:Props){
  const userId=session.user.id;
  const [peer,setPeer]=useState<DirectPeer|null>(initialPeer||null);
  const [contacts,setContacts]=useState<Contact[]>([]);
@@ -27,7 +27,7 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
   try{
    // Scope an open conversation at the database, before LIMIT. A busy inbox
    // must not push an older one-to-one reply out of the latest 120 messages.
-   let messageQuery=client.from('direct_messages').select('id,sender_id,recipient_id,body,reply_to_id,created_at');
+   let messageQuery=client.from('direct_messages').select('id,sender_id,recipient_id,body,reply_to_id,created_at,read_at');
    if(peer)messageQuery=messageQuery.or(
     `and(sender_id.eq.${userId},recipient_id.eq.${peer.id}),and(sender_id.eq.${peer.id},recipient_id.eq.${userId})`
    );
@@ -43,6 +43,23 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
    const rows=(allMessages.data||[]) as DirectMessage[];
    const peerMessages=peer?rows.filter(m=>(m.sender_id===userId&&m.recipient_id===peer.id)||(m.sender_id===peer.id&&m.recipient_id===userId)):[];
    setMessages(peerMessages);
+   const unreadByPeer=new Map<string,number>();
+   for(const row of rows){
+    if(row.recipient_id===userId&&!row.read_at){
+     unreadByPeer.set(row.sender_id,(unreadByPeer.get(row.sender_id)||0)+1);
+    }
+   }
+   // A message is read only when the recipient actually opens the thread.
+   if(peer&&peerMessages.some(row=>row.recipient_id===userId&&!row.read_at)){
+    const marked=await client.from('direct_messages')
+     .update({read_at:new Date().toISOString()})
+     .eq('recipient_id',userId).eq('sender_id',peer.id).is('read_at',null);
+    if(marked.error)console.warn('Could not mark messages read',marked.error.message);
+    else {
+     unreadByPeer.delete(peer.id);
+     onUnreadChange?.();
+    }
+   }
    const latest=new Map<string,DirectMessage>();
    for(const row of rows){
     const other=row.sender_id===userId?row.recipient_id:row.sender_id;
@@ -54,7 +71,7 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
    if(!mounted.current||version!==loaded.current)return;
    const byId=new Map((profiles.data||[]).map(p=>[p.id,p]));
    setContacts(ids.filter(id=>byId.has(id)).map(id=>({
-    ...byId.get(id),id,youFollow:outgoing.has(id),followsYou:incoming.has(id),last:latest.get(id)
+    ...byId.get(id),id,youFollow:outgoing.has(id),followsYou:incoming.has(id),last:latest.get(id),unread:unreadByPeer.get(id)||0
    } as Contact)).sort((a,b)=>(b.last?.created_at||'').localeCompare(a.last?.created_at||'')||Number(b.youFollow&&b.followsYou)-Number(a.youFollow&&a.followsYou)));
    if(peer){
     const permission=await client.rpc('reconfeed_can_send_direct_message',{p_sender:userId,p_recipient:peer.id,p_reply_id:null});
@@ -64,13 +81,13 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
    if(mounted.current&&version===loaded.current)setError('');
   }catch(e:any){if(mounted.current&&version===loaded.current)setError(e.message||'Could not load your messages. Try refreshing.')}
   finally{if(mounted.current&&version===loaded.current)setLoading(false)}
- },[client,userId,peer?.id]);
+ },[client,userId,peer?.id,onUnreadChange]);
 
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;++loaded.current}},[]);
  useEffect(()=>{
   setLoading(true);setMessages([]);setReplyTo(null);setAllowed(false);setError('');
   void load();
-  const interval=setInterval(()=>{if(AppState.currentState==='active'&&!sendPending.current)void load()},7000);
+  const interval=setInterval(()=>{if(AppState.currentState==='active'&&!sendPending.current)void load()},10000);
   return()=>{clearInterval(interval);++loaded.current};
  },[load]);
 
@@ -81,7 +98,7 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
   try{
    const result=await client.from('direct_messages').insert({
     sender_id:userId,recipient_id:peer.id,body:text,reply_to_id:replyTo?.id||null
-   }).select('id,sender_id,recipient_id,body,reply_to_id,created_at').single();
+   }).select('id,sender_id,recipient_id,body,reply_to_id,created_at,read_at').single();
    if(result.error)throw result.error;
    if(!mounted.current)return;
    setBody('');setReplyTo(null);
@@ -133,7 +150,7 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
      {contacts.map(item=><Pressable key={item.id} accessibilityRole="button" accessibilityLabel={'Message @'+item.username} onPress={()=>openContact(item)} style={s.contact}>
       {avatar(item)}<View style={{flex:1,gap:4}}><Text style={s.label} numberOfLines={1}>{item.display_name||item.username}</Text><Text style={s.note}>@{item.username||'creator'} · {item.youFollow&&item.followsYou?'✓ Mutual follow':item.followsYou?'Follows you':'Following'}</Text>
        {item.last?<Text numberOfLines={1} style={s.preview}>{item.last.sender_id===userId?'You: ':''}{item.last.body}</Text>:null}
-      </View><Text style={s.link}>›</Text>
+      </View>{item.unread>0?<View style={{minWidth:24,height:24,paddingHorizontal:5,borderRadius:12,backgroundColor:'#B83235',alignItems:'center',justifyContent:'center'}}><Text style={{color:'#fff',fontSize:11,fontWeight:'900'}}>{item.unread>99?'99+':item.unread}</Text></View>:<Text style={s.link}>›</Text>}
      </Pressable>)}
     </ScrollView>}
    </KeyboardAvoidingView>

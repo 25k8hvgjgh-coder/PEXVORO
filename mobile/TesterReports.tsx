@@ -8,9 +8,14 @@ export default function TesterReports({client,userId,visible,onClose,onReport}:{
  async function load(){
   const ticket=++request.current;setLoading(true);setError('');setIssues([]);
   try{
-   const refreshed=await client.auth.refreshSession();if(refreshed.error)throw refreshed.error;
    const user=await client.auth.getUser();if(user.error)throw user.error;
    const canReview=user.data.user?.app_metadata?.tester_report_reviewer===true;
+   // Reviewers may have recently received a new role; normal testers should
+   // not be forced through a token refresh on every reports-page visit.
+   if(canReview){
+    const refreshed=await client.auth.refreshSession();
+    if(refreshed.error)throw refreshed.error;
+   }
    let query=client.from('tester_issues').select('*').order('created_at',{ascending:false}).limit(100);
    if(!canReview)query=query.eq('reporter_id',userId);
    const result=await query;if(result.error)throw result.error;
