@@ -1,6 +1,6 @@
 import 'react-native-url-polyfill/auto';
 import React,{useEffect,useRef,useState} from 'react';
-import {ActivityIndicator,Alert,AppState,FlatList,Image,ImageBackground,Pressable,RefreshControl,SafeAreaView,ScrollView,Share,StatusBar,Platform,StyleSheet,Text,TextInput,View,useWindowDimensions} from 'react-native';
+import {ActivityIndicator,Alert,AppState,FlatList,Image,ImageBackground,Pressable,RefreshControl,SafeAreaView,ScrollView,Share,Linking,StatusBar,Platform,StyleSheet,Text,TextInput,View,useWindowDimensions} from 'react-native';
 import {Video,ResizeMode} from 'expo-av';
 import {Modal} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -51,8 +51,22 @@ export default function App(){
  const [session,setSession]=useState<Session|null>(null),[tab,setTab]=useState<Tab>(Platform.OS==='web'&&String((globalThis as any).location?.search||'').includes('beta=1')?'Profile':'For You'),[posts,setPosts]=useState<Post[]>([]),[marketListings,setMarketListings]=useState<any[]>([]),[marketTitle,setMarketTitle]=useState(''),[marketDescription,setMarketDescription]=useState(''),[marketPrice,setMarketPrice]=useState(''),[marketCategory,setMarketCategory]=useState('All'),[marketCondition,setMarketCondition]=useState('Good'),[marketLocation,setMarketLocation]=useState(''),[marketAck,setMarketAck]=useState(false),[marketMode,setMarketMode]=useState<'browse'|'sell'>('browse'),[marketSearch,setMarketSearch]=useState(''),[loading,setLoading]=useState(false),[search,setSearch]=useState(''),[email,setEmail]=useState<string>(()=>{if(Platform.OS!=='web'||!String((globalThis as any).location?.search||'').includes('beta=1'))return '';try{return String((globalThis as any).sessionStorage?.getItem('reconfeed_beta_email')||'').trim().toLowerCase()}catch(_error){return ''}}),[password,setPassword]=useState(''),[name,setName]=useState(''),[gender,setGender]=useState(''),[caption,setCaption]=useState(''),[asset,setAsset]=useState<ImagePicker.ImagePickerAsset|null>(null),[prompt,setPrompt]=useState(''),[workflow,setWorkflow]=useState('text-video'),[aiUrl,setAiUrl]=useState(''),[aiStatus,setAiStatus]=useState(''),[busy,setBusy]=useState(false),[profile,setProfile]=useState<any>(null),[commentTarget,setCommentTarget]=useState<Post|null>(null),[commentText,setCommentText]=useState(''),[commentItems,setCommentItems]=useState<any[]>([]),[commentsBusy,setCommentsBusy]=useState(false),[notInterested,setNotInterested]=useState<string[]>([]),[savedPostIds,setSavedPostIds]=useState<string[]>([]);
  const [recovering,setRecovering]=useState(Platform.OS==='web'&&String((globalThis as any).location?.hash||'').includes('type=recovery')),[newPassword,setNewPassword]=useState('');
  const [captureMode,setCaptureMode]=useState<'photo'|'video'>('video'),[captureSeconds,setCaptureSeconds]=useState(15);
- const [profileStats,setProfileStats]=useState({following:0,followers:0,posts:0});
- const [profilePosts,setProfilePosts]=useState<Array<{id:string;media_url:string;media_type:string;caption:string}>>([]);
+ const [profileStats,setProfileStats]=useState({following:0,followers:0,posts:0,likes:0});
+ const [profilePosts,setProfilePosts]=useState<Array<{id:string;media_url:string;media_type:string;caption:string;pinned_at?:string|null}>>([]);
+ const [creatorAnalytics,setCreatorAnalytics]=useState({views:0,completedViews:0,watchSeconds:0,shares:0});
+ const [creatorSettings,setCreatorSettings]=useState({
+  account_type:'personal' as 'personal'|'business',
+  is_private:false,
+  allow_comments:'everyone' as 'everyone'|'followers'|'none',
+  allow_messages:'followers' as 'everyone'|'followers'|'none',
+  allow_mentions:'everyone' as 'everyone'|'followers'|'none',
+  liked_videos_public:false,
+  pronouns:'',website_url:'',instagram_handle:'',youtube_url:''
+ });
+ const [settingsBusy,setSettingsBusy]=useState(false);
+ const [profileSettingsOpen,setProfileSettingsOpen]=useState(false);
+ const [blockedAccounts,setBlockedAccounts]=useState<Array<{blocked_id:string;created_at:string}>>([]);
+ const [profileGridTab,setProfileGridTab]=useState<'videos'|'photos'|'saved'|'liked'>('videos');
  const [profileLoading,setProfileLoading]=useState(false);
  const exploreSearchRequest=useRef(0);
  const [exploreBusy,setExploreBusy]=useState(false);
@@ -171,14 +185,20 @@ export default function App(){
   void verifyBetaTester();return()=>{active=false};
  },[session?.access_token,session?.user.id]);
  useEffect(()=>{let live=true;
-  if(!supabase||!session){setProfileStats({following:0,followers:0,posts:0});setProfilePosts([]);return}
+  if(!supabase||!session){setProfileStats({following:0,followers:0,posts:0,likes:0});setProfilePosts([]);return}
   setProfileLoading(true);
-  void(async()=>{try{const id=session.user.id;const [following,followers,posts,preview]=await Promise.all([
+  void(async()=>{try{const id=session.user.id;const [following,followers,posts,preview,analytics]=await Promise.all([
    supabase.from('follows').select('following_id',{head:true,count:'exact'}).eq('follower_id',id),
    supabase.from('follows').select('follower_id',{head:true,count:'exact'}).eq('following_id',id),
    supabase.from('posts').select('id',{head:true,count:'exact'}).eq('user_id',id),
-   supabase.from('posts').select('id,media_url,media_type,caption').eq('user_id',id).order('created_at',{ascending:false}).limit(9)
-  ]);if(live){setProfileStats({following:following.count||0,followers:followers.count||0,posts:posts.count||0});setProfilePosts((preview.data||[]) as any)}
+   supabase.from('posts').select('id,media_url,media_type,caption,pinned_at').eq('user_id',id).order('pinned_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(45),
+   supabase.rpc('reconfeed_my_creator_analytics')
+  ]);if(live){
+   const numbers=analytics.data||{};
+   setCreatorAnalytics({views:Number(numbers.views||0),completedViews:Number(numbers.completedViews||0),watchSeconds:Number(numbers.watchSeconds||0),shares:Number(numbers.shares||0)});
+   setProfileStats({following:following.count||0,followers:followers.count||0,posts:posts.count||0,likes:Number(numbers.totalLikes||0)});
+   setProfilePosts((preview.data||[]) as any);
+  }
   }catch(e){console.warn('Profile gallery unavailable',e)}finally{if(live)setProfileLoading(false)}})();
   return()=>{live=false};
  },[session?.user.id]);
@@ -210,6 +230,63 @@ export default function App(){
  async function loadResearchResponse(){if(!supabase||!session)return;try{const r=await supabase.from('reconfeed_research_responses').select('feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test').eq('user_id',session.user.id).maybeSingle();if(r.error)throw r.error;if(accountRef.current!==session.user.id)return;if(r.data){setResearchFeatures(r.data.feature_interests||[]);setResearchPrice(r.data.monthly_price||'free');setResearchIdentity(r.data.identity_mode||'both');setResearchNeed(r.data.biggest_need||'');setResearchWilling(!!r.data.willing_to_test);setResearchSaved(true)}else setResearchSaved(false)}catch(e:any){console.warn('Research survey load failed:',e.message)}finally{if(accountRef.current===session.user.id)setResearchLoaded(true)}}
  async function saveResearchResponse(){if(!supabase||!session){showAlert('Sign in required','Sign in to submit tester research.');return}const features=researchFeatures.includes('none_yet')?['none_yet']:researchFeatures;setBusy(true);try{const r=await supabase.from('reconfeed_research_responses').upsert({user_id:session.user.id,feature_interests:features,monthly_price:researchPrice,identity_mode:researchIdentity,biggest_need:researchNeed.trim(),willing_to_test:researchWilling,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(r.error)throw r.error;setResearchFeatures(features);setResearchSaved(true);showAlert('Response saved','Thanks. Your answer is stored as a real tester response and can be updated later.')}catch(e:any){showAlert('Survey unavailable',safeErrorMessage(e)+' If this is a new build, the research survey database migration must be applied first.')}finally{setBusy(false)}}
  useEffect(()=>{let active=true;async function loadSavedPosts(){if(!supabase||!session){setSavedPostIds([]);return}const r=await supabase.from('saved_posts').select('post_id').eq('user_id',session.user.id);if(!r.error&&active)setSavedPostIds((r.data||[]).map((row:any)=>row.post_id))}loadSavedPosts();return()=>{active=false}},[session?.user.id]);
+ useEffect(()=>{
+  let live=true;
+  if(!supabase||!session){setProfileSettingsOpen(false);setBlockedAccounts([]);return}
+  void(async()=>{
+   try{
+    const [prefs,blocks]=await Promise.all([
+     supabase.from('profile_settings').select('account_type,is_private,allow_comments,allow_messages,allow_mentions,liked_videos_public,pronouns,website_url,instagram_handle,youtube_url').eq('user_id',session.user.id).maybeSingle(),
+     supabase.from('blocked_accounts').select('blocked_id,created_at').eq('blocker_id',session.user.id).order('created_at',{ascending:false}).limit(100)
+    ]);
+    if(live&&prefs.data)setCreatorSettings(old=>({...old,...prefs.data}));
+    if(live&&!blocks.error)setBlockedAccounts(blocks.data||[]);
+   }catch(e:any){console.warn('Account controls unavailable',safeErrorMessage(e))}
+  })();
+  return()=>{live=false};
+ },[session?.user.id]);
+ async function saveCreatorSettings(){
+  if(!supabase||!session||settingsBusy)return;
+  if(creatorSettings.website_url&&!/^https:\/\/[\w.-]+(?:\:[0-9]+)?(?:[/?#][^\s]*)?$/i.test(creatorSettings.website_url.trim())){showAlert('Website link','Use a valid https:// link.');return}
+  if(creatorSettings.youtube_url&&!/^https:\/\/[\w.-]+(?:\:[0-9]+)?(?:[/?#][^\s]*)?$/i.test(creatorSettings.youtube_url.trim())){showAlert('YouTube link','Use a valid https:// link.');return}
+  setSettingsBusy(true);
+  try{
+   const r=await supabase.from('profile_settings').upsert({...creatorSettings,user_id:session.user.id,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+   if(r.error)throw r.error;
+   showAlert('Account controls saved',creatorSettings.is_private?'Profile posts are restricted in ReconFeed. Note that media URLs previously shared outside ReconFeed may still be accessible.':'Your profile settings are saved.');
+  }catch(e:any){showAlert('Unable to save settings',safeErrorMessage(e))}
+  finally{setSettingsBusy(false)}
+ }
+ async function togglePinPost(postId:string,pinned:boolean){
+  if(!supabase||!session)return;
+  try{
+   const r=await supabase.from('posts').update({pinned_at:pinned?null:new Date().toISOString()}).eq('id',postId).eq('user_id',session.user.id);
+   if(r.error)throw r.error;
+   setProfilePosts(rows=>rows.map(x=>x.id===postId?{...x,pinned_at:pinned?null:new Date().toISOString()}:x).sort((a,b)=>Number(!!b.pinned_at)-Number(!!a.pinned_at)));
+  }catch(e:any){showAlert('Cannot change pin',safeErrorMessage(e))}
+ }
+ async function blockCreator(creatorId:string){
+  if(!supabase||!session||creatorId===session.user.id)return;
+  showAlert('Block this account?','Blocking prevents either of you from viewing the other\'s posts and profiles inside ReconFeed.',[
+   {text:'Cancel',style:'cancel'},
+   {text:'Block',onPress:()=>{void(async()=>{
+    const r=await supabase.from('blocked_accounts').upsert({blocker_id:session.user.id,blocked_id:creatorId},{onConflict:'blocker_id,blocked_id'});
+    if(r.error)showAlert('Block failed',r.error.message);
+    else{setBlockedAccounts(prev=>[{blocked_id:creatorId,created_at:new Date().toISOString()},...prev]);setViewingCreator(null);showAlert('Account blocked','You can unblock this user from Profile settings.')}
+   })()}}
+  ]);
+ }
+ async function unblockCreator(creatorId:string){
+  if(!supabase||!session)return;
+  const r=await supabase.from('blocked_accounts').delete().eq('blocker_id',session.user.id).eq('blocked_id',creatorId);
+  if(r.error)showAlert('Unblock failed',r.error.message);
+  else setBlockedAccounts(prev=>prev.filter(x=>x.blocked_id!==creatorId));
+ }
+ async function shareProfile(username:string){
+  if(!username.trim())return;
+  const link='https://reconfeed.com/app/?profile='+encodeURIComponent(username.trim().replace(/^@/,''));
+  try{await Share.share({message:'Find me on ReconFeed: '+link,url:link})}catch(error){console.warn('Profile sharing unavailable')}
+ }
  async function loadProfile(){if(!supabase||!session)return;const r=await supabase.from('profiles').select('id,username,display_name,bio,avatar_url,created_at').eq('id',session.user.id).maybeSingle();if(accountRef.current===session.user.id){setProfile(r.data);setName(r.data?.display_name||'');setProfileBioDraft(r.data?.bio||'')}}
  async function runExploreSearch(term:string){
   if(!supabase){setExploreBusy(false);setExploreSearched(true);setExploreResults([]);setExploreCreators([]);return}
