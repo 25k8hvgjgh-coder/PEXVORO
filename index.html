@@ -17,7 +17,7 @@
 document.getElementById('year').textContent=new Date().getFullYear();
 let deferredInstallPrompt=null;const installButton=document.getElementById('install-app');window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;installButton.hidden=false;});installButton.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installButton.hidden=true;});
 const ua=navigator.userAgent||'';const isIOS=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);const isAndroid=/Android/i.test(ua);
-const apkFallback='https://github.com/25k8hvgjgh-coder/PEXVORO/releases/download/android-beta-24/ReconFeed-beta.apk';
+const apkFallback='https://github.com/25k8hvgjgh-coder/PEXVORO/releases/download/android-eas-beta/ReconFeed-beta.apk';
 function setAndroidApk(url){document.getElementById('android-link').href=url;if(!isIOS){document.getElementById('download').href=url;document.getElementById('download').textContent=isAndroid?'Download Android beta':'Get ReconFeed beta ↗';}}
 if(isIOS){document.getElementById('download').textContent='Check iPhone beta status';document.getElementById('download').href='https://expo.dev/accounts/azzholejr06/projects/reconfeed/builds';}
 else{setAndroidApk(apkFallback);}
