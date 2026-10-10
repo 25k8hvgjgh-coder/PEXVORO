@@ -132,15 +132,16 @@ create table if not exists public.marketplace_listings (
   title text not null check (char_length(title) between 3 and 120),
   description text not null default '' check (char_length(description) <= 5000),
   category text not null default 'Other',
-  price_cents integer not null check (price_cents between 1 and 100000000),
+  price numeric not null check (price > 0 and price <= 1000000),
+  -- Nullable legacy cents column for compatibility with earlier marketplace clients.
+  price_cents integer check (price_cents between 1 and 100000000),
   currency text not null default 'usd' check (currency = 'usd'),
-
   condition text not null default 'Good',
   location text not null default '',
   accepted_responsibility boolean not null default false,
   seller_shipping_terms text not null default '',
   image_urls text[] not null default '{}',
-  status text not null default 'draft' check (status in ('draft','active','paused','sold','removed')),
+  status text not null default 'draft' check (status in ('draft','active','paused','sold','hidden','removed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
