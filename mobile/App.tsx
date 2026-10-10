@@ -70,6 +70,11 @@ export default function App(){
  const [blockedAccounts,setBlockedAccounts]=useState<Array<{blocked_id:string;created_at:string}>>([]);
  const [profileGridTab,setProfileGridTab]=useState<'videos'|'photos'|'saved'|'liked'>('videos');
  const [profileLoading,setProfileLoading]=useState(false);
+ const [profileEditOpen,setProfileEditOpen]=useState(false);
+ const [researchPanelOpen,setResearchPanelOpen]=useState(false);
+ const [profileSelected,setProfileSelected]=useState<{id:string;media_url:string;media_type:string;caption:string}|null>(null);
+ const [profileGridLimit,setProfileGridLimit]=useState(18);
+ const [profileViewCounts,setProfileViewCounts]=useState<Record<string,number>>({});
  const exploreSearchRequest=useRef(0);
  const profileDeepLinkOpened=useRef(false);
  const [exploreBusy,setExploreBusy]=useState(false);
@@ -191,17 +196,19 @@ export default function App(){
  useEffect(()=>{let live=true;
   if(!supabase||!session){setProfileStats({following:0,followers:0,posts:0,likes:0});setProfilePosts([]);return}
   setProfileLoading(true);
-  void(async()=>{try{const id=session.user.id;const [following,followers,posts,preview,analytics]=await Promise.all([
+  void(async()=>{try{const id=session.user.id;const [following,followers,posts,preview,analytics,viewCounts]=await Promise.all([
    supabase.from('follows').select('following_id',{head:true,count:'exact'}).eq('follower_id',id),
    supabase.from('follows').select('follower_id',{head:true,count:'exact'}).eq('following_id',id),
    supabase.from('posts').select('id',{head:true,count:'exact'}).eq('user_id',id),
-   supabase.from('posts').select('id,media_url,media_type,caption,pinned_at').eq('user_id',id).order('pinned_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(45),
-   supabase.rpc('reconfeed_my_creator_analytics')
+   supabase.from('posts').select('id,media_url,media_type,caption,pinned_at').eq('user_id',id).order('pinned_at',{ascending:false,nullsFirst:false}).order('created_at',{ascending:false}).limit(90),
+   supabase.rpc('reconfeed_my_creator_analytics'),
+   supabase.rpc('reconfeed_my_post_view_counts')
   ]);if(live){
    const numbers=analytics.data||{};
    setCreatorAnalytics({views:Number(numbers.views||0),completedViews:Number(numbers.completedViews||0),watchSeconds:Number(numbers.watchSeconds||0),shares:Number(numbers.shares||0)});
    setProfileStats({following:following.count||0,followers:followers.count||0,posts:posts.count||0,likes:Number(numbers.totalLikes||0)});
    setProfilePosts((preview.data||[]) as any);
+   if(!viewCounts.error)setProfileViewCounts(Object.fromEntries((viewCounts.data||[]).map((row:any)=>[row.post_id,Number(row.view_count||0)])));
   }
   }catch(e){console.warn('Profile gallery unavailable',e)}finally{if(live)setProfileLoading(false)}})();
   return()=>{live=false};
