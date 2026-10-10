@@ -43,11 +43,11 @@ async function main() {
 
   // Probe marketplace columns; schema changes must be applied to the live database too.
   const marketplace = await check(
-    'marketplace_listings?select=id,title,price_cents,condition,location,accepted_responsibility&limit=1',
+    'marketplace_listings?select=id,seller_id,title,description,category,condition,price,location,image_urls,accepted_responsibility,seller_shipping_terms,status,created_at&limit=1',
     'marketplace listing schema'
   );
   if (!marketplace.ok) {
-    console.warn('::warning::Marketplace database migration may be unapplied: verify price_cents, condition, location, and seller responsibility columns in Supabase.');
+    console.warn('::warning::Marketplace schema may be behind the mobile app: verify price, condition, location, image_urls, seller_shipping_terms, and seller responsibility columns in Supabase.');
   }
 
   // Probe the configured public media bucket without uploading or exposing user files.
@@ -105,17 +105,28 @@ async function main() {
   }
 
   try {
-    const aiStatus = await fetch('https://reconfeed.com/api/generation-status', { signal: AbortSignal.timeout(12000) });
-    await aiStatus.body?.cancel();
-    if (aiStatus.status === 400) {
-      console.log('[PASS] Server-side AI token is present (generation was not started); model compatibility remains unverified.');
-    } else if (aiStatus.status === 503) {
-      console.warn('::warning::AI generation is not configured: the server-side REPLICATE_API_TOKEN is missing.');
+    const unauthenticatedGenerate = await fetch('https://reconfeed.com/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workflow: 'text-video', prompt: 'ReconFeed security smoke test' }),
+      signal: AbortSignal.timeout(12000)
+    });
+    await unauthenticatedGenerate.body?.cancel();
+    if (unauthenticatedGenerate.status === 401) {
+      console.log('[PASS] AI generation endpoint rejects unauthenticated requests.');
     } else {
-      console.warn('::warning::AI status endpoint returned HTTP ' + aiStatus.status + '; verify server API deployment and configuration.');
+      console.warn('::warning::Unauthenticated AI generation returned HTTP ' + unauthenticatedGenerate.status + '; verify that the latest secured API deployment is live.');
+    }
+
+    const aiStatus = await fetch('https://reconfeed.com/api/generation-status?id=smoke_test_0001', { signal: AbortSignal.timeout(12000) });
+    await aiStatus.body?.cancel();
+    if (aiStatus.status === 401) {
+      console.log('[PASS] AI status endpoint rejects unauthenticated requests.');
+    } else {
+      console.warn('::warning::Unauthenticated AI status check returned HTTP ' + aiStatus.status + '; verify that the latest secured API deployment is live.');
     }
   } catch (error) {
-    console.warn('::warning::Could not reach AI status endpoint: ' + String(error?.message || error));
+    console.warn('::warning::Could not complete AI authentication smoke checks: ' + String(error?.message || error));
   }
 
   // Verify the public site has the deployment changes; these checks never log page contents.
@@ -129,10 +140,12 @@ async function main() {
       const hasStableApk = html.includes('https://github.com/25k8hvgjgh-coder/PEXVORO/releases/download/android-eas-beta/ReconFeed-beta.apk');
       const hasManifestLink = html.includes('/manifest.webmanifest');
       const hasServiceWorker = html.includes("navigator.serviceWorker.register('/sw.js')");
-      if (hasStableApk && hasManifestLink && hasServiceWorker) {
-        console.log('[PASS] Public homepage is serving the stable APK link and home-screen support.');
+      const hasSafeIosCopy = html.includes('iPhone beta coming soon') &&
+        !html.includes('https://expo.dev/accounts/azzholejr06/projects/reconfeed/builds');
+      if (hasStableApk && hasManifestLink && hasServiceWorker && hasSafeIosCopy) {
+        console.log('[PASS] Public homepage is serving the stable APK link, home-screen support, and accurate iPhone beta status.');
       } else {
-        console.warn('::warning::Public homepage is reachable, but its HTML does not yet contain all current install-link/PWA changes. Vercel deployment may be stale.');
+        console.warn('::warning::Public homepage is reachable, but its HTML does not yet contain all current install-link/PWA/iOS-status changes. Vercel deployment may be stale.');
       }
     }
 
