@@ -41,11 +41,48 @@ async function main() {
   );
   if (!feed.ok) failed = true;
 
-  const privateColumns = await check('profiles?select=birth_date,gender&limit=1', 'sensitive profile column access probe');
+  const privateColumns = await fetch(base + '/rest/v1/profiles?select=birth_date,gender&limit=1', {
+    headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' },
+    signal: AbortSignal.timeout(12000)
+  });
   if (privateColumns.ok) {
+    await privateColumns.body?.cancel();
     console.warn('::warning::Anonymous client can still SELECT profiles.birth_date/gender. Apply supabase/migrations/20261010020000_profiles_column_privacy.sql in the live project.');
   } else {
-    console.log('[PASS] Sensitive profile columns are not selectable by the anonymous client (verify after applying the migration).');
+    await privateColumns.body?.cancel();
+    console.log('[PASS] Sensitive profile columns are not selectable by the anonymous client.');
+  }
+
+  // Probe the deployed web API without initiating a paid AI generation.
+  try {
+    const configResponse = await fetch('https://reconfeed.com/api/config', { signal: AbortSignal.timeout(12000) });
+    if (!configResponse.ok) {
+      await configResponse.body?.cancel();
+      console.warn('::warning::Live website API config endpoint is unavailable (HTTP ' + configResponse.status + '). Verify the Vercel deployment and project access.');
+    } else {
+      const config = await configResponse.json();
+      if (config.configured && config.url === base && typeof config.anonKey === 'string' && config.anonKey.length > 10) {
+        console.log('[PASS] Deployed website API exposes the expected public Supabase configuration.');
+      } else {
+        console.warn('::warning::Deployed website API config does not match the mobile Supabase project.');
+      }
+    }
+  } catch (error) {
+    console.warn('::warning::Could not reach the deployed website API config endpoint: ' + String(error?.message || error));
+  }
+
+  try {
+    const aiStatus = await fetch('https://reconfeed.com/api/generation-status', { signal: AbortSignal.timeout(12000) });
+    await aiStatus.body?.cancel();
+    if (aiStatus.status === 400) {
+      console.log('[PASS] Server-side AI token is present (generation was not started); model compatibility remains unverified.');
+    } else if (aiStatus.status === 503) {
+      console.warn('::warning::AI generation is not configured: the server-side REPLICATE_API_TOKEN is missing.');
+    } else {
+      console.warn('::warning::AI status endpoint returned HTTP ' + aiStatus.status + '; verify server API deployment and configuration.');
+    }
+  } catch (error) {
+    console.warn('::warning::Could not reach AI status endpoint: ' + String(error?.message || error));
   }
 
   if (failed) process.exit(1);
