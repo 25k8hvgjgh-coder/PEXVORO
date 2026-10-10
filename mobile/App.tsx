@@ -4,12 +4,13 @@ import {ActivityIndicator,Alert,AppState,FlatList,Image,Pressable,RefreshControl
 import {Video,ResizeMode} from 'expo-av';
 import {Modal} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createClient,Session} from '@supabase/supabase-js';
 import * as Updates from 'expo-updates';
 const url=process.env.EXPO_PUBLIC_SUPABASE_URL||'';
 const key=process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY||'';
 const api=(process.env.EXPO_PUBLIC_API_BASE_URL||'').replace(/\/$/,'');
-const supabase=url&&key?createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
+const supabase=url&&key?createClient(url,key,{auth:{storage:AsyncStorage,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
 const theme={bg:'#0a0d0c',panel:'#121816',line:'#2b3731',text:'#f2f4ef',muted:'#9ba9a0',purple:'#c6a15b',pink:'#e0bd78',accent:'#7d9b8a'};
 type Post={id:string;user_id:string;caption:string;media_url:string;media_type:string;format?:string;created_at:string;profiles:any;likes:{count:number}[];comments?:{count:number}[]};
 type Tab='For You'|'Following'|'Discover'|'Market'|'Create'|'Profile';

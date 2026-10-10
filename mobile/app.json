@@ -4,7 +4,7 @@
     "slug": "reconfeed",
     "owner": "azzholejr06",
     "scheme": "reconfeed",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -30,7 +30,7 @@
         "backgroundColor": "#090b08",
         "foregroundImage": "./assets/icon.png"
       },
-      "versionCode": 26
+      "versionCode": 27
     },
     "plugins": [
       [
@@ -49,7 +49,9 @@
         "expo-channel-name": "preview"
       }
     },
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "extra": {
       "eas": {
         "projectId": "cb631cf4-5781-426a-a5f9-9d3c52abf8dc"
