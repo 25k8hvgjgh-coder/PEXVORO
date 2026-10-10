@@ -44,10 +44,10 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           npx eas-cli build:download --build-id 82ab6e2c-03c6-4aea-ac49-461828765bed --non-interactive
-          APK_PATH="$(find . -type f -name '*.apk' -print -quit)"
+          APK_PATH="$(find /tmp/runner/eas-cli-nodejs/eas-build-run-cache "$RUNNER_TEMP" -type f -name '*.apk' -print -quit 2>/dev/null || true)"
           if [ -z "$APK_PATH" ]; then
             echo "::error::EAS build download finished but no APK file was found."
-            find . -maxdepth 4 -type f | sort | tail -80
+            find /tmp/runner/eas-cli-nodejs/eas-build-run-cache "$RUNNER_TEMP" -maxdepth 5 -type f 2>/dev/null | sort | tail -80
             exit 1
           fi
           cp "$APK_PATH" "$GITHUB_WORKSPACE/ReconFeed-beta.apk"
