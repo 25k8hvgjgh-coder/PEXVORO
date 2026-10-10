@@ -33,8 +33,9 @@ export default async function handler(req, res) {
   }
 
   const aiMissingConfiguration = [];
-  if (!process.env.REPLICATE_API_TOKEN) aiMissingConfiguration.push('REPLICATE_API_TOKEN');
-  // Model identifiers have safe defaults in api/generate.js; only the token is secret and required.
+  if (!String(process.env.REPLICATE_API_TOKEN || '').trim()) aiMissingConfiguration.push('REPLICATE_API_TOKEN');
+  if (!String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()) aiMissingConfiguration.push('SUPABASE_SERVICE_ROLE_KEY');
+  // Model identifiers have safe defaults in api/generate.js; both server-only keys are required.
 
   return res.status(200).json({
     app: 'ReconFeed',
