@@ -762,7 +762,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   <View style={s.profileIdentity}>
    <View style={s.profileIdentityText}>
     <Text style={s.profileIdentityName} numberOfLines={2}>{profile?.display_name||session.user.email?.split('@')[0]||'ReconFeed Creator'}</Text>
-    <Text style={s.profileIdentityHandle}>@{profile?.username||'creator'}</Text>
+    <View style={{flexDirection:'row',alignItems:'center',flexWrap:'wrap',gap:6}}><Text style={s.profileIdentityHandle}>@{profile?.username||'creator'}</Text>{(isBetaTester||profile?.is_beta_tester===true)&&<Text accessibilityLabel="Verified beta tester" style={{fontSize:17}}>👨‍💻</Text>}</View>
     {(isBetaTester||profile?.is_beta_tester===true)&&<View style={s.profileBadge}><Text style={s.profileBadgeText}>✦ VERIFIED BETA TESTER</Text></View>}
    </View>
    <Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={()=>{setProfileEditOpen(true);void chooseProfilePhoto()}} style={s.profileIdentityAvatar}>
