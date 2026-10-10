@@ -51,12 +51,12 @@ async function main() {
     let storageDetail = storageText;
     try {
       const parsed = JSON.parse(storageText);
-      storageDetail = String(parsed.error || parsed.message || parsed.statusCode || storageText);
+      storageDetail = String(parsed.message || parsed.error || parsed.statusCode || storageText);
     } catch {}
     storageDetail = storageDetail.slice(0, 180);
-    if (storageProbe.status === 404 && !/bucket not found/i.test(storageDetail)) {
+    if ((storageProbe.status === 404 || storageProbe.status === 400) && /object not found/i.test(storageDetail) && !/bucket not found/i.test(storageDetail)) {
       console.log('[PASS] Supabase post-media public bucket is reachable (probe object intentionally does not exist).');
-    } else if (/bucket not found/i.test(storageDetail)) {
+    } else if (/bucket not found|bucket does not exist/i.test(storageDetail)) {
       console.warn('::warning::Supabase public Storage bucket post-media does not exist in the live project.');
     } else {
       console.warn('::warning::Could not conclusively verify public post-media bucket (HTTP ' + storageProbe.status + '): ' + storageDetail + '. Check Storage bucket and public-read settings.');
