@@ -12,6 +12,14 @@ assert.equal(imageFormat(png).type,'image/png');
 assert.throws(()=>imageFormat(new Uint8Array([1,2,3]).buffer),/format/);
 globalThis.fetch=async()=>({ok:true,arrayBuffer:async()=>jpg});
 assert.equal((await readProfilePhoto({uri:'fixture',mimeType:'image/heic'},false)).type,'image/jpeg','Use actual cropped bytes instead of original HEIC label');
+const savedFetch=globalThis.fetch;
+globalThis.fetch=async()=>{throw Error('Native file URI fetch failed');};
+const pickerBase64=Buffer.from(jpg).toString('base64');
+const nativePhoto=await readProfilePhoto({uri:'file://unreadable-avatar',base64:pickerBase64},false);
+assert.equal(nativePhoto.type,'image/jpeg','Use native picker bytes if file URI fetch is unreliable');
+assert.equal(Buffer.from(nativePhoto.bytes).toString('base64'),pickerBase64,'Preserve the exact image bytes');
+await assert.rejects(()=>readProfilePhoto({uri:'file://bad-image',base64:'broken!'},false),/decoded/);
+globalThis.fetch=savedFetch;
 let drawn=false;
 globalThis.Image=class{naturalWidth=4000;naturalHeight=3000;async decode(){}};
 globalThis.document={createElement:()=>({getContext:()=>({drawImage(...args){drawn=true;assert.deepEqual(args.slice(1),[500,0,3000,3000,0,0,1024,1024])}}),toBlob(cb,type){assert.equal(type,'image/jpeg');cb(new Blob([jpg],{type}))}})};
@@ -26,4 +34,4 @@ await assert.rejects(()=>uploadProfilePhoto(failedClient,'owner',{uri:'fixture'}
 
 globalThis.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(6*1024*1024)});
 await assert.rejects(()=>readProfilePhoto({uri:'oversize'},false),/5 MB/);
-console.log('Profile-photo checks passed: cropped MIME detection, browser resizing/cropping, upload bytes and size rejection.');
+console.log('Profile-photo checks passed: native base64 fallback, cropped MIME detection, browser resizing/cropping, upload bytes and size rejection.');
