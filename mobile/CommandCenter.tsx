@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useRef,useState} from 'react';
-import {ActivityIndicator,Image,Modal,Pressable,SafeAreaView,ScrollView,Text,View} from 'react-native';
+import {ActivityIndicator,Image,Linking,Modal,Pressable,SafeAreaView,ScrollView,Text,View} from 'react-native';
 import type {SupabaseClient} from '@supabase/supabase-js';
 import {olive} from './oliveTheme';
 
@@ -32,8 +32,8 @@ export default function CommandCenter({client,visible,onClose,onReport}:Props){
   try{
    const auth=await client.auth.getUser();
    if(auth.error)throw auth.error;
-   if(auth.data.user?.id!=='8287fc6f-dd23-48d8-988e-388a8c93fe7b'||auth.data.user?.app_metadata?.tester_report_reviewer!==true){
-    throw new Error('This dashboard is reserved for approved ReconFeed administrators.');
+   if(auth.data.user?.id!=='8287fc6f-dd23-48d8-988e-388a8c93fe7b'||auth.data.user?.app_metadata?.reconfeed_command_center_admin!==true){
+    throw new Error('This command center is reserved for the single verified ReconFeed owner account.');
    }
    const refresh=await client.auth.refreshSession();
    if(refresh.error)throw refresh.error;
@@ -80,6 +80,7 @@ export default function CommandCenter({client,visible,onClose,onReport}:Props){
    <Pressable accessibilityLabel="Close command center" accessibilityRole="button" onPress={onClose} style={[chip,{marginLeft:8}]}><Text style={{color:olive.text,fontWeight:'800'}}>Close ×</Text></Pressable>
   </View>
   <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:17,paddingBottom:80}}>
+   <Pressable accessibilityRole="link" accessibilityLabel="Open full owner command center in browser" onPress={()=>{void Linking.openURL('https://reconfeed.com/command-center.html')}} style={[chip,{backgroundColor:olive.accent,marginTop:13,alignSelf:'flex-start'}]}><Text style={{fontWeight:'800',color:olive.deep}}>Open full command center ↗</Text></Pressable>
    <View style={{flexDirection:'row',gap:10,marginTop:14,alignItems:'center'}}>
     <Pressable accessibilityRole="button" onPress={()=>void load()} disabled={busy} style={[chip,{backgroundColor:olive.accent}]}><Text style={{fontWeight:'800',color:olive.deep}}>↻ Refresh live data</Text></Pressable>
     {busy?<ActivityIndicator color={olive.accent}/>:null}
