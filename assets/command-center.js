@@ -6,7 +6,7 @@
  const add=(parent,...kids)=>{for(const child of kids)if(child)parent.appendChild(child);return parent;};
  const statuses=['open','triaged','in_progress','fixed','closed'];
  const labels={open:'Open',triaged:'Triaged',in_progress:'In progress',fixed:'Fixed',closed:'Closed'};
- const pages={overview:['Your operation.','One clear view.','Real reports, real testers and the information you need to build a stronger ReconFeed.'],reports:['Tester reports.','Every issue counts.','Review screenshots and track progress toward working fixes.'],testers:['Your beta community.','Growing together.','Real tester applications from the ReconFeed website.'],feedback:['Community feedback.','Build what matters.','Actual research responses and feature ideas from verified app users.'],moderation:['Community reports.','Make it safer.','Handle content flags without exposing anyone’s private conversations.'],systems:['Systems & security.','Stay in control.','Check service health and see the security safeguards that need attention.']};
+ const pages={overview:['Your operation.','One clear view.','Real reports, real testers and the information you need to build a stronger ReconFeed.'],reports:['Tester reports.','Every issue counts.','Review screenshots and track progress toward working fixes.'],testers:['Your beta community.','Growing together.','Real tester applications from the ReconFeed website.'],profiles:['Registered members.','Real creator accounts.','Latest signed-up profiles from the live database.'],feedback:['Community feedback.','Build what matters.','Actual research responses and feature ideas from verified app users.'],moderation:['Community reports.','Make it safer.','Handle content flags without exposing anyone’s private conversations.'],systems:['Systems & security.','Stay in control.','Check service health and see the security safeguards that need attention.']};
  const state={config:null,session:null,data:null,page:'overview',busy:false,lastTouch:Date.now()};
  const fmtDate=v=>{const d=new Date(v);return Number.isNaN(d.valueOf())?'Unknown time':new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(d);};
  const num=v=>Math.max(0,Number(v)||0).toLocaleString();
@@ -78,23 +78,23 @@
   const [heading,accent,description]=pages[name];
   el('screen-title').replaceChildren(document.createTextNode(heading),' ',make('em','',accent));
   el('screen-description').textContent=description;
-  el('current-location').textContent=({overview:'Overview',reports:'Tester reports',testers:'Beta testers',feedback:'Feedback & research',moderation:'Moderation',systems:'Systems & security'})[name];
+  el('current-location').textContent=({overview:'Overview',reports:'Tester reports',testers:'Beta testers',profiles:'Profiles',feedback:'Feedback & research',moderation:'Moderation',systems:'Systems & security'})[name];
   el('sidebar').classList.remove('is-open');
   if(name==='systems')void health();
  }
  function render(){
   const d=state.data;if(!d)return;
   const metrics=el('metrics');metrics.replaceChildren();
-  const stats=[['profiles','Creator accounts'],['posts','Public posts'],['stories','Active Stories'],['issues','Tester reports'],['testers','Beta signups'],['messages','Private messages'],['postReports','Post flags'],['listingReports','Listing flags']];
+  const stats=[['profiles','Registered profiles'],['recentProfiles','New profiles · 7 days'],['betaProfiles','In-app beta accounts'],['testers','Beta applications'],['pendingTesters','Pending applications'],['issuesActive','Unresolved reports'],['posts','Public posts'],['stories','Active stories'],['issues','Tester reports'],['research','Research surveys'],['messages','Private messages'],['postReports','Post flags'],['listingReports','Listing flags']];
   stats.forEach(([key,label])=>{
    const card=make('div','metric');
-   add(card,make('span','metric-title',label),make('strong','metric-value',num(d.counts[key])),make('span','metric-foot',key==='messages'?'Count only · contents private':'Live database total'));
+   add(card,make('span','metric-title',label),make('strong','metric-value',num(d.counts[key])),make('span','metric-foot',key==='messages'?'Count only · contents private':key==='betaProfiles'?'Profile beta flag · may include owner':key==='testers'?'Website signup forms · distinct from profiles':key==='recentProfiles'?'Accounts created in the last 7 days':key==='pendingTesters'?'Awaiting a response':key==='issuesActive'?'Open, triaged, or in progress':'Live database total'));
    metrics.appendChild(card);
   });
   el('report-counter').textContent=num(d.counts.issues);
   el('last-sync').textContent='Updated '+fmtDate(d.generatedAt);
   el('data-status').textContent='Live snapshot · '+fmtDate(d.generatedAt);
-  overview();reports();testers();feedback();moderation();
+  overview();reports();testers();profiles();feedback();moderation();
  }
  function overview(){
   const issues=state.data.issues||[];
@@ -110,7 +110,7 @@
    button.addEventListener('click',()=>openReport(issue));recent.appendChild(button);
   }
   const activity=el('live-activity');activity.replaceChildren();
-  for(const [label,key] of [['Registered creator profiles','profiles'],['Published public posts','posts'],['Active Stories','stories'],['Direct messages (count only)','messages'],['Research responses','research'],['Beta applications','testers']])
+  for(const [label,key] of [['Registered profiles','profiles'],['New profiles (7 days)','recentProfiles'],['Accounts with in-app beta flag','betaProfiles'],['Website beta applications','testers'],['Pending beta applications','pendingTesters'],['Unresolved tester reports','issuesActive'],['Published public posts','posts'],['Active Stories','stories'],['Direct messages (count only)','messages'],['Research responses','research']])
    add(activity,add(make('div','activity-row'),make('span','',label),make('strong','',num(state.data.counts[key]))));
  }
  function reports(){
@@ -125,12 +125,28 @@
   }
  }
  function testers(){
+  const summary=el('tester-breakdown');summary.replaceChildren();
+  for(const [label,key] of [['Website beta applications','testers'],['Pending applications','pendingTesters'],['In-app accounts marked beta','betaProfiles']])
+   add(summary,add(make('div','activity-row'),make('span','',label),make('strong','',num(state.data.counts[key]))));
   const list=el('tester-list');list.replaceChildren();
   if(!state.data.applications?.length){list.appendChild(empty('No consented applications yet.'));return;}
   for(const person of state.data.applications){
    const info=add(make('div'),make('span','label','BETA APPLICATION'),make('h3','',person.email||'Email unavailable'),make('p','',(person.platform||'Unspecified platform')+' · '+fmtDate(person.created_at)));
    if(person.interests)add(info,make('p','',Array.isArray(person.interests)?person.interests.join(', '):person.interests));
    add(list,add(make('div','data-row'),info,make('span','pill',person.status||'pending')));
+  }
+ }
+ function profiles(){
+  const list=el('profile-list');list.replaceChildren();
+  const records=state.data.recentProfiles||[];
+  const summary=el('profile-breakdown');summary.replaceChildren();
+  for(const [label,key] of [['Total registered profiles','profiles'],['New in last 7 days','recentProfiles'],['Profiles marked in-app beta','betaProfiles']])
+   add(summary,add(make('div','activity-row'),make('span','',label),make('strong','',num(state.data.counts[key]))));
+  if(!records.length){list.appendChild(empty('No profiles have signed up yet.'));return;}
+  for(const person of records){
+   const info=add(make('div'),make('span','label',person.is_beta_tester?'IN-APP BETA ACCOUNT':'REGISTERED ACCOUNT'),
+    make('h3','',person.display_name||'Creator'),make('p','','@'+(person.username||'unknown')+' · '+fmtDate(person.created_at)));
+   add(list,add(make('div','data-row'),info,make('span','pill',person.is_beta_tester?'Beta flag':'Registered')));
   }
  }
  function feedback(){
@@ -221,5 +237,9 @@
  document.addEventListener('keydown',()=>{state.lastTouch=Date.now()},true);
  // Short-lived private session in this tab. No persistent token storage.
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.session&&Date.now()-state.lastTouch>25*60*1000)signOut('Your command center was locked after being inactive.')});
- window.setInterval(()=>{if(state.session&&Date.now()-state.lastTouch>25*60*1000)signOut('Signed out due to inactivity.')},60000);
+ window.setInterval(()=>{
+  if(!state.session)return;
+  if(Date.now()-state.lastTouch>25*60*1000){signOut('Signed out due to inactivity.');return;}
+  if(!document.hidden&&!state.busy)void reload();
+ },60000);
 })();
