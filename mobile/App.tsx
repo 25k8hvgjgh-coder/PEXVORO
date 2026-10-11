@@ -163,6 +163,7 @@ export default function App(){
  const [testerIssueOpen,setTesterIssueOpen]=useState(false);
  const [testerReportsOpen,setTesterReportsOpen]=useState(false);
  const testerSubmitPending=useRef(false);
+ const deletionRequestPending=useRef(false);
  useEffect(()=>{setTesterIssueOpen(false);setTesterReportsOpen(false);setTesterIssueTitle('');setTesterIssueDescription('');setTesterIssueSteps('');setTesterScreenshot(null);setProfileAvatarDraft(null);setProfilePhotoOpen(false);setProfileEditOpen(false);setProfileSettingsOpen(false);setProfileSettingsPage('drawer');setConnections(null);setAnalyticsOpen(false);setProfileGridTab('videos');setViewingCreator(null)},[session?.user.id]);
  const [testerIssueTitle,setTesterIssueTitle]=useState('');
  const [testerIssueDescription,setTesterIssueDescription]=useState('');
@@ -1086,7 +1087,38 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
   }
   finally{testerSubmitPending.current=false;setTesterIssueBusy(false)}
  }
+
+ async function submitAccountDeletionRequest(){
+  if(!supabase||!session){showAlert('Sign in required','Sign in to request deletion of your ReconFeed account.');return}
+  if(deletionRequestPending.current)return;
+  deletionRequestPending.current=true;
+  try{
+   const previous=await supabase.from('account_deletion_requests')
+    .select('id,status,requested_at').eq('user_id',session.user.id).maybeSingle();
+   if(previous.error)throw previous.error;
+   if(previous.data){
+    showAlert('Deletion request already received',
+     'Your request is '+previous.data.status+'. We will verify and process it according to our deletion policy. You can also contact reconfeed@reconfeed.com.');
+    return;
+   }
+   const result=await supabase.from('account_deletion_requests')
+    .insert({user_id:session.user.id}).select('id').single();
+   if(result.error)throw result.error;
+   showAlert('Deletion request received',
+    'Your account deletion request was securely recorded. This does not immediately erase your account. ReconFeed must verify and complete the deletion, including eligible posts, media and personal information. We aim to complete verified requests within 30 days. See reconfeed.com/delete-account.html.');
+  }catch(error:any){
+   showAlert('Could not request deletion',safeErrorMessage(error)+' Please contact reconfeed@reconfeed.com from the email on your account.');
+  }finally{deletionRequestPending.current=false;}
+ }
+ function confirmAccountDeletion(){
+  showAlert('Request permanent account deletion?',
+   'This requests deletion of your ReconFeed account, public posts, uploads, Stories and other associated personal data except records lawfully retained. The account remains accessible until the request is verified and processed. This is not just deactivation.',
+   [{text:'Cancel',style:'cancel'},
+    {text:'Request account deletion',style:'destructive',onPress:()=>{void submitAccountDeletionRequest()}}]);
+ }
+
  function handleSettingsAction(action:SettingsAction){
+  if(action==='delete_account'){setProfileSettingsOpen(false);confirmAccountDeletion();return}
   if(action==='manage_posts'){setProfileSettingsOpen(false);setProfileGridTab('videos');setProfileGridLimit(18);return}
   if(action==='following'){setProfileSettingsOpen(false);setConnections('following');return}
   if(action==='liked'){setProfileSettingsOpen(false);setProfileGridTab('liked');return}
@@ -1204,6 +1236,10 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
  {profileSettingsOpen&&<View style={[s.card,{gap:13,marginVertical:14,borderColor:'#C6AA72',borderWidth:1}]}>
   <Text style={s.heading}>≡ RECONFEED ACCOUNT CONTROL</Text>
   <Text style={s.muted}>These settings save to your account. Personal and Business are profile categories; paid rewards, commercial music rights and passkeys are not enabled here.</Text>
+  <Text style={s.subheading}>ACCOUNT & DATA DELETION</Text>
+  <Text style={s.muted}>You may request permanent deletion of your ReconFeed account and associated content. An authorized reviewer must verify and complete the request; sending a request does not erase your account immediately.</Text>
+  <Pressable accessibilityRole="button" accessibilityLabel="Request permanent account deletion" style={[s.outline,{borderColor:'#B86560'}]} onPress={confirmAccountDeletion}><Text style={[s.link,{color:'#F4C4B4'}]}>Request deletion of my account</Text></Pressable>
+  <Pressable accessibilityRole="link" onPress={()=>{void Linking.openURL('https://reconfeed.com/delete-account.html')}} style={s.outline}><Text style={s.link}>Account deletion details ↗</Text></Pressable>
   <Text style={s.subheading}>ACCOUNT TYPE</Text>
   <View style={s.row}>
    {(['personal','business'] as const).map(type=><Pressable key={type} style={[s.chip,creatorSettings.account_type===type&&s.selected]} onPress={()=>setCreatorSettings(v=>({...v,account_type:type}))}><Text style={s.chipText}>{type==='business'?'Business':'Personal'}</Text></Pressable>)}

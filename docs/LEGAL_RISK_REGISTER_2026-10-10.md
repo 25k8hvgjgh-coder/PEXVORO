@@ -12,6 +12,12 @@ This is an engineering and public-record risk register, **not an attorney opinio
 - New beta signups require backend-verified legal acknowledgement; the database records version 2026-10-10 and its acceptance timestamp. Historical beta signups have null terms fields, not retroactive agreement.
 - The old anonymous beta RPC was revoked after the new public signup API became live. The replacement terms-audited RPC remains accessible to anonymous beta applicants. Confirmed with Supabase privilege checks; existing tester records were retained.
 
+## Account deletion request feature and operator obligation
+- Public /delete-account.html page provides an email-based deletion request path without reinstalling the app; link is in footer/legal navigation.
+- In-app Settings > Account > Delete account creates one account-owned deletion request with RLS and a deliberate confirmation. It is NOT automated deletion of the auth user or files.
+- Operator must monitor public.account_deletion_requests, verify users, remove content/media and account records appropriately, handle legal holds, and confirm completion. Claims of fully automated deletion or guaranteed store compliance would be premature.
+- Apple App Review 5.1.1(v) and Google Play account-deletion policy require working in-app and web paths; their operational fulfillment remains an ongoing responsibility.
+
 ## Open steps requiring the operator and qualified lawyers
 1. Identify exact contracting legal entity, business address, jurisdiction, privacy-controller and authorized point of contact. **Never invent them in published documents**. Confirm support mailbox monitored.
 2. Copyright Office DMCA §512(c) agent: register required legal entity, physical address, designated-agent name, street address, phone and email with U.S. Copyright Office. Public-facing agent information must match. Implement operational, logged notices and counter-notices, repeat infringer policy enforcement. Current public contact is not a designated-agent representation.

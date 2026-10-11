@@ -10,7 +10,7 @@ export type SettingsAction=
  |'following'|'liked'|'viewers'|'music'|'inbox'|'activity'|'audience'|'ads'
  |'playback'|'language'|'display'|'accessibility'|'contacts'
  |'offline'|'storage'|'data_saver'|'help'|'privacy'|'terms'
- |'switch_account'|'logout'|'report_issue'|'tester_reports';
+ |'switch_account'|'logout'|'report_issue'|'tester_reports'|'delete_account';
 
 type Item={id:SettingsAction;name:string;symbol:string;icon?:ProfileIconName};
 type Group={heading:string;items:Item[]};
@@ -26,6 +26,7 @@ const groups:Group[]=[
  {heading:'Account',items:[
   {id:'account',name:'Account',symbol:'♙',icon:'user'},
   {id:'security',name:'Security & permissions',symbol:'⬡',icon:'lock'},
+  {id:'delete_account',name:'Delete account & associated data',symbol:'×',icon:'lock'},
   {id:'orders',name:'Your orders',symbol:'▣'},
   {id:'share',name:'Share profile',symbol:'➚',icon:'adduser'}
  ]},
