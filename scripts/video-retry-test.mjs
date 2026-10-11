@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const app=await readFile(new URL('../mobile/App.tsx',import.meta.url),'utf8');
+assert.match(app,/onError=\{\(\)=>\{setFailedVideoIds/,'failed streams must show fallback');
+assert.match(app,/accessibilityLabel="Retry video"/,'failed streams must have a usable retry control');
+assert.match(app,/setVideoRetryVersions\(v=>/,'retry must remount the broken stream');
+assert.match(app,/pointerEvents=\{failedVideoIds\.includes\(p\.id\)\?'none':'auto'\}/,'tap handler must not swallow video retry');
+assert.match(app,/readyVideoIds\.join\(','\)\+'\|'\+failedVideoIds\.join/,'failure state must invalidate the feed item');
+assert.match(app,/pagingEnabled snapToInterval=\{feedPageHeight\}/,'retry must not break snapping');
+console.log('Video error and retry contracts passed; playback verification still requires a device.');
