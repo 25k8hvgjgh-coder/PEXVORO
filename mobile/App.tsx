@@ -22,7 +22,7 @@ import SettingsPrivacyPage,{type SettingsAction} from './SettingsPrivacyPage';
 import PublicCreatorHeader from './PublicCreatorHeader';
 import BalancePage from './BalancePage';
 import {olive} from './oliveTheme';
-import {FeedVideo,VideoTilePreview,type WebVideoElement} from './PlayableVideo';
+import {FeedVideo,VideoTilePreview,ViewerVideo,type WebVideoElement} from './PlayableVideo';
 import {rankFeedPosts, type FeedEvent, type RankingContext} from './feedRanking';
 import {createFeedEventQueue} from './feedEventQueue';
 import {normalizeBlockedKeywords,parseCreatorTags,allowedForFeed} from './contentSignals';
@@ -1061,7 +1061,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
 
   <Modal visible={!!exploreSelected} animationType="slide" onRequestClose={()=>setExploreSelected(null)}>
    <SafeAreaView style={[s.safe,{padding:12}]}><Pressable onPress={()=>setExploreSelected(null)} style={s.outline}><Text style={s.link}>✕ Close search result</Text></Pressable>
-   {exploreSelected?.media_type==='video'?<Video source={{uri:exploreSelected.media_url}} style={{flex:1,width:'100%'}} useNativeControls shouldPlay resizeMode={ResizeMode.CONTAIN}/>:exploreSelected?<Image source={{uri:exploreSelected.media_url}} style={{flex:1,width:'100%'}} resizeMode="contain"/>:null}
+   {exploreSelected?.media_type==='video'?<ViewerVideo uri={exploreSelected.media_url}/>:exploreSelected?<Image source={{uri:exploreSelected.media_url}} style={{flex:1,width:'100%'}} resizeMode="contain"/>:null}
    <Text style={s.muted}>{exploreSelected?.caption||''}</Text></SafeAreaView>
   </Modal>
   <Pressable accessibilityRole="button" onPress={()=>setTab('Market')} style={s.exchangePromo}><Text style={s.exchangePromoBig}>▣  FIELD EXCHANGE</Text><Text style={s.exchangePromoSmall}>BUY · SELL · MESSAGE  /  EXPLORE THE MARKETPLACE  ↗</Text></Pressable>
@@ -1268,7 +1268,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
  {profileGridTab!=='activity'&&visibleProfilePosts.length>profileGridLimit?<Pressable accessibilityRole="button" style={s.profileLoadMore} onPress={()=>setProfileGridLimit(n=>n+18)}><Text style={s.profileActionLabel}>Show more posts ↓</Text></Pressable>:null}
  <Modal visible={!!profileSelected} animationType="slide" onRequestClose={()=>setProfileSelected(null)}>
   <SafeAreaView style={s.safe}><Pressable style={s.profileCloseVideo} onPress={()=>setProfileSelected(null)}><Text style={s.profileActionLabel}>← BACK TO PROFILE</Text></Pressable>
-   {profileSelected?.media_type==='video'?<Video key={profileSelected.id} source={{uri:profileSelected.media_url}} shouldPlay isLooping useNativeControls resizeMode={ResizeMode.CONTAIN} style={{width:'100%',flex:1,backgroundColor:'#050806'}}/>:profileSelected?<Image source={{uri:profileSelected.media_url}} style={{flex:1,width:'100%'}} resizeMode="contain"/>:null}
+   {profileSelected?.media_type==='video'?<ViewerVideo key={profileSelected.id} uri={profileSelected.media_url}/>:profileSelected?<Image source={{uri:profileSelected.media_url}} style={{flex:1,width:'100%'}} resizeMode="contain"/>:null}
    <Text style={[s.muted,{padding:14}]}>{profileSelected?.caption||''}</Text>{profileSelected&&profilePosts.some(p=>p.id===profileSelected.id)?<View style={[s.row,{padding:12}]}><Pressable accessibilityRole="button" style={s.chip} onPress={()=>void togglePinPost(profileSelected.id,!!profilePosts.find(p=>p.id===profileSelected.id)?.pinned_at)}><Text style={s.chipText}>{profilePosts.find(p=>p.id===profileSelected.id)?.pinned_at?'Unpin':'Pin post'}</Text></Pressable><Pressable accessibilityRole="button" style={s.chip} onPress={()=>deleteOwnPost(profileSelected.id)}><Text style={s.chipText}>Delete post</Text></Pressable></View>:null}
   </SafeAreaView>
  </Modal>
