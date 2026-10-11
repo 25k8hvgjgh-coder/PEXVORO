@@ -77,6 +77,33 @@ export function FeedVideo({uri,active,muted,paused,wide,onElement,onLoad,onError
  return <View style={{height:'100%',width:'100%',overflow:'hidden'}}>{React.createElement('video',props)}</View>;
 }
 
+// A viewer opens after a deliberate tap, so native Safari controls can offer
+// sound. Start muted to satisfy inline autoplay restrictions, then let the
+// viewer unmute and scrub with the regular platform media controls.
+export function ViewerVideo({uri}:{uri:string}){
+ const ref=useRef<HTMLVideoElement|null>(null);
+ useEffect(()=>{
+  if(Platform.OS!=='web')return;
+  const video=ref.current;
+  if(!video)return;
+  video.muted=true;
+  video.playsInline=true;
+  void video.play().catch(()=>{});
+  return()=>video.pause();
+ },[uri]);
+ if(Platform.OS!=='web')return <Video source={{uri}} shouldPlay isLooping useNativeControls resizeMode={ResizeMode.CONTAIN}
+  style={{width:'100%',flex:1,backgroundColor:'#050806'}}/>;
+ return <View style={{width:'100%',flex:1,backgroundColor:'#050806',position:'relative',overflow:'hidden'}}>
+  {React.createElement('video',{
+   ref:(node:HTMLVideoElement|null)=>{ref.current=node},
+   src:uri,controls:true,autoPlay:true,muted:true,playsInline:true,loop:true,preload:'auto',
+   'webkit-playsinline':'true',
+   style:{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain',backgroundColor:'#050806'},
+   onCanPlay:(event:React.SyntheticEvent<HTMLVideoElement>)=>void event.currentTarget.play().catch(()=>{})
+  } as any)}
+ </View>;
+}
+
 // Real moving previews for the first visible profile tiles. All others avoid
 // mounting additional decoders until the creator actually opens the post.
 export function VideoTilePreview({uri,playing=false}: {uri:string;playing?:boolean}){
