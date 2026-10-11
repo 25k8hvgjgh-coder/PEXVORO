@@ -43,4 +43,14 @@ assert.match(app,/videoPage:\{[^\n]*backgroundColor:olive\.deep/,'media letterbo
 assert.match(app,/feedTabActive:\{[^\n]*borderBottomColor:olive\.gold/,'selected category must use the gold accent');
 assert.match(app,/backgroundColor:olive\.accent,borderLeftColor:olive\.border,borderRightColor:olive\.gold/,'Create button must use olive and gold');
 assert.doesNotMatch(app,/\(tab==='For You'\|\|tab==='Following'\)\&\&\{backgroundColor:'#000'/,'feed overrides must not revert to black');
+assert.match(app,/const \{width:screenWidth,height:screenHeight,fontScale\}=useWindowDimensions\(\)/,'respect Android logical width and font scaling');
+assert.match(app,/adaptiveNavPad/,'bottom navigation should use responsive Android padding');
+assert.match(app,/feedViewportHeight,screenWidth,screenHeight/,'viewport changes must re-align snapped videos');
+assert.match(app,/keyboardShouldPersistTaps="always"/,'Discover categories must remain tappable when keyboard is open');
+assert.match(app,/void runExploreSearch\(item\.query\)/,'tap category should request actual filtered results');
+assert.match(app,/videoActions:\{[^\n]*zIndex:5/,'buttons must remain above the full-video gesture layer');
+assert.match(app,/videoInfo:\{[^\n]*zIndex:5/,'creator profile links must remain tappable above the video');
+const header=await read('mobile/CreatorProfileHeader.tsx');
+assert.match(header,/smallPhone=width<380/,'creator header must shrink on narrower phones');
+assert.match(header,/onCreate=\{startStory\}/,'profile story entry stays wired');
 console.log('Responsive layout contracts verified (static checks; real-device testing still required).');
