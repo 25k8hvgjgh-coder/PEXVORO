@@ -84,7 +84,7 @@ export default function SettingsPrivacyPage({onBack,onSelect,isPrivate,commentVi
  return <SafeAreaView style={s.safe}>
   <View style={s.nav}>
    <Pressable accessibilityRole="button" accessibilityLabel="Back to profile menu" style={s.back} onPress={onBack}><Text style={s.backText}>‹</Text></Pressable>
-   <Text style={s.navTitle}>Settings and privacy</Text>
+   <Text style={s.navTitle}>ReconFeed settings</Text>
    <View style={s.back}/>
   </View>
   <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.scroll}>
@@ -109,21 +109,21 @@ export default function SettingsPrivacyPage({onBack,onSelect,isPrivate,commentVi
 }
 const s=StyleSheet.create({
  safe:{flex:1,backgroundColor:olive.bg},
- nav:{height:56,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:13,backgroundColor:olive.bg},
+ nav:{height:58,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:16,backgroundColor:olive.bg,borderBottomWidth:1,borderBottomColor:olive.border},
  back:{width:44,height:48,justifyContent:'center',alignItems:'flex-start'},
  backText:{fontSize:42,fontWeight:'300',lineHeight:47,color:olive.text},
- navTitle:{fontSize:18,color:olive.text,fontWeight:'700'},
- scroll:{paddingBottom:60},
- pageTitle:{fontSize:31,fontWeight:'900',letterSpacing:-0.9,color:olive.text,paddingHorizontal:21,paddingTop:10,paddingBottom:18},
- section:{marginBottom:20},
- sectionTitle:{fontSize:15,color:olive.muted,fontWeight:'600',paddingHorizontal:21,paddingVertical:12},
- groupCard:{marginHorizontal:8,borderRadius:12,overflow:'hidden',backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border},
- item:{flexDirection:'row',alignItems:'center',backgroundColor:olive.surface,minHeight:62,paddingLeft:17,paddingRight:14},
+ navTitle:{fontSize:16,color:olive.text,fontWeight:'700',letterSpacing:-.2},
+ scroll:{paddingBottom:70,paddingTop:10},
+ pageTitle:{fontSize:28,fontWeight:'800',letterSpacing:-.65,color:olive.text,paddingHorizontal:21,paddingTop:14,paddingBottom:17},
+ section:{marginBottom:22},
+ sectionTitle:{fontSize:12,color:olive.muted,fontWeight:'750',letterSpacing:1,textTransform:'uppercase',paddingHorizontal:22,paddingVertical:11},
+ groupCard:{marginHorizontal:12,borderRadius:16,overflow:'hidden',backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border},
+ item:{flexDirection:'row',alignItems:'center',backgroundColor:olive.surface,minHeight:60,paddingLeft:16,paddingRight:16,borderBottomWidth:1,borderBottomColor:olive.border},
  firstItem:{paddingTop:3},lastItem:{paddingBottom:3},
  symbolBox:{width:25,marginRight:11,justifyContent:'center',alignItems:'center'},
  symbol:{fontSize:22,fontWeight:'700',color:olive.muted,textAlign:'center'},
- itemLabel:{color:olive.text,fontSize:16,fontWeight:'600',flex:1,letterSpacing:-.15},
+ itemLabel:{color:olive.text,fontSize:15,fontWeight:'600',flex:1,letterSpacing:-.12},
  valueText:{fontSize:14,color:olive.muted,marginLeft:5,marginRight:7},
- chevron:{fontSize:29,color:olive.muted,fontWeight:'300',lineHeight:34,marginLeft:5},
+ chevron:{fontSize:25,color:olive.muted,fontWeight:'300',lineHeight:32,marginLeft:5},
  footer:{textAlign:'center',fontSize:12,color:olive.muted,lineHeight:20,marginHorizontal:21,marginTop:13}
 });

@@ -1,13 +1,13 @@
-/** The ReconFeed visual identity: military olive, never white settings/profile surfaces. */
+/** ReconFeed unified dark-olive visual system for the website and mobile app. */
 export const olive={
- bg:'#293829',
- surface:'#344631',
- raised:'#40543B',
- deep:'#172619',
- accent:'#A8BE77',
- gold:'#D4BF85',
- text:'#F4F1E5',
- muted:'#BBC8B4',
- border:'#617357',
- scrim:'rgba(4,10,4,0.65)',
+ bg:'#19271D',
+ surface:'#243529',
+ raised:'#304534',
+ deep:'#101C14',
+ accent:'#B5C893',
+ gold:'#C8B889',
+ text:'#F2F4EC',
+ muted:'#BBC8B7',
+ border:'#465D4A',
+ scrim:'rgba(4,11,7,0.72)',
 } as const;

@@ -21,6 +21,7 @@ export default function ProfileMenuOverview({onClose,onSettings,onBalance,onAnal
   <Pressable accessibilityRole="button" accessibilityLabel="Close menu" onPress={onClose} style={s.scrim}/>
   <SafeAreaView style={s.sheet}>
    <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+    <View style={s.menuHeader}><View style={s.menuIdentity}><Text style={s.menuTitle}>Your account</Text><Text style={s.menuSubtitle}>Manage your ReconFeed experience</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Close account menu" onPress={onClose} style={s.closeButton}><Text style={s.closeGlyph}>×</Text></Pressable></View>
     {section([{id:'balance',label:'Balance',glyph:'▣',action:onBalance}],'balance')}
     {section([
      {id:'activity',label:'Activity center',glyph:'◷',action:onSettings},
@@ -53,15 +54,21 @@ export default function ProfileMenuOverview({onClose,onSettings,onBalance,onAnal
 const s=StyleSheet.create({
  overlay:{flex:1,flexDirection:'row',backgroundColor:olive.scrim},
  scrim:{flex:1},
- sheet:{width:'84%',height:'100%',backgroundColor:olive.bg},
- scroll:{paddingHorizontal:14,paddingTop:57,paddingBottom:48,gap:10},
- group:{backgroundColor:olive.surface,borderRadius:19,overflow:'hidden',borderWidth:1,borderColor:olive.border},
- row:{minHeight:63,flexDirection:'row',alignItems:'center',paddingHorizontal:17,backgroundColor:olive.surface},
+ sheet:{width:'86%',height:'100%',backgroundColor:olive.bg,borderRightWidth:1,borderRightColor:olive.border},
+ scroll:{paddingHorizontal:14,paddingTop:28,paddingBottom:48,gap:11},
+ menuHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:10,paddingHorizontal:3,paddingBottom:15},
+ menuIdentity:{flex:1},
+ menuTitle:{fontSize:23,fontWeight:'800',letterSpacing:-.6,color:olive.text},
+ menuSubtitle:{fontSize:12,color:olive.muted,marginTop:5,lineHeight:18},
+ closeButton:{width:40,height:40,borderRadius:12,backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border,alignItems:'center',justifyContent:'center'},
+ closeGlyph:{color:olive.text,fontSize:25,lineHeight:28},
+ group:{backgroundColor:olive.surface,borderRadius:15,overflow:'hidden',borderWidth:1,borderColor:olive.border},
+ row:{minHeight:60,flexDirection:'row',alignItems:'center',paddingHorizontal:17,backgroundColor:olive.surface},
  rowDivider:{borderBottomWidth:1,borderBottomColor:olive.border},
  iconBox:{width:25,alignItems:'center',marginRight:11},
  glyph:{color:olive.muted,fontSize:23,fontWeight:'700'},
- itemText:{color:olive.text,fontWeight:'600',fontSize:16,flex:1},
- chevron:{color:olive.muted,fontSize:29,fontWeight:'300'},
+ itemText:{color:olive.text,fontWeight:'600',fontSize:15,flex:1},
+ chevron:{color:olive.muted,fontSize:25,fontWeight:'300'},
  extras:{flexDirection:'row',justifyContent:'space-around',paddingVertical:13,paddingHorizontal:11,borderTopWidth:1,borderTopColor:olive.border},
  extraTile:{flex:1,alignItems:'center',gap:7,paddingVertical:5},
  extraLabel:{color:olive.text,fontSize:12,fontWeight:'600'}

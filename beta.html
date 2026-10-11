@@ -100,6 +100,43 @@ footer{padding-bottom:max(42px,env(safe-area-inset-bottom,0px))}
  .chip{font-size:11px}
 }
 
+
+/* ReconFeed 2026: mature olive design system — preserves the original military-olive identity. */
+
+:root{--black:#111a14;--metal:#293b2d;--olive:#b5c893;--silver:#dce5d6;--gold:#c8b889;--white:#f2f4ec}
+body{background:#111a14;color:var(--white);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;line-height:1.6}
+header{background:#142017;border-bottom-color:#526953}
+.nav{min-height:73px}
+.brand{font-weight:850;font-size:23px;font-style:normal;letter-spacing:-.7px}
+.brand img{border-radius:12px;border-color:#5c745d}
+.navlink{font-weight:700;letter-spacing:.25px;color:#cbd9c7}
+.hero{background:#17261c;border-color:#465d47}
+.hero:before{background:radial-gradient(ellipse at 88% 25%,#637c5242,transparent 55%),linear-gradient(105deg,#17271c,#1c3022)}
+.hero:after{opacity:.14}
+.hero-inner{padding:65px 0}
+.eyebrow{color:#c1d7a5;letter-spacing:1.25px;font-size:11px;font-weight:750;border-color:#a2bb83}
+h1,h2,h3{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;letter-spacing:-.035em;font-weight:800;line-height:1.07}
+h1{font-size:clamp(43px,6.3vw,82px);margin:20px 0;text-shadow:none}
+h1 em{color:#b7cd98}
+.lede{font-size:clamp(15px,1.5vw,18px);color:#c9d5c4}
+.motto{font-size:11px;letter-spacing:1px;color:#d0ddc7}
+.btn{clip-path:none;border-radius:10px;border:1px solid #acc48b;background:#acbf8f;color:#18271a;box-shadow:none;letter-spacing:.25px;font-weight:800}
+.btn.secondary{background:#273b2b;color:#ecf2e6;border-color:#647b60}
+.tactical-rule{height:2px;background:linear-gradient(90deg,#a3b98a,#567554)}
+.panel{background:#1d2b20;border:1px solid #4d664e;border-radius:17px;box-shadow:none}
+.kicker{font-weight:750;color:#bfd2a2;letter-spacing:1.2px}
+h2{font-size:clamp(28px,3.4vw,40px)}
+.panel p{color:#c7d3c2}
+.step{gap:14px}.num{border-color:#506e53;background:#2b4030;color:#c9daba;border-radius:10px}
+.step small,.tiny{color:#b3c6b1}
+input[type="email"],select{background:#101c15;border-color:#5a7359;border-radius:10px;color:#f2f4ec}
+input::placeholder{color:#a5b4a3}
+.chip{background:#293b2d;border-color:#526f51;border-radius:22px;font-weight:650}
+.guideline-panel{background:#223327;border-color:#546d53;border-radius:12px}
+.guideline-panel h3{font:800 17px/1.2 Inter,system-ui,sans-serif;letter-spacing:.1px;color:#cedfb9}
+footer{border-top-color:#405741}
+@media(max-width:540px){.hero-inner{padding:43px 0}.panel{padding:19px}h1{font-size:clamp(36px,10vw,54px)}.navlink{max-width:145px}}
+
 </style>
 </head>
 <body>
