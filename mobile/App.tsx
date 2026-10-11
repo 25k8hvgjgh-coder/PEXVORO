@@ -195,7 +195,8 @@ export default function App(){
  const [soundTarget,setSoundTarget]=useState<Post|null>(null);
  const [testerIssueOpen,setTesterIssueOpen]=useState(false);
  const [testerReportsOpen,setTesterReportsOpen]=useState(false);
- const [commandCenterOpen,setCommandCenterOpen]=useState(Platform.OS==='web'&&String((globalThis as any).location?.search||'').includes('center=1'));
+ const [commandCenterOpen,setCommandCenterOpen]=useState(false);
+ useEffect(()=>{if(Platform.OS==='web'&&session?.user.id==='8287fc6f-dd23-48d8-988e-388a8c93fe7b'&&session.user.app_metadata?.tester_report_reviewer===true&&String((globalThis as any).location?.search||'').includes('center=1'))setCommandCenterOpen(true)},[session?.user.id]);
  const testerSubmitPending=useRef(false);
  const deletionRequestPending=useRef(false);
  useEffect(()=>{setTesterIssueOpen(false);setTesterReportsOpen(false);setCommandCenterOpen(false);setTesterIssueTitle('');setTesterIssueDescription('');setTesterIssueSteps('');setTesterScreenshot(null);setProfileAvatarDraft(null);setProfilePhotoOpen(false);setProfileEditOpen(false);setProfileSettingsOpen(false);setProfileSettingsPage('drawer');setConnections(null);setAnalyticsOpen(false);setProfileGridTab('videos');setViewingCreator(null)},[session?.user.id]);
@@ -1348,7 +1349,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
     onInbox={()=>{setProfileSettingsOpen(false);setMarketThread(null);setInboxOpen(true)}}
     onReportIssue={()=>{setProfileSettingsOpen(false);setTesterIssueOpen(true)}}
     onTesterReports={()=>{setProfileSettingsOpen(false);setTesterReportsOpen(true)}}
-    isReviewer={session?.user?.app_metadata?.tester_report_reviewer===true}
+    isReviewer={session?.user?.id==='8287fc6f-dd23-48d8-988e-388a8c93fe7b'&&session?.user?.app_metadata?.tester_report_reviewer===true}
     onCommandCenter={()=>{setProfileSettingsOpen(false);setCommandCenterOpen(true)}}
     onUnavailable={label=>showAlert(label,label+' is planned for a future ReconFeed update and is not enabled in this beta.')}
    />
