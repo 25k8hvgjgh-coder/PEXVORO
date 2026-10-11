@@ -23,7 +23,7 @@ const result = spawnSync(process.execPath, [requireMobile.resolve('expo/bin/cli'
   }
 });
 if (result.status !== 0) process.exit(result.status || 1);
-for (const filename of ['index.html', 'beta.html', 'marketplace-terms.html', 'manifest.webmanifest', 'sw.js', 'app-link.json']) {
+for (const filename of ['index.html', 'beta.html', 'marketplace-terms.html', 'privacy.html', 'terms.html', 'copyright.html', 'community-guidelines.html', 'manifest.webmanifest', 'sw.js', 'app-link.json']) {
   await copyFile(path.join(root, filename), path.join(root, 'dist', filename));
 }
 await cp(path.join(root, 'assets'), path.join(root, 'dist/assets'), { recursive: true });
