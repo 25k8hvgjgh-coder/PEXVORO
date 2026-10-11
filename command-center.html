@@ -20,6 +20,7 @@
    <button class="nav-link is-active" type="button" data-screen="overview"><span class="nav-icon">◈</span> Overview</button>
    <button class="nav-link" type="button" data-screen="reports"><span class="nav-icon">▤</span> Tester reports <span class="counter" id="report-counter">–</span></button>
    <button class="nav-link" type="button" data-screen="testers"><span class="nav-icon">◎</span> Beta testers</button>
+    <button class="nav-link" type="button" data-screen="profiles"><span class="nav-icon">♙</span> Registered profiles</button>
    <button class="nav-link" type="button" data-screen="feedback"><span class="nav-icon">✧</span> Feedback & research</button>
    <button class="nav-link" type="button" data-screen="moderation"><span class="nav-icon">⚑</span> Moderation</button>
    <button class="nav-link" type="button" data-screen="systems"><span class="nav-icon">⚙</span> Systems & security</button>
@@ -64,10 +65,13 @@
      <div class="panel"><div class="section-head"><div><h2>Tester reports</h2><p>Investigate reports, open attached screenshots and update progress.</p></div><label class="filter-label">Status <select id="issue-filter"><option value="all">All statuses</option><option value="open">Open</option><option value="triaged">Triaged</option><option value="in_progress">In progress</option><option value="fixed">Fixed</option><option value="closed">Closed</option></select></label></div><label class="search-label">Search reports<input id="issue-search" type="search" placeholder="Title, issue, platform, or category"></label><div id="report-list" class="report-list"></div></div>
     </section>
     <section id="screen-testers" class="screen" hidden>
-     <div class="panel"><div class="section-head"><div><h2>Beta tester applications</h2><p>Real signups from your website. Contact details are visible only to the owner account.</p></div></div><div id="tester-list" class="data-list"></div></div>
+     <div class="panel"><div class="section-head"><div><h2>Beta tester applications</h2><p>Website applications, pending reviews, and accounts with the in-app beta flag are tracked separately.</p></div></div><div id="tester-breakdown" class="activity-list" aria-live="polite"></div><div id="tester-list" class="data-list"></div></div>
      <div class="callout"><strong>How feedback gets here</strong><p>Send testers to ReconFeed's 18+ beta signup page. After joining and signing into the app, they can submit bug reports with screenshots from their profile. Feedback is not fabricated or copied from outside sources.</p><a href="/beta.html" target="_blank" rel="noopener noreferrer">Open beta signup ↗</a></div>
     </section>
-    <section id="screen-feedback" class="screen" hidden>
+    <section id="screen-profiles" class="screen" hidden>
+      <div class="panel"><div class="section-head"><div><h2>Registered profiles</h2><p>Recent profiles from the live database. Beta applications are not the same as signed-in accounts.</p></div></div><div id="profile-breakdown" class="activity-list" aria-live="polite"></div><div id="profile-list" class="data-list"></div><p class="muted">Showing up to 100 most recently registered profiles. This is private, owner-only information.</p></div>
+     </section>
+     <section id="screen-feedback" class="screen" hidden>
      <div class="panel"><div class="section-head"><div><h2>Survey feedback</h2><p>Real feature requests, needs, and willingness to beta test—never invented answers.</p></div><span class="pill" id="feedback-count">0 responses</span></div><div id="survey-feedback" class="data-list"></div></div>
      <div class="callout"><strong>Where new feedback comes from</strong><p>Registered testers can complete ReconFeed's in-app research survey and submit individual bug reports. Both appear here as they arrive. Reports are separate from survey responses so issues don't get mixed with general feature requests.</p><a href="/app/" target="_blank" rel="noopener noreferrer">Open the app ↗</a></div>
     </section>
