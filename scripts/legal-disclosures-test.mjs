@@ -35,6 +35,12 @@ assert.match(stories,/is_promotional:isPromotional/,'Story sponsorship label mus
 assert.match(stories,/active\?\.is_promotional\?<Text accessibilityLabel="Paid promotion or gifted product"/,'Story viewers must see promotional label');
 assert.match(terms,/Advertising, sponsorship and gifts/,'terms must govern material connection');
 assert.match(community,/Advertising and brand relationships/,'community must require disclosure');
+// Promotional imagery is now first-party CSS illustration: no third-party
+// photograph or recognizable-model rights uncertainty in public marketing.
+for(const [name,html] of [['homepage',home],['beta signup',beta]]){
+ assert.doesNotMatch(html,/https:\/\/images\.(unsplash|pexels)\.com/,'public '+name+' must not depend on unverified stock photography');
+ assert.match(html,/radial-gradient\(ellipse at/,'public '+name+' keeps olive-and-gold designed visuals');
+}
 console.log('ReconFeed legal disclosure, deletion and upload-rights checks passed.');
 
 for(const p of ['/privacy.html','/terms.html','/copyright.html','/community-guidelines.html','/delete-account.html'])assert.ok(legal.includes(p),'legal center links '+p);

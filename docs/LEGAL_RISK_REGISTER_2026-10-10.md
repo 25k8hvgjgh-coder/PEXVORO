@@ -54,3 +54,8 @@ This is an engineering and public-record risk register, **not an attorney opinio
 - Creator publish forms now ask about sponsorships, free products and affiliate payments, and affected viewers see an explicit "PAID PROMOTION / GIFTED PRODUCT" badge.
 - Terms and community rules require meaningful visible disclosure beyond a hidden profile, tag or caption. These flags do not verify the truthfulness of creator statements or replace legal compliance with local ad regulations.
 - Reference: https://www.ftc.gov/business-guidance/resources/disclosures-101-social-media-influencers
+
+## Marketing-photo rights reduction (October 10, 2026)
+- Replaced all direct Unsplash/Pexels stock-image references on `index.html` and `beta.html` with authored CSS olive-and-gold gradient illustrations. This removes reliance on third-party photo/likeness releases for those pages without changing ReconFeed's brand name or the layout.
+- Automated legal disclosure tests now reject new external Unsplash/Pexels stock-image URLs on these marketing pages.
+- This does **not** certify rights in all existing logo assets, user-uploaded footage, music, imagery used elsewhere in the app, or patent/trademark clearance; those require separate records and review.
