@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import {Audio,ResizeMode,Video} from 'expo-av';
 import type {Session,SupabaseClient} from '@supabase/supabase-js';
 import {imageFormat} from './profilePhoto';
+import {olive} from './oliveTheme';
 
 type Story={
  id:string;user_id:string;media_path:string;media_type:'video'|'image';
@@ -15,7 +16,7 @@ type FeedProps={
  onCreate:()=>void;
 };
 const LIMIT=24*1024*1024;
-const textColor='#F0EEE5',gold='#C6AA72',muted='#B7BDBB';
+const textColor=olive.text,gold=olive.gold,muted=olive.muted;
 const isTemporary=(error:any)=>/network|fetch|timeout|temporarily|connection|socket|reset|503|502|429/i.test(String(error?.message||error||''));
 
 export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
@@ -62,6 +63,23 @@ export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
   }catch(e:any){setError(e.message||'Story could not open.');}
   finally{setLoading(false)}
  }
+ function advanceStory(direction:1|-1){
+  if(!active)return;
+  const i=stories.findIndex(item=>item.id===active.id);
+  const next=i+direction;
+  if(next<0)return;
+  if(next>=stories.length){setActive(null);setAssetUrl('');return}
+  void view(stories[next]);
+ }
+ useEffect(()=>{
+  if(!active||loading||!assetUrl||active.media_type!=='image')return;
+  const timeout=setTimeout(()=>{
+   const i=stories.findIndex(story=>story.id===active.id);
+   if(i>=0&&i+1<stories.length)void view(stories[i+1]);
+   else{setActive(null);setAssetUrl('')}
+  },7000);
+  return()=>clearTimeout(timeout);
+ },[active?.id,loading,assetUrl]);
  async function deleteOwnStory(){
   if(!client||!session||!active||active.user_id!==session.user.id||deleting)return;
   setDeleting(true);setError('');
@@ -94,8 +112,10 @@ export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
   </ScrollView>
   <Modal visible={!!active} animationType="fade" onRequestClose={()=>{setActive(null);setAssetUrl('')}}>
    <SafeAreaView style={s.viewer}>
+    <View style={s.storyProgressRow}>{stories.map((item,i)=><View key={item.id} style={[s.storyProgressSegment,{backgroundColor:active&&i<=stories.findIndex(story=>story.id===active.id)?olive.accent:'#ffffff55'}]}/>)}</View>
     <View style={s.viewerHead}><Text style={s.heading} numberOfLines={1}>@{active?.profile?.username||'creator'} · Story</Text><Pressable accessibilityRole="button" onPress={()=>{setActive(null);setAssetUrl('')}} style={s.close}><Text style={s.closeText}>✕ Close</Text></Pressable></View>
-    {loading?<ActivityIndicator color={gold} style={{flex:1}}/>:assetUrl&&active?.media_type==='video'?<Video source={{uri:assetUrl}} shouldPlay isLooping resizeMode={ResizeMode.CONTAIN} useNativeControls style={s.viewerMedia}/>:assetUrl?<Image source={{uri:assetUrl}} resizeMode="contain" style={s.viewerMedia}/>:<Text style={s.warning}>{error||'Story unavailable'}</Text>}
+    {loading?<ActivityIndicator color={gold} style={{flex:1}}/>:assetUrl&&active?.media_type==='video'?<Video source={{uri:assetUrl}} shouldPlay isLooping={false} resizeMode={ResizeMode.CONTAIN} useNativeControls={false} style={s.viewerMedia} onPlaybackStatusUpdate={status=>{if(status.isLoaded&&status.didJustFinish)advanceStory(1)}}/>:assetUrl?<Image source={{uri:assetUrl}} resizeMode="contain" style={s.viewerMedia}/>:<Text style={s.warning}>{error||'Story unavailable'}</Text>}
+    {assetUrl&&!loading?<View style={s.storyNav} pointerEvents="box-none"><Pressable accessibilityRole="button" accessibilityLabel="Previous story" onPress={()=>advanceStory(-1)} style={s.storyPrevious}><Text style={s.storyNavText}>‹</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Next story" onPress={()=>advanceStory(1)} style={s.storyNext}><Text style={s.storyNavText}>›</Text></Pressable></View>:null}
     {active?.is_promotional?<Text accessibilityLabel="Paid promotion or gifted product" style={{color:gold,fontWeight:'900',fontSize:13,textAlign:'center',padding:8}}>PAID PROMOTION / GIFTED PRODUCT</Text>:null}
 {!!active?.caption&&<Text style={s.viewerCaption}>{active.caption}</Text>}
     {active?.user_id===session.user.id?<View style={{padding:12,gap:8}}>
@@ -205,14 +225,20 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
  </Modal>;
 }
 const s=StyleSheet.create({
- strip:{height:86,minHeight:86,maxHeight:86,backgroundColor:'#101612',borderBottomWidth:1,borderColor:'#344436',width:'100%'},
+ strip:{height:91,minHeight:91,maxHeight:91,backgroundColor:olive.bg,borderBottomWidth:1,borderColor:olive.border,width:'100%'},
  row:{alignItems:'center',gap:12,paddingHorizontal:12,paddingVertical:6},
  storyCard:{width:62,alignItems:'center',gap:4},
- storyAvatar:{width:51,height:51,borderRadius:26,borderWidth:2,borderColor:'#8e9d6e',backgroundColor:'#253629',alignItems:'center',justifyContent:'center',overflow:'hidden'},
+ storyAvatar:{width:53,height:53,borderRadius:27,borderWidth:3,borderColor:olive.accent,backgroundColor:olive.raised,alignItems:'center',justifyContent:'center',overflow:'hidden'},
  cover:{width:'100%',height:'100%',borderRadius:26},
  storyLabel:{fontSize:10,color:textColor,fontWeight:'700',maxWidth:62},
  empty:{fontSize:11,color:muted,maxWidth:180,lineHeight:17},
  viewer:{flex:1,backgroundColor:'#050705'},
+ storyProgressRow:{flexDirection:'row',gap:4,paddingHorizontal:9,paddingTop:8,paddingBottom:3},
+ storyProgressSegment:{height:3,flex:1,borderRadius:3},
+ storyNav:{position:'absolute',top:95,bottom:90,left:0,right:0,flexDirection:'row',justifyContent:'space-between',zIndex:4},
+ storyPrevious:{width:'22%',justifyContent:'center',alignItems:'flex-start',paddingLeft:8},
+ storyNext:{width:'22%',justifyContent:'center',alignItems:'flex-end',paddingRight:8},
+ storyNavText:{color:'#ffffff65',fontSize:33,fontWeight:'300'},
  viewerHead:{minHeight:56,paddingHorizontal:14,flexDirection:'row',alignItems:'center',gap:8,justifyContent:'space-between'},
  heading:{fontWeight:'900',fontSize:16,color:gold,flexShrink:1},
  close:{minHeight:44,padding:10,justifyContent:'center'},
