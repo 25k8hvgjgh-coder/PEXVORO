@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
-const [app,home,beta,build,terms,privacy,copyright,community,market,deletion]=await Promise.all(['mobile/App.tsx','index.html','beta.html','scripts/build-web.mjs','terms.html','privacy.html','copyright.html','community-guidelines.html','marketplace-terms.html','delete-account.html'].map(read));
+const [app,home,beta,build,terms,privacy,copyright,community,market,deletion,legal]=await Promise.all(['mobile/App.tsx','index.html','beta.html','scripts/build-web.mjs','terms.html','privacy.html','copyright.html','community-guidelines.html','marketplace-terms.html','delete-account.html','legal.html'].map(read));
 for(const [n,html] of [['terms',terms],['privacy',privacy],['copyright',copyright],['community',community]]){assert.match(html,/<title>/,n+' title');assert.match(html,/reconfeed@reconfeed\.com/i,n+' contact');assert.match(html,/<a href="\/" class="brand">/,'return-home link');assert.match(build,new RegExp(n==='community'?'community-guidelines':n),n+' in production web export');}
 for(const link of ['privacy.html','terms.html','copyright.html','community-guidelines.html','delete-account.html']){assert.ok(home.includes('/'+link),'homepage must link '+link);assert.ok(beta.includes('/'+link),'beta must link '+link);assert.ok(market.includes('/'+link),'market must link '+link);}
 assert.match(beta,/id="legal_acknowledgment" type="checkbox" required/,'beta applicant must acknowledge terms');
@@ -30,3 +30,14 @@ assert.match(stories,/rightsConfirmed/,'Story must include rights acknowledgment
 assert.match(stories,/disabled=\{!asset\|\|busy\|\|!rightsConfirmed\}/,'Story upload requires rights confirmation');
 assert.match(home,/not endorsements by the people or brands shown/,'stock imagery must not imply endorsement');
 console.log('ReconFeed legal disclosure, deletion and upload-rights checks passed.');
+
+for(const p of ['/privacy.html','/terms.html','/copyright.html','/community-guidelines.html','/delete-account.html'])assert.ok(legal.includes(p),'legal center links '+p);
+for(const [n,page] of [['home',home],['beta',beta],['marketplace',market]])assert.ok(page.includes('/legal.html'),n+' must link legal center');
+assert.match(legal,/not a trademark or patent clearance certificate/i,'hub must not claim worldwide clearance');
+assert.match(build,/legal\.html/,'legal center copied into built site');
+const legalSettings=await read('mobile/SettingsPrivacyPage.tsx');
+assert.match(legalSettings,/id:'legal_center'/,'mobile Settings legal link');
+assert.match(app,/action==='legal_center'.*reconfeed\.com\/legal\.html/,'mobile legal link opens correct page');
+assert.match(app,/Followers \(in app\)/,'followers label must be honest about scope');
+assert.match(app,/publicly reachable link/,'restricted post storage warning');
+console.log('IP hub, non-affiliation, and post visibility disclosures passed.');

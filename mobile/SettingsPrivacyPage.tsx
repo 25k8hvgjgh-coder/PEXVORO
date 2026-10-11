@@ -9,7 +9,7 @@ export type SettingsAction=
  |'comments'|'mentions'|'messages'|'reuse'|'shared_links'|'downloads'
  |'following'|'liked'|'viewers'|'music'|'inbox'|'activity'|'audience'|'ads'
  |'playback'|'language'|'display'|'accessibility'|'contacts'
- |'offline'|'storage'|'data_saver'|'help'|'privacy'|'terms'
+ |'offline'|'storage'|'data_saver'|'help'|'privacy'|'terms'|'legal_center'
  |'switch_account'|'logout'|'report_issue'|'tester_reports'|'delete_account';
 
 type Item={id:SettingsAction;name:string;symbol:string;icon?:ProfileIconName};
@@ -65,6 +65,7 @@ const groups:Group[]=[
  {heading:'Support & About',items:[
   {id:'help',name:'Help Center',symbol:'?'},
   {id:'privacy',name:'Privacy Center',symbol:'▣',icon:'lock'},
+  {id:'legal_center',name:'Legal & Intellectual Property',symbol:'§'},
   {id:'terms',name:'Terms and Policies',symbol:'ⓘ'}
  ]},
  {heading:'Login',items:[

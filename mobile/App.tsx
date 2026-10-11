@@ -1034,7 +1034,8 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
  {asset?.type==='video'&&<View style={s.card}><Text style={s.subheading}>VIDEO PREVIEW · REVIEW BEFORE POSTING</Text><Video key={asset.uri} source={{uri:asset.uri}} style={{width:'100%',height:310,backgroundColor:'#000'}} useNativeControls resizeMode={ResizeMode.CONTAIN}/></View>}
  {!!asset&&<Pressable style={s.outline} accessibilityRole="button" onPress={()=>{setAsset(null);setCaption('')}}><Text style={s.link}>✕ Delete draft / Retake</Text></Pressable>}
  <Text style={s.subheading}>WHO CAN SEE THIS POST?</Text>
- <View style={s.row}>{[{key:'public',label:'Everyone'},{key:'followers',label:'Followers'},{key:'private',label:'Only me'}].map(option=><Pressable key={option.key} style={[s.chip,postPrivacy===option.key&&s.selected]} onPress={()=>setPostPrivacy(option.key as any)}><Text style={s.chipText}>{option.label}</Text></Pressable>)}</View>
+ <View style={s.row}>{[{key:'public',label:'Everyone'},{key:'followers',label:'Followers (in app)'},{key:'private',label:'Only me (in app)'}].map(option=><Pressable key={option.key} style={[s.chip,postPrivacy===option.key&&s.selected]} onPress={()=>setPostPrivacy(option.key as any)}><Text style={s.chipText}>{option.label}</Text></Pressable>)}</View>
+ {postPrivacy!=='public'&&<Text accessibilityRole="alert" style={[s.muted,{color:olive.gold,padding:11,borderWidth:1,borderColor:olive.gold,borderRadius:9}]}>Important: Restricted visibility currently hides your post inside ReconFeed, but its underlying media uses a publicly reachable link. Anyone with that link can access the file. Do not upload confidential media.</Text>}
  <TextInput value={caption} onChangeText={setCaption} multiline placeholder="Describe the video; include relevant keywords and hashtags…" placeholderTextColor={theme.muted} style={[s.input,{height:90}]}/>
  <Text style={s.subheading}>FIELD TAGS & AUDIO</Text>
  <TextInput value={tagDraft} onChangeText={setTagDraft} maxLength={300} placeholder="Tags: trucks, welding, outdoors (up to 12)" placeholderTextColor={theme.muted} style={s.input}/>
@@ -1139,7 +1140,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
     [{text:'Cancel',style:'cancel'},{text:action==='logout'?'Log out':'Continue',onPress:()=>{setProfileSettingsOpen(false);void (async()=>{await feedQueueRef.current?.clear();await supabase?.auth.signOut()})()}}]);
    return;
   }
-  if(action==='terms'){setProfileSettingsOpen(false);void Linking.openURL('https://reconfeed.com/terms.html');return}if(action==='privacy'){setProfileSettingsOpen(false);void Linking.openURL('https://reconfeed.com/privacy.html');return}if(['content_preferences','account','security','private','blocked','comments','audience','contacts'].includes(action)){
+  if(action==='legal_center'){setProfileSettingsOpen(false);void Linking.openURL('https://reconfeed.com/legal.html');return}if(action==='terms'){setProfileSettingsOpen(false);void Linking.openURL('https://reconfeed.com/terms.html');return}if(action==='privacy'){setProfileSettingsOpen(false);void Linking.openURL('https://reconfeed.com/privacy.html');return}if(['content_preferences','account','security','private','blocked','comments','audience','contacts'].includes(action)){
    setProfileSettingsPage('advanced');return;
   }
   const labels:Partial<Record<SettingsAction,string>>={

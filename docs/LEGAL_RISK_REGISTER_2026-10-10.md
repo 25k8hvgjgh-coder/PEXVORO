@@ -41,3 +41,10 @@ This is an engineering and public-record risk register, **not an attorney opinio
 - WIPO Global Brand Database: https://www.wipo.int/en/web/global-brand-database/index
 - U.S. Copyright Office agent registration: https://www.copyright.gov/dmca-directory/faq.html
 - U.S. patent search: https://patents.google.com/
+
+
+## Additional disclosure safeguards
+- The public Legal/IP Center is now linked from marketing, beta, marketplace and native app Settings.
+- Independent veteran ownership does not imply affiliation with federal agencies, military branches or other platforms.
+- New post labels say Followers/Only me **in app**, with a clear warning that files still use publicly reachable URLs. This is truthful disclosure, NOT a fix for protected file access. Prioritize private buckets and signed URLs before offering confidential sharing.
+- Still outstanding: real operator legal-entity details; DMCA registration; country-specific mark clearance, patent freedom-to-operate review; stock media identity/release ledger; sensitive political-affiliation signup data review.
