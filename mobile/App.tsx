@@ -1349,8 +1349,8 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
     onInbox={()=>{setProfileSettingsOpen(false);setMarketThread(null);setInboxOpen(true)}}
     onReportIssue={()=>{setProfileSettingsOpen(false);setTesterIssueOpen(true)}}
     onTesterReports={()=>{setProfileSettingsOpen(false);setTesterReportsOpen(true)}}
-    isReviewer={session?.user?.id==='8287fc6f-dd23-48d8-988e-388a8c93fe7b'&&session?.user?.app_metadata?.tester_report_reviewer===true}
-    onCommandCenter={()=>{setProfileSettingsOpen(false);setCommandCenterOpen(true)}}
+    isReviewer={session?.user?.id==='8287fc6f-dd23-48d8-988e-388a8c93fe7b'&&session?.user?.app_metadata?.reconfeed_command_center_admin===true}
+    onCommandCenter={()=>{setProfileSettingsOpen(false);if(Platform.OS==='web')void Linking.openURL('https://reconfeed.com/command-center.html');else setCommandCenterOpen(true)}}
     onUnavailable={label=>showAlert(label,label+' is planned for a future ReconFeed update and is not enabled in this beta.')}
    />
   :profileSettingsPage==='settings'?
