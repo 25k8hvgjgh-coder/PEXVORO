@@ -25,7 +25,9 @@ assert.match(app,/scrollSnapAlign:'start',scrollSnapStop:'always'/,'web slides s
 assert.match(app,/scheduleWebFeedSnap\(event\.nativeEvent\.contentOffset\.y\)/,'web should settle after touch and trackpad scrolling');
 assert.match(app,/ListFooterComponent=\{null\}/,'infinite scrolling must not leave a partial loading-only slide');
 assert.match(app,/feedNavRow:/,'feed category tabs should share a responsive row');
-assert.match(app,/tab==='Following'\?<StoryStrip/,'Stories should not reduce For You video height');
+assert.match(app,/tab==='Following'\?<View[^>]+><StoryStrip/,'Only Friends / Following should reserve room for the Stories strip');
+assert.match(app,/tab==='Following'\?<View[^>]+paddingTop:/,'Stories should be positioned below the immersive overlay navigation');
+assert.match(app,/<StoryStrip client=\{supabase\} session=\{session\}/,'Stories must remain connected to real accounts');
 assert.match(app,/pageHeight>=400\?<Pressable/,'short screens should collapse Save into More');
 assert.match(app,/pageHeight>=460\?<Pressable/,'short screens should collapse Share into More');
 assert.match(app,/accessibilityLabel="More post actions"/,'extra feed actions remain accessible');
