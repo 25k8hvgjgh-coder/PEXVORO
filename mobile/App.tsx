@@ -988,7 +988,7 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
    if(p.media_type==='video'&&!nearby)return <View style={[s.fullMedia,{justifyContent:'center',alignItems:'center'}]}><Text style={{color:'#9caa96',fontSize:16}}>Up next…</Text></View>;
   return <>{p.media_type==='video'?<Video key={p.id+':'+(videoRetryVersions[p.id]||0)} source={{uri:p.media_url}} onLoad={status=>{setFailedVideoIds(ids=>ids.includes(p.id)?ids.filter(id=>id!==p.id):ids);setReadyVideoIds(ids=>ids.includes(p.id)?ids:[p.id,...ids].slice(0,8));const size=(status as any)?.naturalSize;if(size&&Number(size.width)>0&&Number(size.height)>0){const wide=Number(size.width)>Number(size.height)*.95;setWideVideoIds(ids=>{const had=ids.includes(p.id);return had===wide?ids:wide?[...ids,p.id]:ids.filter(id=>id!==p.id)})}}} onError={()=>{setFailedVideoIds(ids=>ids.includes(p.id)?ids:[...ids,p.id].slice(-16));setReadyVideoIds(ids=>ids.filter(id=>id!==p.id));}} onPlaybackStatusUpdate={status=>trackPlayback(p.id,status)} style={s.fullMedia} resizeMode={wideVideoIds.includes(p.id)?ResizeMode.CONTAIN:ResizeMode.COVER} shouldPlay={pausedPostId!==p.id&&appActive&&!commentTarget&&!inboxOpen&&!socialInboxOpen&&!collection&&(tab==='For You'||tab==='Following')&&p.id===(activePostId||posts[0]?.id)} isLooping isMuted={muted} progressUpdateIntervalMillis={500}/>:<Image source={{uri:p.media_url}} style={s.fullMedia} resizeMode="cover"/>}</>;
  };
- const feed=()=> <View style={{flex:1,backgroundColor:'#070b08'}}><View style={[s.feedTop,{height:compact?50:56}]}><View style={s.feedNavRow}>
+ const feed=()=> <View style={{flex:1,backgroundColor:olive.bg}}><View style={[s.feedTop,{height:compact?50:56}]}><View style={s.feedNavRow}>
  <Pressable accessibilityRole="button" accessibilityLabel="Discover people and videos" style={s.feedUtilityButton} onPress={()=>setTab('Discover')}><Text style={s.feedUtilityIcon}>⌕</Text></Pressable>
  <View style={s.feedMainTabs}>
   <Pressable accessibilityRole="tab" accessibilityState={{selected:tab==='Following'}} style={s.feedMainTabButton} onPress={()=>{setSearch('');setTab('Following')}}><Text style={[s.feedMainTabText,tab==='Following'&&s.feedMainTabActive]}>Following</Text>{tab==='Following'?<View style={s.feedActiveIndicator}/>:null}</Pressable>
@@ -1578,7 +1578,7 @@ feedOverline:{flexDirection:'row',alignItems:'center',gap:7,marginVertical:4},
 liveDot:{width:7,height:7,borderRadius:4,backgroundColor:theme.purple},
 feedEyebrow:{fontSize:11,color:theme.purple,fontWeight:'900',letterSpacing:1.5},
 feedEdition:{fontSize:9,color:theme.muted,fontWeight:'800',marginLeft:'auto'},
-navOuter:{backgroundColor:olive.deep,paddingHorizontal:4,paddingTop:3,paddingBottom:5,borderTopWidth:1,borderTopColor:'#ffffff22'},
+navOuter:{backgroundColor:olive.bg,paddingHorizontal:4,paddingTop:3,paddingBottom:5,borderTopWidth:1,borderTopColor:'#ffffff22'},
 navItemActive:{backgroundColor:olive.surface,borderRadius:12},
 navIconActive:{color:olive.accent},
 navLabelActive:{color:olive.accent,fontWeight:'800'},
@@ -1599,7 +1599,7 @@ strong:{color:theme.text,fontWeight:'900',fontSize:14,letterSpacing:.1},
 link:{color:theme.pink,fontWeight:'900',fontSize:12,letterSpacing:.25},
 caption:{color:theme.text,fontSize:14,lineHeight:21,marginBottom:10},
 media:{width:'100%',backgroundColor:'#0a0d09',borderRadius:6},
-feedTop:{position:'absolute',top:0,left:0,right:0,height:56,justifyContent:'center',backgroundColor:'rgba(6,11,7,.5)',zIndex:12,elevation:12},
+feedTop:{position:'absolute',top:0,left:0,right:0,height:56,justifyContent:'center',backgroundColor:olive.bg,zIndex:12,elevation:12},
 feedNavRow:{flexDirection:'row',width:'100%',alignItems:'center',justifyContent:'space-between',paddingHorizontal:9},
  feedUtilityButton:{width:45,height:44,alignItems:'center',justifyContent:'center',borderRadius:22},
  feedUtilityIcon:{fontSize:26,fontWeight:'700',color:'#fff',textShadowColor:'#000',textShadowRadius:5},
@@ -1616,7 +1616,7 @@ feedTabActive:{color:olive.text,borderBottomWidth:2,borderBottomColor:olive.gold
 feedDivider:{height:12,width:1,backgroundColor:theme.line},
 feedSearch:{backgroundColor:'#1b241c',borderWidth:1,borderColor:'#596c51',borderRadius:10,paddingHorizontal:14,paddingVertical:11,color:theme.text,fontSize:13,marginVertical:3},
 feedLoading:{flex:1,alignItems:'center',justifyContent:'center',gap:12},
-videoPage:{width:'100%',backgroundColor:'#060806',borderRadius:0,overflow:'hidden',marginBottom:0,position:'relative',borderWidth:0},
+videoPage:{width:'100%',backgroundColor:olive.deep,borderRadius:0,overflow:'hidden',marginBottom:0,position:'relative',borderWidth:0},
 videoCanvas:{...StyleSheet.absoluteFillObject,backgroundColor:'#060806'},
 fullMedia:{width:'100%',height:'100%',backgroundColor:'#060806'},
 videoShade:{...StyleSheet.absoluteFillObject,backgroundColor:'transparent'},
