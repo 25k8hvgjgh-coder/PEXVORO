@@ -10,7 +10,7 @@ This is an engineering and public-record risk register, **not an attorney opinio
 
 ## Beta terms audit trail
 - New beta signups require backend-verified legal acknowledgement; the database records version 2026-10-10 and its acceptance timestamp. Historical beta signups have null terms fields, not retroactive agreement.
-- The legacy public RPC should be disabled only after the new API deployment is confirmed, to prevent bypassing the new acknowledgement.
+- The old anonymous beta RPC was revoked after the new public signup API became live. The replacement terms-audited RPC remains accessible to anonymous beta applicants. Confirmed with Supabase privilege checks; existing tester records were retained.
 
 ## Open steps requiring the operator and qualified lawyers
 1. Identify exact contracting legal entity, business address, jurisdiction, privacy-controller and authorized point of contact. **Never invent them in published documents**. Confirm support mailbox monitored.
