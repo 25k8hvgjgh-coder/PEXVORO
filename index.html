@@ -213,6 +213,12 @@ footer{padding-bottom:max(42px,env(safe-area-inset-bottom,0px))}
 @media(max-width:700px){.hero-art{width:100%;padding:22px 0 0;min-height:0}.hero-ad{width:min(100%,340px)}.hero-ad-heading strong{font-size:25px}}
 @media(prefers-reduced-motion:reduce){.hero-ad-cover{transition:none}}
 
+
+/* Sound activation stays in the ad card, visible when browsers enforce user gesture. */
+.hero-ad-sound{width:100%;margin:12px 0 1px;display:flex;align-items:center;justify-content:center;min-height:46px;padding:11px 10px;border:1px solid #d5dcb7;border-radius:7px;background:linear-gradient(140deg,#e7edd2,#9fb77d);color:#14200c;font:900 12px/1.3 Inter,system-ui,sans-serif;letter-spacing:.6px;box-shadow:0 6px 15px #0008;cursor:pointer}
+.hero-ad-sound:hover,.hero-ad-sound:focus-visible{filter:brightness(1.09)}
+.hero-ad-sound[hidden],.hero-ad-status[hidden]{display:none!important}
+.hero-ad-status{margin:9px 3px 2px;text-align:center;font-size:11px;line-height:1.45;color:#dfd4ad}
 </style>
 </head><body>
 <div class="site-top"><div class="shell"><nav aria-label="Primary navigation"><a class="brand" href="/" aria-label="ReconFeed home"><span class="brand-symbol"><img src="/assets/reconfeed-emblem.svg" alt=""></span><span class="wordmark">Recon<span>Feed</span></span></a><div class="nav-links"><a href="#home">Home</a><a href="#features">Features</a><a href="#community">Community</a><a href="#get-the-app">Download</a><a href="/beta.html">Free Beta Testers</a></div><a class="btn btn-primary btn-small" href="/app/">GET THE APP ↗</a></nav>
@@ -220,9 +226,11 @@ footer{padding-bottom:max(42px,env(safe-area-inset-bottom,0px))}
 <div class="hero-art" aria-label="ReconFeed video advertisement"><aside class="hero-ad" aria-label="ReconFeed promotional video and beta invitation">
 <div class="hero-ad-heading"><span class="hero-ad-kicker">RECONFEED / BETA PREMIERE</span><strong>SEE RECONFEED IN ACTION</strong></div>
 <div class="hero-ad-media" id="reconfeed-promo-frame">
-<video id="reconfeed-promo-video" aria-label="ReconFeed beta promotional ad" muted playsinline loop controls preload="none" controlslist="nodownload" disablepictureinpicture><source data-src="/assets/reconfeed-beta-ad.mp4" type="video/mp4">Your browser does not support HTML5 video.</video>
+<video id="reconfeed-promo-video" aria-label="ReconFeed beta promotional ad with music" autoplay playsinline loop controls preload="none" controlslist="nodownload" disablepictureinpicture><source data-src="/assets/reconfeed-beta-ad.mp4" type="video/mp4">Your browser does not support HTML5 video.</video>
 <div class="hero-ad-cover" aria-hidden="true"><img src="/assets/reconfeed-emblem.svg" alt=""><b>REAL PEOPLE.<br>REAL STORIES.</b><small>VETERAN OWNED · 18+</small></div>
 </div>
+<button class="hero-ad-sound" id="reconfeed-promo-sound" type="button" hidden aria-label="Turn on music for the ReconFeed promotional video">🔊 TAP TO ENABLE MUSIC</button>
+<p class="hero-ad-status" id="reconfeed-promo-status" role="status" aria-live="polite" hidden></p>
 <div class="hero-ad-bottom"><span>FREE BETA TESTERS WANTED<br>OPEN TO ALL RESPECTFUL ADULTS 18+</span><a href="/beta.html?utm_source=homepage_video">JOIN BETA ↗</a></div>
 </aside>
 
@@ -260,29 +268,99 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventLi
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;if(installButton)installButton.hidden=false;});
 if(installButton)installButton.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installButton.hidden=true;});
 
-/* Lazy-load the optional homepage ad so a four-minute clip never delays the main page. */
+/* Play the homepage beta ad with music where permitted; offer one-tap sound on Safari/mobile. */
 (function(){
   const video=document.getElementById('reconfeed-promo-video');
   const frame=document.getElementById('reconfeed-promo-frame');
-  if(!video||!frame)return;
+  const soundButton=document.getElementById('reconfeed-promo-sound');
+  const status=document.getElementById('reconfeed-promo-status');
+  if(!video||!frame||!soundButton||!status)return;
   const source=video.querySelector('source[data-src]');
-  let started=false;
+  let started=false,ready=false,failed=false;
   const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const setStatus=(message)=>{status.textContent=message;status.hidden=!message;};
+  const showSoundPrompt=()=>{
+    if(failed)return;
+    soundButton.hidden=false;
+    soundButton.textContent='🔊 TAP TO ENABLE MUSIC';
+  };
+  const markFailed=()=>{
+    if(failed)return;
+    failed=true;
+    soundButton.hidden=true;
+    frame.classList.remove('is-ready');
+    setStatus('The promotional video is temporarily unavailable. You can still join the beta below.');
+  };
   const start=()=>{
     if(started||!source)return;
     started=true;
     source.src=source.dataset.src;
     video.load();
   };
+  const tryAutoplay=async()=>{
+    if(failed)return;
+    if(reduceMotion){
+      showSoundPrompt();
+      setStatus('Tap to play with music.');
+      return;
+    }
+    // Audible autoplay works where allowed (usually after a prior user interaction).
+    video.muted=false;
+    video.volume=1;
+    try{
+      await video.play();
+      soundButton.hidden=true;
+      setStatus('');
+    }catch(error){
+      if(failed)return;
+      // iPhone Safari and most mobile browsers permit muted autoplay only.
+      video.muted=true;
+      try{
+        await video.play();
+        showSoundPrompt();
+        setStatus('Video is playing. Tap above to enable its music.');
+      }catch(mutedError){
+        showSoundPrompt();
+        setStatus('Tap above to start the video with music.');
+      }
+    }
+  };
+  // Only a real click can unlock sound reliably on mobile browsers.
+  soundButton.addEventListener('click',()=>{
+    if(failed)return;
+    start();
+    video.muted=false;
+    video.volume=1;
+    const attempt=video.play();
+    if(attempt&&typeof attempt.then==='function'){
+      attempt.then(()=>{
+        soundButton.hidden=true;
+        setStatus('');
+      }).catch(()=>{
+        showSoundPrompt();
+        setStatus('Audio needs permission. Use the video playback controls to enable sound.');
+      });
+    }else{
+      soundButton.hidden=true;
+      setStatus('');
+    }
+  });
   video.addEventListener('loadeddata',()=>{
+    ready=true;
     frame.classList.add('is-ready');
-    if(!reduceMotion)video.play().catch(()=>{});
+    tryAutoplay();
   },{once:true});
-  video.addEventListener('error',()=>{frame.classList.remove('is-ready');});
+  video.addEventListener('volumechange',()=>{
+    if(!ready||failed)return;
+    if(video.muted||video.volume===0)showSoundPrompt();
+    else if(!video.paused){soundButton.hidden=true;setStatus('');}
+  });
+  video.addEventListener('error',markFailed);
+  if(source)source.addEventListener('error',markFailed);
   if('IntersectionObserver' in window){
     const observer=new IntersectionObserver(entries=>{
       if(entries.some(entry=>entry.isIntersecting)){start();observer.disconnect();}
-    },{rootMargin:'180px'});
+    },{rootMargin:'250px'});
     observer.observe(frame);
   }else{
     window.addEventListener('load',start,{once:true});
