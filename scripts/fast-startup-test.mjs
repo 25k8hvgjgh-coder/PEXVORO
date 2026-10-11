@@ -14,7 +14,7 @@ assert.ok(load.indexOf('setPosts(starterPosts)')<load.indexOf('const [followRes,
 assert.match(load,/if\(previewShown\)\{\s*\/\/ Do not jump/,'background ranking cannot replace currently visible video');
 assert.match(load,/candidatePosts\.length>=initialFeedPageSize/,'pagination size matches initial query');
 assert.match(app,/syncReconFeedUpdate\(\)\},10000\)/,'update checks must not compete with first video');
-assert.match(app,/tab==='For You'\|\|tab==='Following'\)\?require\('\.\/assets\/icon\.png'\)/,'feed must avoid extra remote background image download');
+assert.match(app,/source=\{require\('\.\/assets\/icon\.png'\)\}/,'all screens use local artwork and avoid remote decorative image downloads');
 assert.match(app,/pagingEnabled snapToInterval=\{feedPageHeight\}/,'TikTok-style one-video swipe preserved');
 assert.match(app,/const feed=\(\)=> <View style=\{\{flex:1,backgroundColor:olive\.bg\}\}/,'olive theme preserved');
 assert.match(app,/useState\(Platform\.OS==='web'\)/,'Safari needs muted autoplay');
