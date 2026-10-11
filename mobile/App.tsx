@@ -196,10 +196,10 @@ export default function App(){
  const [testerIssueOpen,setTesterIssueOpen]=useState(false);
  const [testerReportsOpen,setTesterReportsOpen]=useState(false);
  const [commandCenterOpen,setCommandCenterOpen]=useState(false);
- useEffect(()=>{if(Platform.OS==='web'&&session?.user.id==='8287fc6f-dd23-48d8-988e-388a8c93fe7b'&&session.user.app_metadata?.tester_report_reviewer===true&&String((globalThis as any).location?.search||'').includes('center=1'))setCommandCenterOpen(true)},[session?.user.id]);
+
  const testerSubmitPending=useRef(false);
  const deletionRequestPending=useRef(false);
- useEffect(()=>{setTesterIssueOpen(false);setTesterReportsOpen(false);setCommandCenterOpen(false);setTesterIssueTitle('');setTesterIssueDescription('');setTesterIssueSteps('');setTesterScreenshot(null);setProfileAvatarDraft(null);setProfilePhotoOpen(false);setProfileEditOpen(false);setProfileSettingsOpen(false);setProfileSettingsPage('drawer');setConnections(null);setAnalyticsOpen(false);setProfileGridTab('videos');setViewingCreator(null)},[session?.user.id]);
+ useEffect(()=>{setTesterIssueOpen(false);setTesterReportsOpen(false);setCommandCenterOpen(Platform.OS==='web'&&session?.user.id==='8287fc6f-dd23-48d8-988e-388a8c93fe7b'&&session.user.app_metadata?.tester_report_reviewer===true&&String((globalThis as any).location?.search||'').includes('center=1'));setTesterIssueTitle('');setTesterIssueDescription('');setTesterIssueSteps('');setTesterScreenshot(null);setProfileAvatarDraft(null);setProfilePhotoOpen(false);setProfileEditOpen(false);setProfileSettingsOpen(false);setProfileSettingsPage('drawer');setConnections(null);setAnalyticsOpen(false);setProfileGridTab('videos');setViewingCreator(null)},[session?.user.id]);
  const [testerIssueTitle,setTesterIssueTitle]=useState('');
  const [testerIssueDescription,setTesterIssueDescription]=useState('');
  const [testerIssueSteps,setTesterIssueSteps]=useState('');
