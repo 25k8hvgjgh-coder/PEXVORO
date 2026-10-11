@@ -24,4 +24,7 @@ assert.match(app,/const nearby=position===focus/,'video plays before adjacent vi
 assert.match(app,/setReadyVideoIds/,'buffer next only after current loads');
 assert.doesNotMatch(app,/feedViewportHeight>0\?<FlatList/,'video must never wait for measurement');
 assert.doesNotMatch(app,/<ActivityIndicator color=\{theme\.purple\} style=\{\{flex:1\}\}/,'remove blank spinner');
+assert.match(load,/const starterPosts=\[\.\.\.starterRanked\.filter\(post=>post\.media_type==='video'\)/,'open on a video rather than an image when possible');
+assert.match(app,/if\(tab!=='For You'\|\|!authReady\)return/,'restore cache before waiting on remote preferences');
+assert.doesNotMatch(app,/if\(!authReady\)return <SafeAreaView style=\{s\.safe\}><ActivityIndicator/,'session restore must not show another spinner');
 console.log('Startup speed regression checks passed.');
