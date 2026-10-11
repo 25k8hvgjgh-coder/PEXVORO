@@ -7,7 +7,7 @@ import {imageFormat} from './profilePhoto';
 
 type Story={
  id:string;user_id:string;media_path:string;media_type:'video'|'image';
- caption:string;created_at:string;expires_at:string;
+ caption:string;is_promotional?:boolean;created_at:string;expires_at:string;
  profile?:{username?:string;display_name?:string;avatar_url?:string}|null;
 };
 type FeedProps={
@@ -30,7 +30,7 @@ export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
   if(!client||!session)return;
   try{
    const response=await client.from('stories')
-    .select('id,user_id,media_path,media_type,caption,created_at,expires_at')
+    .select('id,user_id,media_path,media_type,caption,is_promotional,created_at,expires_at')
     .gt('expires_at',new Date().toISOString())
     .order('created_at',{ascending:false}).limit(50);
    if(response.error)throw response.error;
@@ -96,7 +96,8 @@ export function StoryStrip({client,session,refreshToken,onCreate}:FeedProps){
    <SafeAreaView style={s.viewer}>
     <View style={s.viewerHead}><Text style={s.heading} numberOfLines={1}>@{active?.profile?.username||'creator'} · Story</Text><Pressable accessibilityRole="button" onPress={()=>{setActive(null);setAssetUrl('')}} style={s.close}><Text style={s.closeText}>✕ Close</Text></Pressable></View>
     {loading?<ActivityIndicator color={gold} style={{flex:1}}/>:assetUrl&&active?.media_type==='video'?<Video source={{uri:assetUrl}} shouldPlay isLooping resizeMode={ResizeMode.CONTAIN} useNativeControls style={s.viewerMedia}/>:assetUrl?<Image source={{uri:assetUrl}} resizeMode="contain" style={s.viewerMedia}/>:<Text style={s.warning}>{error||'Story unavailable'}</Text>}
-    {!!active?.caption&&<Text style={s.viewerCaption}>{active.caption}</Text>}
+    {active?.is_promotional?<Text accessibilityLabel="Paid promotion or gifted product" style={{color:gold,fontWeight:'900',fontSize:13,textAlign:'center',padding:8}}>PAID PROMOTION / GIFTED PRODUCT</Text>:null}
+{!!active?.caption&&<Text style={s.viewerCaption}>{active.caption}</Text>}
     {active?.user_id===session.user.id?<View style={{padding:12,gap:8}}>
      {confirmDelete?<View style={s.buttons}>
       <Pressable accessibilityRole="button" onPress={()=>setConfirmDelete(false)} style={s.button}><Text style={s.buttonLabel}>Cancel</Text></Pressable>
@@ -116,9 +117,10 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
  const [asset,setAsset]=useState<ImagePicker.ImagePickerAsset|null>(null);
  const [caption,setCaption]=useState('');
  const [rightsConfirmed,setRightsConfirmed]=useState(false);
+ const [isPromotional,setIsPromotional]=useState(false);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
- const close=()=>{if(busy)return;setAsset(null);setCaption('');setError('');setRightsConfirmed(false);onClose()};
+ const close=()=>{if(busy)return;setAsset(null);setCaption('');setError('');setRightsConfirmed(false);setIsPromotional(false);onClose()};
  async function gallery(){
   try{
    const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images','videos'],quality:.85,exif:false,base64:false});
@@ -169,9 +171,9 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
    if(upload.error)throw upload.error;
    if(!upload.data?.path)throw new Error('Story upload could not be confirmed. Please retry.');
    uploadedPath=upload.data.path;
-   const record=await client.from('stories').insert({user_id:session.user.id,media_path:uploadedPath,media_type:kind,caption:caption.trim().slice(0,300)});
+   const record=await client.from('stories').insert({user_id:session.user.id,media_path:uploadedPath,media_type:kind,caption:caption.trim().slice(0,300),is_promotional:isPromotional});
    if(record.error)throw record.error;
-   uploadedPath='';setAsset(null);setCaption('');setRightsConfirmed(false);onPublished();onClose();
+   uploadedPath='';setAsset(null);setCaption('');setRightsConfirmed(false);setIsPromotional(false);onPublished();onClose();
   }catch(e:any){
    if(uploadedPath)void client.storage.from('story-media').remove([uploadedPath]);
    setError(e.message||'Story could not be posted. Try again.');
@@ -192,7 +194,9 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
     </View>
     {asset?.type==='video'?<Video source={{uri:asset.uri}} resizeMode={ResizeMode.CONTAIN} useNativeControls style={s.preview}/>:asset?<Image source={{uri:asset.uri}} resizeMode="contain" style={s.preview}/>:<View style={[s.preview,{justifyContent:'center',alignItems:'center'}]}><Text style={s.note}>Choose a photo or video above</Text></View>}
     <TextInput placeholder="Add a caption (optional)" placeholderTextColor={muted} value={caption} onChangeText={setCaption} maxLength={300} multiline style={s.input}/>
-    <Pressable accessibilityRole="checkbox" accessibilityState={{checked:rightsConfirmed}} onPress={()=>setRightsConfirmed(v=>!v)} style={[s.button,{backgroundColor:'#223126',justifyContent:'flex-start'}]}><Text style={s.buttonLabel}>{rightsConfirmed?'☑':'☐'} I own this Story and its audio or have permission from the rights holders and depicted people.</Text></Pressable>
+    <Pressable accessibilityRole="checkbox" accessibilityState={{checked:isPromotional}} onPress={()=>setIsPromotional(v=>!v)} style={[s.button,{backgroundColor:'#223126',justifyContent:'flex-start'}]}><Text style={s.buttonLabel}>{isPromotional?'☑':'☐'} Paid or gifted promotion — clearly label this Story.</Text></Pressable>
+<Text style={s.note}>Disclose money, gifts, affiliate commissions and other material brand connections in the Story.</Text>
+<Pressable accessibilityRole="checkbox" accessibilityState={{checked:rightsConfirmed}} onPress={()=>setRightsConfirmed(v=>!v)} style={[s.button,{backgroundColor:'#223126',justifyContent:'flex-start'}]}><Text style={s.buttonLabel}>{rightsConfirmed?'☑':'☐'} I own this Story and its audio or have permission from the rights holders and depicted people.</Text></Pressable>
     {!!error&&<Text accessibilityRole="alert" style={s.warning}>{error}</Text>}
     <Pressable accessibilityRole="button" disabled={!asset||busy||!rightsConfirmed} onPress={()=>void publish()} style={[s.button,s.selected,(!asset||busy||!rightsConfirmed)&&{opacity:.5}]}><Text style={s.buttonLabel}>{busy?'Publishing…':'Publish Story'}</Text></Pressable>
     <Text style={s.note}>Story media is stored privately. Followers can view active stories; old stories leave their feeds after 24 hours. Only you can delete your own stories.</Text>

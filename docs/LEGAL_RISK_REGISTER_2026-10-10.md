@@ -48,3 +48,9 @@ This is an engineering and public-record risk register, **not an attorney opinio
 - Independent veteran ownership does not imply affiliation with federal agencies, military branches or other platforms.
 - New post labels say Followers/Only me **in app**, with a clear warning that files still use publicly reachable URLs. This is truthful disclosure, NOT a fix for protected file access. Prioritize private buckets and signed URLs before offering confidential sharing.
 - Still outstanding: real operator legal-entity details; DMCA registration; country-specific mark clearance, patent freedom-to-operate review; stock media identity/release ledger; sensitive political-affiliation signup data review.
+
+## FTC creator material-connection safeguard (implemented)
+- Added creator-declared `is_promotional` labels to posts and follower Stories without modifying previously published content. Old content defaults to unlabeled; the operator must manually review preexisting promotional material.
+- Creator publish forms now ask about sponsorships, free products and affiliate payments, and affected viewers see an explicit "PAID PROMOTION / GIFTED PRODUCT" badge.
+- Terms and community rules require meaningful visible disclosure beyond a hidden profile, tag or caption. These flags do not verify the truthfulness of creator statements or replace legal compliance with local ad regulations.
+- Reference: https://www.ftc.gov/business-guidance/resources/disclosures-101-social-media-influencers

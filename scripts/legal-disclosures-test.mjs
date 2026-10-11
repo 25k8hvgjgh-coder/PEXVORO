@@ -29,6 +29,12 @@ assert.match(app,/disabled=\{busy\|\|!mediaRightsConfirmed\}/,'post upload requi
 assert.match(stories,/rightsConfirmed/,'Story must include rights acknowledgment');
 assert.match(stories,/disabled=\{!asset\|\|busy\|\|!rightsConfirmed\}/,'Story upload requires rights confirmation');
 assert.match(home,/not endorsements by the people or brands shown/,'stock imagery must not imply endorsement');
+assert.match(app,/is_promotional:isPromotional/,'post sponsorship label must be persisted');
+assert.match(app,/p\.is_promotional\?<Text accessibilityLabel="Paid promotion or gifted product"/,'paid promotion must be visible on playback');
+assert.match(stories,/is_promotional:isPromotional/,'Story sponsorship label must be persisted');
+assert.match(stories,/active\?\.is_promotional\?<Text accessibilityLabel="Paid promotion or gifted product"/,'Story viewers must see promotional label');
+assert.match(terms,/Advertising, sponsorship and gifts/,'terms must govern material connection');
+assert.match(community,/Advertising and brand relationships/,'community must require disclosure');
 console.log('ReconFeed legal disclosure, deletion and upload-rights checks passed.');
 
 for(const p of ['/privacy.html','/terms.html','/copyright.html','/community-guidelines.html','/delete-account.html'])assert.ok(legal.includes(p),'legal center links '+p);
