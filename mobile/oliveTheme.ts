@@ -1,13 +1,13 @@
-/** ReconFeed unified dark-olive visual system for the website and mobile app. */
+/** ReconFeed's warmer, livelier olive identity across native and web. */
 export const olive={
- bg:'#19271D',
- surface:'#243529',
- raised:'#304534',
- deep:'#101C14',
- accent:'#B5C893',
- gold:'#C8B889',
- text:'#F2F4EC',
- muted:'#BBC8B7',
- border:'#465D4A',
+ bg:'#1A2A20',
+ surface:'#293F2F',
+ raised:'#39563F',
+ deep:'#102017',
+ accent:'#BDD59E',
+ gold:'#DEBE83',
+ text:'#F7F6ED',
+ muted:'#C6D4C1',
+ border:'#54735A',
  scrim:'rgba(4,11,7,0.72)',
 } as const;
