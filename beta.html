@@ -137,16 +137,35 @@ input::placeholder{color:#a5b4a3}
 footer{border-top-color:#405741}
 @media(max-width:540px){.hero-inner{padding:43px 0}.panel{padding:19px}h1{font-size:clamp(36px,10vw,54px)}.navlink{max-width:145px}}
 
+
+/* ReconFeed lively beta tester experience */
+body{background:radial-gradient(ellipse at 9% 10%,#486b4639,transparent 43%),#101b14}
+.hero{background:linear-gradient(125deg,#172b1e,#213926 58%,#132116)}
+.hero:before{background:radial-gradient(ellipse at 70% 30%,#c1ab6c31,transparent 55%)}
+h1 em{color:#c9dfa8}
+.lede{line-height:1.75;color:#d1ddcb}
+.panel{background:linear-gradient(145deg,#2b4230,#1b2e20 75%);border-color:#688b68;box-shadow:0 17px 39px #01080466}
+.btn{clip-path:none;border-radius:12px;background:#c3d9a4;color:#172719;transition:transform .2s ease,filter .2s ease}
+.btn:hover{transform:translateY(-3px);filter:brightness(1.07)}
+.btn:active{transform:scale(.98)}
+.btn.secondary{background:#35523b;border-color:#7a9877}
+.chip{transition:background .2s ease,transform .2s ease}
+.chip:hover{background:#385840;transform:translateY(-1px)}
+.chip:has(input:checked){border-color:#bddba1;background:#496b4b}
+input[type="email"]:focus,select:focus{border-color:#c4dca3;box-shadow:0 0 0 3px #c4dca326}
+.guideline-panel{background:linear-gradient(145deg,#294530,#192f21);border-color:#71936d}
+@media(prefers-reduced-motion:reduce){.btn,.chip{transition:none!important;transform:none!important}}
+
 </style>
 </head>
 <body>
 <header><div class="wrap nav"><a href="/" class="brand"><img src="/assets/reconfeed-emblem.svg" alt=""><span>Recon<span>Feed</span></span></a><a href="/app/" class="navlink">OPEN EXISTING APP ↗</a></div></header>
 <main>
-<section class="hero"><div class="wrap hero-inner"><div class="eyebrow">VETERAN OWNED · ADULTS 18+ · OPEN TO CIVILIANS</div><h1><strong>FREE BETA</strong><em>TESTERS WANTED.</em></h1><p class="lede">We're building ReconFeed for veterans, hardworking people, trucks, trades, outdoor enthusiasts and creators. Help shape the next chapter of a veteran-owned social community.</p><p class="motto">REAL PEOPLE. REAL STORIES. BUILT DIFFERENT. <br>MORE THAN A SCROLL. IT'S A BROTHERHOOD.</p><div class="actions"><a href="#join" class="btn">✦ JOIN THE FREE BETA LIST</a><button class="btn secondary" id="share-campaign" type="button">↗ SHARE WITH A FRIEND</button></div></div></section>
+<section class="hero"><div class="wrap hero-inner"><div class="eyebrow">VETERAN OWNED · ADULTS 18+ · OPEN TO CIVILIANS</div><h1><strong>FREE BETA</strong><em>TESTERS WANTED.</em></h1><p class="lede">We're building a place for real stories—from jobsite wins and truck builds to the moments you want your people to see. Come try it out and help make ReconFeed better.</p><p class="motto">REAL PEOPLE. REAL STORIES. BUILT DIFFERENT. <br>MORE THAN A SCROLL. IT'S A BROTHERHOOD.</p><div class="actions"><a href="#join" class="btn">✦ JOIN THE FREE BETA LIST</a><button class="btn secondary" id="share-campaign" type="button">↗ SHARE WITH A FRIEND</button></div></div></section>
 <div class="tactical-rule" aria-hidden="true"></div>
 <div class="wrap grid">
 <div class="panel">
- <span class="kicker">001 / THE MISSION</span><h2>YOUR FEEDBACK BUILDS THE FUTURE.</h2>
+ <span class="kicker">001 / THE MISSION</span><h2>YOUR VOICE HELPS SHAPE THIS.</h2>
  <p>Test ReconFeed, report bugs, suggest improvements and tell us what real communities need. We're recruiting people who enjoy content about service, skilled trades, automotive builds, outdoor life and honest everyday stories.</p>
  <div class="steps">
   <div class="step"><span class="num">01</span><div><strong>Join the interest list</strong><small>Leave your email and device preference. No purchase necessary, and no payment or compensation is offered.</small></div></div>
@@ -157,8 +176,8 @@ footer{border-top-color:#405741}
  <p class="tiny">Beta software may contain bugs or incomplete features. Testers should avoid sharing sensitive information. Do not assume sign-up guarantees a test slot or an invitation.</p>
 </div>
 <div class="panel" id="join">
- <span class="kicker">002 / VOLUNTEER TESTER ENROLLMENT</span><h2>ENLIST AS A TESTER.</h2><p>Already testing? <a href="/app/?beta=1">Open issue reports and screenshot uploads in the app ↗</a></p>
- <p>Sign up to receive ReconFeed beta testing invitations and updates. This form takes about 30 seconds.</p>
+ <span class="kicker">002 / VOLUNTEER TESTER ENROLLMENT</span><h2>COME TEST WITH US.</h2><p>Already testing? <a href="/app/?beta=1">Open issue reports and screenshot uploads in the app ↗</a></p>
+ <p>Sign up to receive ReconFeed beta testing invitations and updates. It only takes a moment to join.</p>
  <form id="beta-form">
   <label for="email">Email address <span aria-hidden="true">*</span></label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" maxlength="254" required>
   <label for="platform">What will you test on? <span aria-hidden="true">*</span></label><select id="platform" name="platform" required><option value="">Choose your device</option><option value="iphone">iPhone / iPad (web beta for now)</option><option value="android">Android</option><option value="both">iPhone and Android</option><option value="web">Browser / desktop</option></select>
