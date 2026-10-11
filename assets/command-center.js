@@ -6,7 +6,7 @@
  const add=(parent,...kids)=>{for(const child of kids)if(child)parent.appendChild(child);return parent;};
  const statuses=['open','triaged','in_progress','fixed','closed'];
  const labels={open:'Open',triaged:'Triaged',in_progress:'In progress',fixed:'Fixed',closed:'Closed'};
- const pages={overview:['Your operation.','One clear view.','Real reports, real testers and the information you need to build a stronger ReconFeed.'],reports:['Tester reports.','Every issue counts.','Review screenshots and track progress toward working fixes.'],testers:['Your beta community.','Growing together.','Real tester applications from the ReconFeed website.'],moderation:['Community reports.','Make it safer.','Handle content flags without exposing anyone’s private conversations.'],systems:['Systems & security.','Stay in control.','Check service health and see the security safeguards that need attention.']};
+ const pages={overview:['Your operation.','One clear view.','Real reports, real testers and the information you need to build a stronger ReconFeed.'],reports:['Tester reports.','Every issue counts.','Review screenshots and track progress toward working fixes.'],testers:['Your beta community.','Growing together.','Real tester applications from the ReconFeed website.'],feedback:['Community feedback.','Build what matters.','Actual research responses and feature ideas from verified app users.'],moderation:['Community reports.','Make it safer.','Handle content flags without exposing anyone’s private conversations.'],systems:['Systems & security.','Stay in control.','Check service health and see the security safeguards that need attention.']};
  const state={config:null,session:null,data:null,page:'overview',busy:false,lastTouch:Date.now()};
  const fmtDate=v=>{const d=new Date(v);return Number.isNaN(d.valueOf())?'Unknown time':new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(d);};
  const num=v=>Math.max(0,Number(v)||0).toLocaleString();
@@ -78,7 +78,7 @@
   const [heading,accent,description]=pages[name];
   el('screen-title').replaceChildren(document.createTextNode(heading),' ',make('em','',accent));
   el('screen-description').textContent=description;
-  el('current-location').textContent=({overview:'Overview',reports:'Tester reports',testers:'Beta testers',moderation:'Moderation',systems:'Systems & security'})[name];
+  el('current-location').textContent=({overview:'Overview',reports:'Tester reports',testers:'Beta testers',feedback:'Feedback & research',moderation:'Moderation',systems:'Systems & security'})[name];
   el('sidebar').classList.remove('is-open');
   if(name==='systems')void health();
  }
@@ -94,7 +94,7 @@
   el('report-counter').textContent=num(d.counts.issues);
   el('last-sync').textContent='Updated '+fmtDate(d.generatedAt);
   el('data-status').textContent='Live snapshot · '+fmtDate(d.generatedAt);
-  overview();reports();testers();moderation();
+  overview();reports();testers();feedback();moderation();
  }
  function overview(){
   const issues=state.data.issues||[];
@@ -132,6 +132,20 @@
    if(person.interests)add(info,make('p','',Array.isArray(person.interests)?person.interests.join(', '):person.interests));
    add(list,add(make('div','data-row'),info,make('span','pill',person.status||'pending')));
   }
+ }
+ function feedback(){
+  const list=el('survey-feedback');list.replaceChildren();
+  const records=state.data?.feedback||[];
+  el('feedback-count').textContent=num(records.length)+' most recent';
+  if(!records.length){list.appendChild(empty('No completed research surveys yet. Testers can answer the in-app survey to share their ideas.'));return;}
+  records.forEach(item=>{
+   const row=make('div','data-row'),info=make('div');
+   add(info,make('span','label','COMMUNITY FEEDBACK · '+fmtDate(item.created_at)),
+    make('h3','',item.biggest_need||'No written feature request'),
+    make('p','',Array.isArray(item.feature_interests)?'Interested in: '+item.feature_interests.join(', '):'No feature interests selected'),
+    make('p','',('Price: '+(item.monthly_price||'Not given'))+' · '+('Creator preference: '+(item.identity_mode||'Not selected'))));
+   add(row,info,make('span','pill',item.willing_to_test?'Available to test':'Not currently testing'));list.appendChild(row);
+  });
  }
  function moderation(){
   for(const [id,key,field] of [['post-flags','posts','post_id'],['listing-flags','listings','listing_id']]){
