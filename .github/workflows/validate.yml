@@ -27,6 +27,8 @@ jobs:
         run: node ../scripts/feed-slide-test.mjs
       - name: Check fast startup and first-video rendering
         run: node ../scripts/fast-startup-test.mjs
+      - name: Test broken stream retry and full-screen feed preservation
+        run: node ../scripts/video-retry-test.mjs
       - name: Check fast visual assets and lightweight profile gallery
         run: node ../scripts/media-loading-regression-test.mjs
       - name: Check inbox, report and PWA reliability contracts
