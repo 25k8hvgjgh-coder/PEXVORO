@@ -12,7 +12,7 @@ type Props={
 type Entry={id:string;label:string;glyph:string;icon?:ProfileIconName;action:()=>void};
 export default function ProfileMenuOverview({onClose,onSettings,onBalance,onAnalytics,onSaved,onMyPosts,onInbox,onReportIssue,onTesterReports,onUnavailable}:Props){
  const section=(items:Entry[],key:string)=> <View key={key} style={s.group}>
-  {items.map((item,i)=><Pressable accessibilityRole="button" accessibilityLabel={item.label} key={item.id} onPress={item.action} style={[s.row,i!==items.length-1&&s.rowDivider]}>
+  {items.map((item,i)=><Pressable accessibilityRole="button" accessibilityLabel={item.label} key={item.id} onPress={item.action} style={({pressed})=>[s.row,i!==items.length-1&&s.rowDivider,pressed&&s.rowPressed]}>
     <View style={s.iconBox}>{item.icon?<ProfileIcon name={item.icon} size={22} color={olive.muted}/>:<Text style={s.glyph}>{item.glyph}</Text>}</View>
     <Text style={s.itemText}>{item.label}</Text><Text style={s.chevron}>›</Text>
    </Pressable>)}
@@ -21,7 +21,7 @@ export default function ProfileMenuOverview({onClose,onSettings,onBalance,onAnal
   <Pressable accessibilityRole="button" accessibilityLabel="Close menu" onPress={onClose} style={s.scrim}/>
   <SafeAreaView style={s.sheet}>
    <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-    <View style={s.menuHeader}><View style={s.menuIdentity}><Text style={s.menuTitle}>Your account</Text><Text style={s.menuSubtitle}>Manage your ReconFeed experience</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Close account menu" onPress={onClose} style={s.closeButton}><Text style={s.closeGlyph}>×</Text></Pressable></View>
+    <View style={s.menuHeader}><View style={s.menuIdentity}><Text style={s.menuTitle}>Your corner</Text><Text style={s.menuSubtitle}>Your posts, people, and favorite things.</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Close account menu" onPress={onClose} style={s.closeButton}><Text style={s.closeGlyph}>×</Text></Pressable></View>
     {section([{id:'balance',label:'Balance',glyph:'▣',action:onBalance}],'balance')}
     {section([
      {id:'activity',label:'Activity center',glyph:'◷',action:onSettings},
@@ -58,13 +58,14 @@ const s=StyleSheet.create({
  scroll:{paddingHorizontal:14,paddingTop:28,paddingBottom:48,gap:11},
  menuHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:10,paddingHorizontal:3,paddingBottom:15},
  menuIdentity:{flex:1},
- menuTitle:{fontSize:23,fontWeight:'800',letterSpacing:-.6,color:olive.text},
+ menuTitle:{fontSize:25,fontWeight:'800',letterSpacing:-.65,color:olive.text},
  menuSubtitle:{fontSize:12,color:olive.muted,marginTop:5,lineHeight:18},
  closeButton:{width:40,height:40,borderRadius:12,backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border,alignItems:'center',justifyContent:'center'},
  closeGlyph:{color:olive.text,fontSize:25,lineHeight:28},
- group:{backgroundColor:olive.surface,borderRadius:15,overflow:'hidden',borderWidth:1,borderColor:olive.border},
+ group:{backgroundColor:olive.surface,borderRadius:16,overflow:'hidden',borderWidth:1,borderColor:olive.border,shadowColor:'#000',shadowOpacity:.1,shadowRadius:6,elevation:1},
  row:{minHeight:60,flexDirection:'row',alignItems:'center',paddingHorizontal:17,backgroundColor:olive.surface},
  rowDivider:{borderBottomWidth:1,borderBottomColor:olive.border},
+ rowPressed:{backgroundColor:olive.raised,opacity:.88},
  iconBox:{width:25,alignItems:'center',marginRight:11},
  glyph:{color:olive.muted,fontSize:23,fontWeight:'700'},
  itemText:{color:olive.text,fontWeight:'600',fontSize:15,flex:1},
