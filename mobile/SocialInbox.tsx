@@ -1,13 +1,15 @@
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {ActivityIndicator,AppState,FlatList,Image,KeyboardAvoidingView,Modal,Platform,Pressable,SafeAreaView,ScrollView,StyleSheet,Text,TextInput,View} from 'react-native';
 import type {Session,SupabaseClient} from '@supabase/supabase-js';
+import {olive} from './oliveTheme';
+import {StoryStrip} from './Stories';
 
 export type DirectPeer={id:string;username?:string|null;display_name?:string|null;avatar_url?:string|null};
 type DirectMessage={id:string;sender_id:string;recipient_id:string;body:string;reply_to_id:string|null;created_at:string;read_at:string|null};
 type Contact=DirectPeer & {followsYou:boolean;youFollow:boolean;last?:DirectMessage;unread:number};
-type Props={client:SupabaseClient;session:Session;initialPeer?:DirectPeer|null;onClose:()=>void;onProfile?:(peer:DirectPeer)=>void;onUnreadChange?:()=>void};
+type Props={client:SupabaseClient;session:Session;initialPeer?:DirectPeer|null;onClose:()=>void;onProfile?:(peer:DirectPeer)=>void;onUnreadChange?:()=>void;onCreateStory?:()=>void;onDiscover?:()=>void};
 
-export default function SocialInbox({client,session,initialPeer,onClose,onProfile,onUnreadChange}:Props){
+export default function SocialInbox({client,session,initialPeer,onClose,onProfile,onUnreadChange,onCreateStory,onDiscover}:Props){
  const userId=session.user.id;
  const [peer,setPeer]=useState<DirectPeer|null>(initialPeer||null);
  const [contacts,setContacts]=useState<Contact[]>([]);
@@ -15,6 +17,8 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
  const [replyTo,setReplyTo]=useState<DirectMessage|null>(null);
  const [body,setBody]=useState('');
  const [busy,setBusy]=useState(false);
+ const [contactSearch,setContactSearch]=useState('');
+ const [contactFilter,setContactFilter]=useState<'all'|'unread'>('all');
  const [loading,setLoading]=useState(true);
  const [allowed,setAllowed]=useState(false);
  const [error,setError]=useState('');
@@ -116,7 +120,7 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
    <KeyboardAvoidingView style={[s.screen,{maxWidth:780,width:'100%',alignSelf:'center'}]} behavior={Platform.OS==='ios'?'padding':undefined}>
     <View style={s.header}>
      <Pressable accessibilityRole="button" accessibilityLabel={peer?'Back to messages':'Close messages'} onPress={()=>peer?setPeer(null):onClose()} style={s.control}><Text style={s.link}>{peer?'← Inbox':'Close'}</Text></Pressable>
-     <Text style={[s.title,{minWidth:0,flexShrink:1}]} numberOfLines={1}>{peer?(peer.display_name||peer.username||'Message'):'ReconFeed Inbox'}</Text>
+     <Text style={[s.title,{minWidth:0,flexShrink:1}]} numberOfLines={1}>{peer?(peer.display_name||peer.username||'Message') :'Inbox'}</Text>
      <Pressable accessibilityRole="button" accessibilityLabel="Refresh messages" onPress={()=>void load()} style={s.control}><Text style={s.link}>Refresh</Text></Pressable>
     </View>
     {error?<Text accessibilityRole="alert" style={s.error}>{error}</Text>:null}
@@ -144,10 +148,14 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
       <Pressable accessibilityRole="button" accessibilityLabel="Send direct message" onPress={()=>void send()} disabled={!allowed||busy||!body.trim()} style={[s.send,(!allowed||busy||!body.trim())&&{opacity:.45}]}><Text style={s.sendLabel}>{busy?'Sending…':'Send'}</Text></Pressable>
      </View>
     </View>:<ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingBottom:30}}>
-     <Text style={s.section}>Conversations and connections</Text>
-     <Text style={s.note}>Tap an account to open a private conversation. When two users follow each other, they can message and reply. You can also find people in Friends or Followers.</Text>
-     {contacts.length===0&&!loading?<Text style={s.note}>No connections yet. Visit Friends, follow another creator, and have them follow you back.</Text>:null}
-     {contacts.map(item=><Pressable key={item.id} accessibilityRole="button" accessibilityLabel={'Message @'+item.username} onPress={()=>openContact(item)} style={s.contact}>
+     <View style={s.inboxWelcome}><Text style={s.inboxHeading}>Stay connected.</Text><Text style={s.inboxIntro}>Stories and conversations from real people on ReconFeed.</Text></View>
+     <StoryStrip client={client} session={session} refreshToken={0} onCreate={onCreateStory||(()=>{})}/>
+     <View style={s.activityPanel}><Text style={s.activityTitle}>◈ Your activity</Text><Text style={s.activityCopy}>{contacts.filter(c=>c.unread>0).length?contacts.filter(c=>c.unread>0).length+' conversations with unread messages':'No unread messages. You’re all caught up.'}</Text><Text style={s.activityCopy}>{contacts.filter(c=>c.followsYou).length} accounts follow you</Text></View>
+     <View style={s.inboxSectionRow}><Text style={s.section}>Messages</Text><Pressable accessibilityRole="button" onPress={()=>onDiscover?.()}><Text style={s.link}>Find people ↗</Text></Pressable></View>
+     <View style={s.searchBox}><Text style={{fontSize:20,color:olive.muted}}>⌕</Text><TextInput accessibilityLabel="Search conversations" value={contactSearch} onChangeText={setContactSearch} placeholder="Search accounts and messages" placeholderTextColor={olive.muted} autoCapitalize="none" style={s.searchInput}/>{contactSearch?<Pressable accessibilityLabel="Clear search" accessibilityRole="button" onPress={()=>setContactSearch('')}><Text style={{color:olive.muted,fontSize:21}}>×</Text></Pressable>:null}</View>
+     <View style={s.filters}><Pressable accessibilityRole="button" accessibilityState={{selected:contactFilter==='all'}} onPress={()=>setContactFilter('all')} style={[s.filter,contactFilter==='all'&&s.filterActive]}><Text style={[s.filterText,contactFilter==='all'&&s.filterTextActive]}>All</Text></Pressable><Pressable accessibilityRole="button" accessibilityState={{selected:contactFilter==='unread'}} onPress={()=>setContactFilter('unread')} style={[s.filter,contactFilter==='unread'&&s.filterActive]}><Text style={[s.filterText,contactFilter==='unread'&&s.filterTextActive]}>Unread</Text></Pressable></View>
+     {contacts.length===0&&!loading?<Text style={[s.note,{paddingHorizontal:18,paddingVertical:18}]}>No conversations yet. Follow creators, share stories, and start connecting.</Text>:null}
+     {contacts.filter(item=>(contactFilter==='all'||item.unread>0)&&(!contactSearch.trim()||[item.display_name,item.username,item.last?.body].join(' ').toLowerCase().includes(contactSearch.trim().toLowerCase()))).map(item=><Pressable key={item.id} accessibilityRole="button" accessibilityLabel={'Message @'+item.username} onPress={()=>openContact(item)} style={s.contact}>
       {avatar(item)}<View style={{flex:1,gap:4}}><Text style={s.label} numberOfLines={1}>{item.display_name||item.username}</Text><Text style={s.note}>@{item.username||'creator'} · {item.youFollow&&item.followsYou?'✓ Mutual follow':item.followsYou?'Follows you':'Following'}</Text>
        {item.last?<Text numberOfLines={1} style={s.preview}>{item.last.sender_id===userId?'You: ':''}{item.last.body}</Text>:null}
       </View>{item.unread>0?<View style={{minWidth:24,height:24,paddingHorizontal:5,borderRadius:12,backgroundColor:'#B83235',alignItems:'center',justifyContent:'center'}}><Text style={{color:'#fff',fontSize:11,fontWeight:'900'}}>{item.unread>99?'99+':item.unread}</Text></View>:<Text style={s.link}>›</Text>}
@@ -158,15 +166,29 @@ export default function SocialInbox({client,session,initialPeer,onClose,onProfil
  </Modal>;
 }
 const s=StyleSheet.create({
- screen:{flex:1,backgroundColor:'#101612'},
- header:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',padding:5,borderBottomWidth:1,borderBottomColor:'#596958'},
+ screen:{flex:1,backgroundColor:olive.bg},
+ inboxWelcome:{paddingHorizontal:18,paddingTop:19,paddingBottom:9},
+ inboxHeading:{fontSize:24,fontWeight:'800',letterSpacing:-.55,color:olive.text},
+ inboxIntro:{fontSize:13,color:olive.muted,lineHeight:19,marginTop:5},
+ activityPanel:{backgroundColor:olive.surface,marginHorizontal:14,marginTop:15,marginBottom:15,padding:15,borderWidth:1,borderColor:olive.border,borderRadius:16,gap:5},
+ activityTitle:{fontSize:16,color:olive.text,fontWeight:'800',marginBottom:3},
+ activityCopy:{fontSize:12,color:olive.muted,lineHeight:19},
+ inboxSectionRow:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:15,paddingVertical:10},
+ searchBox:{marginHorizontal:14,borderRadius:13,paddingHorizontal:13,backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border,flexDirection:'row',alignItems:'center',gap:8,minHeight:45},
+ searchInput:{color:olive.text,fontSize:14,flex:1,minHeight:43},
+ filters:{flexDirection:'row',gap:7,marginHorizontal:14,marginTop:11,marginBottom:4},
+ filter:{borderColor:olive.border,borderWidth:1,borderRadius:20,backgroundColor:olive.surface,paddingVertical:7,paddingHorizontal:18},
+ filterActive:{backgroundColor:olive.accent,borderColor:olive.accent},
+ filterText:{color:olive.text,fontSize:13,fontWeight:'700'},
+ filterTextActive:{color:olive.deep},
+ header:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',padding:5,borderBottomWidth:1,borderBottomColor:olive.border,backgroundColor:olive.bg},
  control:{minHeight:44,paddingHorizontal:12,justifyContent:'center'},
- title:{flex:1,textAlign:'center',fontSize:17,fontWeight:'900',color:'#F0EEE5'},
+ title:{flex:1,textAlign:'center',fontSize:17,fontWeight:'800',color:olive.text},
  link:{fontSize:14,fontWeight:'800',color:'#C6AA72'},
- section:{fontSize:19,fontWeight:'900',color:'#F0EEE5',paddingHorizontal:16,paddingTop:15},
+ section:{fontSize:19,fontWeight:'800',color:olive.text},
  note:{fontSize:12,color:'#B7BDBB',lineHeight:19},
- contact:{flexDirection:'row',gap:12,alignItems:'center',padding:14,borderBottomWidth:1,borderBottomColor:'#344436'},
- avatar:{width:48,height:48,borderRadius:24,backgroundColor:'#344436'},
+ contact:{flexDirection:'row',gap:12,alignItems:'center',paddingHorizontal:17,paddingVertical:13,borderBottomWidth:1,borderBottomColor:olive.border,minHeight:71},
+ avatar:{width:51,height:51,borderRadius:26,backgroundColor:olive.raised,borderWidth:2,borderColor:olive.border},
  avatarEmpty:{alignItems:'center',justifyContent:'center'},
  avatarText:{fontSize:20,color:'#F0EEE5',fontWeight:'800'},
  label:{color:'#F0EEE5',fontSize:14,fontWeight:'800'},
