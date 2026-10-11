@@ -50,7 +50,7 @@ export function FeedVideo({uri,active,muted,paused,wide,onElement,onLoad,onError
  useEffect(()=>()=>{onElement?.(null)},[onElement]);
  if(Platform.OS!=='web')return <Video source={{uri}} shouldPlay={playWanted} isMuted={muted} isLooping resizeMode={wide?ResizeMode.CONTAIN:ResizeMode.COVER}
   style={{width:'100%',height:'100%'}} progressUpdateIntervalMillis={500}
-  onLoad={info=>{const size=info.naturalSize;onLoad?.({width:size?.width||0,height:size?.height||0})}}
+  onLoad={info=>{const size=(info as any)?.naturalSize;onLoad?.({width:size?.width||0,height:size?.height||0})}}
   onError={()=>onError?.()}
   onPlaybackStatusUpdate={status=>{if(status.isLoaded)onProgress?.({isLoaded:true,isPlaying:status.isPlaying,positionMillis:status.positionMillis,durationMillis:status.durationMillis||0,didJustFinish:status.didJustFinish})}}/>;
  const videoStyle:React.CSSProperties={
