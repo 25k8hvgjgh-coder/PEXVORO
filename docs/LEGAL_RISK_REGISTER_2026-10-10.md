@@ -18,6 +18,13 @@ This is an engineering and public-record risk register, **not an attorney opinio
 - Operator must monitor public.account_deletion_requests, verify users, remove content/media and account records appropriately, handle legal holds, and confirm completion. Claims of fully automated deletion or guaranteed store compliance would be premature.
 - Apple App Review 5.1.1(v) and Google Play account-deletion policy require working in-app and web paths; their operational fulfillment remains an ongoing responsibility.
 
+## Relevant public-record name and patent screening (not clearance)
+- An App Store listing for **Recon: Food, Friends, Fun** (developer Recon Technologies Inc.) describes a social networking experience. Its similar RECON name and related market warrant formal trademark comparison with RECONFEED. https://apps.apple.com/us/app/recon-food-friends-fun/id1554505144 . This is NOT proof of a trademark registration or infringement.
+- U.S. Patent 12,563,261 addresses certain threshold-based video-preloading techniques: https://patents.justia.com/patent/12563261 . A technical topic overlap is not infringement; a patent attorney must review independent claims, term/status, jurisdictions and ReconFeed's actual code.
+- U.S. Patent 12,489,949 B2 describes video-recommendation information and particular recommendation/comment panels: https://patentsgazette.uspto.gov/week48/OG/html/1541-1/US12489949-20251202.html . A feature resemblance alone does not identify a claim overlap.
+- Unsplash and Pexels generally license commercial use of their photos, but releases and third-party rights for people, brands and implied endorsements can require separate consent. Homepage and beta promotional pages now identify stock media as illustrative, and creators confirm rights before post and Story uploads.
+- No systematic global trademark register search or complete patent claim chart was completed. There is no basis to claim worldwide clearance or automatically rename the ReconFeed brand.
+
 ## Open steps requiring the operator and qualified lawyers
 1. Identify exact contracting legal entity, business address, jurisdiction, privacy-controller and authorized point of contact. **Never invent them in published documents**. Confirm support mailbox monitored.
 2. Copyright Office DMCA §512(c) agent: register required legal entity, physical address, designated-agent name, street address, phone and email with U.S. Copyright Office. Public-facing agent information must match. Implement operational, logged notices and counter-notices, repeat infringer policy enforcement. Current public contact is not a designated-agent representation.

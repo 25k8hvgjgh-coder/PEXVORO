@@ -23,4 +23,10 @@ assert.match(app,/confirmAccountDeletion/,'irreversible request requires user co
 assert.match(app,/user_id:session\.user\.id/,'request tied to the signed-in account');
 const settings=await read('mobile/SettingsPrivacyPage.tsx');
 assert.match(settings,/id:'delete_account',name:'Delete account & associated data'/,'delete action visible inside Account menu');
-console.log('ReconFeed legal-disclosure links, signup acknowledgement and account deletion request contracts passed.');
+const stories=await read('mobile/Stories.tsx');
+assert.match(app,/mediaRightsConfirmed/,'post publish must include rights acknowledgment');
+assert.match(app,/disabled=\{busy\|\|!mediaRightsConfirmed\}/,'post upload requires rights confirmation');
+assert.match(stories,/rightsConfirmed/,'Story must include rights acknowledgment');
+assert.match(stories,/disabled=\{!asset\|\|busy\|\|!rightsConfirmed\}/,'Story upload requires rights confirmation');
+assert.match(home,/not endorsements by the people or brands shown/,'stock imagery must not imply endorsement');
+console.log('ReconFeed legal disclosure, deletion and upload-rights checks passed.');
