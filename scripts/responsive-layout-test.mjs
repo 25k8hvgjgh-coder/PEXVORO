@@ -13,7 +13,7 @@ for(const [label,page] of [['home',home],['beta',beta]]){
 }
 assert.match(builder,/#root\{height:100dvh\}/,'browser app must use dynamic viewport height on Safari');
 assert.match(builder,/font-size:16px!important/,'form inputs should not trigger automatic iPhone zoom');
-assert.match(app,/feedPageHeight=Math\.max\(1,feedViewportHeight/,'feed should measure usable viewport');
+assert.match(app,/feedPageHeight=feedViewportHeight>0\?feedViewportHeight:Math\.max\(160/,'feed should use measured viewport when available and a safe fallback immediately');
 assert.match(app,/onLayout=\{event=>\{const h=Math\.round\(event\.nativeEvent\.layout\.height\)/,'feed should measure real layout');
 assert.match(app,/<FlatList key=\{tab\} ref=\{feedListRef\}/,'feed mounts immediately');
 assert.doesNotMatch(app,/feedViewportHeight>0\?<FlatList/,'never gate video on layout measurement');

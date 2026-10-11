@@ -7,7 +7,7 @@ const checks=[
  ['stop at each video',/scrollSnapAlign:'start',scrollSnapStop:'always'/],
  ['web wheel and touch settle',/onScroll=\{event=>\{if\(Platform\.OS==='web'\)scheduleWebFeedSnap\(event\.nativeEvent\.contentOffset\.y\)\}\}/],
  ['momentum settle',/onMomentumScrollEnd=\{event=>\{if\(Platform\.OS==='web'\)scheduleWebFeedSnap\(event\.nativeEvent\.contentOffset\.y\)\}\}/],
- ['measured viewport',/const feedPageHeight=Math\.max\(1,feedViewportHeight\)/],
+ ['measured viewport with instant fallback',/const feedPageHeight=feedViewportHeight>0\?feedViewportHeight:Math\.max\(160/],
  ['exact-height video slide',/style=\{\[s\.videoPage,\{height:pageHeight\}/],
  ['active video playback',/p\.id===\(activePostId\|\|posts\[0\]\?\.id\)/],
  ['olive styling',/const feed=\(\)=> <View style=\{\{flex:1,backgroundColor:olive\.bg\}\}/]

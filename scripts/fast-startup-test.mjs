@@ -8,7 +8,8 @@ assert.match(app,/const startupFallback=setTimeout\(\(\)=>\{if\(active\)setAuthR
 assert.match(app,/\[tab,session\?\.user\.id,prefsLoaded\]/,'preference completion must reload feeds');
 assert.match(load,/const initialFeedPageSize=12/,'fetch a smaller first page');
 assert.match(load,/const preview=await publicFeedPromise/,'fetch immediate preview');
-assert.match(load,/setPosts\(starterPosts\);\s*setActivePostId\(starterPosts\[0\]\?\.id\|\|null\);\s*setLoading\(false\)/,'show preview without waiting for personalization');
+assert.match(load,/setPosts\(starterPosts\);\s*setActivePostId\(starterPosts\[0\]\?\.id\|\|null\);/,'show initial video before optional queries');
+assert.ok(load.indexOf('setLoading(false)')<load.indexOf('const [followRes,historyRes,likesRes,saveRes]'),'preview exits loading state before personalization awaits');
 assert.ok(load.indexOf('setPosts(starterPosts)')<load.indexOf('const [followRes,historyRes,likesRes,saveRes]'),'post preview must render before recommendation-history awaits');
 assert.match(load,/if\(previewShown\)\{\s*\/\/ Do not jump/,'background ranking cannot replace currently visible video');
 assert.match(load,/candidatePosts\.length>=initialFeedPageSize/,'pagination size matches initial query');
