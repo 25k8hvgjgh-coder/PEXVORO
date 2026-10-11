@@ -169,7 +169,7 @@ const source=(new URLSearchParams(location.search).get('utm_source')||new URLSea
 form.addEventListener('submit',async function(e){
  e.preventDefault();if(!form.reportValidity())return;
  button.disabled=true;button.textContent='SENDING REQUEST…';status.textContent='Saving your request…';status.className='';
- const data={email:document.getElementById('email').value.trim(),platform:document.getElementById('platform').value,political_party:form.querySelector('input[name="political_party"]:checked')?.value||'',interests:[...form.querySelectorAll('input[name="interest"]:checked')].map(x=>x.value),confirm_adult:document.getElementById('adult').checked,consent:document.getElementById('consent').checked,accept_guidelines:document.getElementById('guidelines').checked,company_website:document.getElementById('company_website').value,source};
+ const data={email:document.getElementById('email').value.trim(),platform:document.getElementById('platform').value,political_party:form.querySelector('input[name="political_party"]:checked')?.value||'',interests:[...form.querySelectorAll('input[name="interest"]:checked')].map(x=>x.value),confirm_adult:document.getElementById('adult').checked,consent:document.getElementById('consent').checked,accept_guidelines:document.getElementById('guidelines').checked,legal_acknowledgment:document.getElementById('legal_acknowledgment').checked,legal_version:'2026-10-10',company_website:document.getElementById('company_website').value,source};
  try{
  const response=await fetch('/api/beta-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
  const body=await response.json().catch(()=>({}));
