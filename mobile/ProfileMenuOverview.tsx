@@ -7,10 +7,11 @@ type Props={
  onClose:()=>void;onSettings:()=>void;onBalance:()=>void;onAnalytics:()=>void;
  onSaved:()=>void;onMyPosts:()=>void;onInbox:()=>void;
  onReportIssue:()=>void;onTesterReports:()=>void;
+ isReviewer?:boolean;onCommandCenter?:()=>void;
  onUnavailable:(label:string)=>void;
 };
 type Entry={id:string;label:string;glyph:string;icon?:ProfileIconName;action:()=>void};
-export default function ProfileMenuOverview({onClose,onSettings,onBalance,onAnalytics,onSaved,onMyPosts,onInbox,onReportIssue,onTesterReports,onUnavailable}:Props){
+export default function ProfileMenuOverview({onClose,onSettings,onBalance,onAnalytics,onSaved,onMyPosts,onInbox,onReportIssue,onTesterReports,isReviewer=false,onCommandCenter,onUnavailable}:Props){
  const section=(items:Entry[],key:string)=> <View key={key} style={s.group}>
   {items.map((item,i)=><Pressable accessibilityRole="button" accessibilityLabel={item.label} key={item.id} onPress={item.action} style={({pressed})=>[s.row,i!==items.length-1&&s.rowDivider,pressed&&s.rowPressed]}>
     <View style={s.iconBox}>{item.icon?<ProfileIcon name={item.icon} size={22} color={olive.muted}/>:<Text style={s.glyph}>{item.glyph}</Text>}</View>
@@ -43,6 +44,7 @@ export default function ProfileMenuOverview({onClose,onSettings,onBalance,onAnal
       <Pressable style={s.extraTile} accessibilityRole="button" onPress={onInbox}><ProfileIcon name="inbox" color={olive.muted} size={24}/><Text style={s.extraLabel}>Inbox</Text></Pressable>
      </View>
     </View>
+    {isReviewer&&onCommandCenter?section([{id:'command-center',label:'Command Center · Private',glyph:'▣',action:onCommandCenter}],'admin'):null}
     {section([
      {id:'report',label:'Report a problem',glyph:'⚑',action:onReportIssue},
      {id:'testers',label:'Beta tester reports',glyph:'▧',action:onTesterReports}
