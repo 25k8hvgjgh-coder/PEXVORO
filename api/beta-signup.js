@@ -34,9 +34,9 @@ export default async function handler(req,res) {
     if(interests.length > 6 || interests.some(x => !VALID_INTERESTS.has(x))) return res.status(400).json({error:'Select up to six valid interests.'});
     if(body.confirm_adult !== true || body.consent !== true || body.accept_guidelines !== true || body.legal_acknowledgment !== true || body.legal_version !== '2026-10-10')
       return res.status(400).json({error:'Confirm you are 18+, consent to contact, and accept the tester guidelines and ReconFeed legal terms.'});
-    const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/join_reconfeed_beta',{
+    const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/join_reconfeed_beta_legal',{
       method:'POST',headers:{'apikey':PUBLIC_KEY,'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify({p_email:email,p_platform:platform,p_interests:interests,p_source:source,p_confirm_adult:true,p_consent:true,p_trap:''})
+      body:JSON.stringify({p_email:email,p_platform:platform,p_interests:interests,p_source:source,p_confirm_adult:true,p_consent:true,p_trap:'',p_legal_accepted:true,p_legal_version:'2026-10-10'})
     });
     if(!response.ok) {
       // Do not leak responses with database details or private user data.

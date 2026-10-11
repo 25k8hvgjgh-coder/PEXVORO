@@ -8,6 +8,10 @@ This is an engineering and public-record risk register, **not an attorney opinio
 - Changed video badge from “RECONFEED ORIGINAL” to “RECONFEED COMMUNITY” so user-generated content is not falsely branded as ReconFeed-owned.
 - No sweeping trademark renames or feed rewrites based only on superficial web searches.
 
+## Beta terms audit trail
+- New beta signups require backend-verified legal acknowledgement; the database records version 2026-10-10 and its acceptance timestamp. Historical beta signups have null terms fields, not retroactive agreement.
+- The legacy public RPC should be disabled only after the new API deployment is confirmed, to prevent bypassing the new acknowledgement.
+
 ## Open steps requiring the operator and qualified lawyers
 1. Identify exact contracting legal entity, business address, jurisdiction, privacy-controller and authorized point of contact. **Never invent them in published documents**. Confirm support mailbox monitored.
 2. Copyright Office DMCA §512(c) agent: register required legal entity, physical address, designated-agent name, street address, phone and email with U.S. Copyright Office. Public-facing agent information must match. Implement operational, logged notices and counter-notices, repeat infringer policy enforcement. Current public contact is not a designated-agent representation.

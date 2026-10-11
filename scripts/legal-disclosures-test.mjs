@@ -8,6 +8,8 @@ assert.match(beta,/id="legal_acknowledgment" type="checkbox" required/,'beta app
 assert.match(beta,/legal_acknowledgment:document.getElementById\('legal_acknowledgment'\).checked/,'beta sends terms acknowledgment');
 const api=await read('api/beta-signup.js');
 assert.match(api,/body\.legal_acknowledgment !== true \|\| body\.legal_version !== '2026-10-10'/,'server enforces acknowledgment');
+assert.match(api,/join_reconfeed_beta_legal/,'legal signup uses auditing RPC');
+assert.match(api,/p_legal_accepted:true,p_legal_version:'2026-10-10'/,'legal consent record version is passed');
 assert.match(app,/termsAccepted/,'account signup must require explicit terms');
 assert.match(app,/terms_accepted_version:'2026-10-10'/,'account consent version audit metadata');
 assert.match(app,/action==='privacy'.*Linking\.openURL\('https:\/\/reconfeed\.com\/privacy\.html'\)/,'working privacy link in app');
