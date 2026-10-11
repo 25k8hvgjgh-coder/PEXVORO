@@ -85,22 +85,29 @@ async function overview(cfg){
   count(cfg,'reconfeed_beta_testers'),
   count(cfg,'reconfeed_research_responses'),
   count(cfg,'post_reports'),count(cfg,'marketplace_listing_reports'),
+  count(cfg,'profiles','&is_beta_tester=eq.true'),
+  count(cfg,'profiles','&created_at=gte.'+encodeURIComponent(new Date(Date.now()-7*86400000).toISOString())),
+  count(cfg,'reconfeed_beta_testers','&status=eq.pending'),
+  count(cfg,'tester_issues','&status=in.(open,triaged,in_progress)'),
   rows(cfg,'tester_issues?select=id,title,category,description,steps_to_reproduce,platform,status,created_at,updated_at,screenshot_path&order=updated_at.desc&limit=75'),
   rows(cfg,'reconfeed_beta_testers?select=id,email,platform,status,interests,contact_consent,created_at&order=created_at.desc&limit=50'),
   rows(cfg,'post_reports?select=id,post_id,reason,created_at&order=created_at.desc&limit=35'),
   rows(cfg,'marketplace_listing_reports?select=id,listing_id,reason,created_at&order=created_at.desc&limit=35'),
-  rows(cfg,'reconfeed_research_responses?select=id,feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test,created_at&order=created_at.desc&limit=75')
+  rows(cfg,'reconfeed_research_responses?select=id,feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test,created_at&order=created_at.desc&limit=75'),
+  rows(cfg,'profiles?select=username,display_name,is_beta_tester,created_at&order=created_at.desc&limit=100')
  ];
  const results=await Promise.all(tasks);
- const [profiles,posts,stories,messages,issuesCount,testers,research,postReports,listingReports,issues,applications,moderationPosts,moderationListings,feedback]=results;
+ const [profiles,posts,stories,messages,issuesCount,testers,research,postReports,listingReports,betaProfiles,recentProfiles,pendingTesters,issuesActive,issues,applications,moderationPosts,moderationListings,feedback,profileList]=results;
  return {
   generatedAt:new Date().toISOString(),
-  counts:{profiles,posts,stories,messages,issues:issuesCount,testers,research,postReports,listingReports},
+  counts:{profiles,posts,stories,messages,issues:issuesCount,testers,research,postReports,listingReports,
+   betaProfiles,recentProfiles,pendingTesters,issuesActive},
   issues:issues.map(({screenshot_path,...issue})=>({...issue,hasScreenshot:Boolean(screenshot_path)})),
+  recentProfiles:profileList.map(({username,display_name,is_beta_tester,created_at})=>({username,display_name,is_beta_tester,created_at})),
   applications:applications.filter(item=>item.contact_consent===true).map(({contact_consent,...row})=>row),
   moderation:{posts:moderationPosts,listings:moderationListings},
   feedback:feedback.map(({id,feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test,created_at})=>({id,feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test,created_at})),
-  notice:'Counts are real database records, not online users. Messages are counted only: message contents and private account information are never included.'
+  notice:'Profiles, beta applications, and flagged in-app beta testers are separate totals and can overlap. Counts reflect current database records, not online users. Private messages are counted, never disclosed.'
  };
 }
 export default async function handler(req,res){
