@@ -6,6 +6,9 @@ const DEFAULT_ANON='sb_publishable_mhVX66Gl1F0x6WMgORilRw_QWjOrusW';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const STATUSES=new Set(['open','triaged','in_progress','fixed','closed']);
 const trim=text=>String(text||'').trim();
+// This is the sole verified founder's user ID. An app_metadata role alone is insufficient.
+// This ID is an account identifier, not a secret or an authentication credential.
+const OWNER_ID='8287fc6f-dd23-48d8-988e-388a8c93fe7b';
 function send(res,status,body){
  res.status(status).json(body);
 }
@@ -50,7 +53,7 @@ async function authenticate(req,cfg){
  }});
  if(!response.ok)return null;
  const person=await response.json();
- if(!person||!UUID.test(person.id)||!person.email_confirmed_at||
+ if(!person||person.id!==OWNER_ID||!UUID.test(person.id)||!person.email_confirmed_at||
     person.app_metadata?.reconfeed_command_center_admin!==true)return null;
  return {id:person.id};
 }
