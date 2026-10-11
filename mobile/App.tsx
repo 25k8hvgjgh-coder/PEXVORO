@@ -1551,7 +1551,7 @@ feedTop:{height:56,justifyContent:'center',backgroundColor:olive.bg,flexShrink:0
 feedNavRow:{flexDirection:'row',width:'100%',alignItems:'center',justifyContent:'space-between',paddingHorizontal:9},
 feedTabButton:{minWidth:0,flexShrink:1,minHeight:44,alignItems:'center',justifyContent:'center',paddingHorizontal:0},
 feedTabs:{flexDirection:'row',alignItems:'center',justifyContent:'space-around',gap:10,paddingVertical:10,backgroundColor:olive.surface,borderRadius:12,borderWidth:1,borderColor:olive.border},
-feedTab:{fontSize:15,fontWeight:'650',color:olive.muted,letterSpacing:0},
+feedTab:{fontSize:15,fontWeight:'600',color:olive.muted,letterSpacing:0},
 feedTabActive:{color:olive.text,borderBottomWidth:2,borderBottomColor:olive.gold,paddingBottom:4},
 feedDivider:{height:12,width:1,backgroundColor:theme.line},
 feedSearch:{backgroundColor:'#1b241c',borderWidth:1,borderColor:'#596c51',borderRadius:10,paddingHorizontal:14,paddingVertical:11,color:theme.text,fontSize:13,marginVertical:3},

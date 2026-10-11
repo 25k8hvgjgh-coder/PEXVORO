@@ -116,7 +116,7 @@ const s=StyleSheet.create({
  scroll:{paddingBottom:70,paddingTop:10},
  pageTitle:{fontSize:28,fontWeight:'800',letterSpacing:-.65,color:olive.text,paddingHorizontal:21,paddingTop:14,paddingBottom:17},
  section:{marginBottom:22},
- sectionTitle:{fontSize:12,color:olive.muted,fontWeight:'750',letterSpacing:1,textTransform:'uppercase',paddingHorizontal:22,paddingVertical:11},
+ sectionTitle:{fontSize:12,color:olive.muted,fontWeight:'700',letterSpacing:1,textTransform:'uppercase',paddingHorizontal:22,paddingVertical:11},
  groupCard:{marginHorizontal:12,borderRadius:16,overflow:'hidden',backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border},
  item:{flexDirection:'row',alignItems:'center',backgroundColor:olive.surface,minHeight:60,paddingLeft:16,paddingRight:16,borderBottomWidth:1,borderBottomColor:olive.border},
  firstItem:{paddingTop:3},lastItem:{paddingBottom:3},
