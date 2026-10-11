@@ -636,7 +636,7 @@ export default function App(){
  async function chooseProfilePhoto(){
   if(!session)return;
   try{
-   const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:true,aspect:[1,1],quality:.7,exif:false,base64:false});
+   const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images'],allowsEditing:true,aspect:[1,1],quality:.7,exif:false,base64:Platform.OS!=='web'});
    if(result.canceled||!result.assets?.[0])return;
    setProfileAvatarDraft(result.assets[0]);
    // Keep the editor open: the photo, username, name and bio are saved together.
