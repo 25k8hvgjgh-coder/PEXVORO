@@ -88,16 +88,18 @@ async function overview(cfg){
   rows(cfg,'tester_issues?select=id,title,category,description,steps_to_reproduce,platform,status,created_at,updated_at,screenshot_path&order=updated_at.desc&limit=75'),
   rows(cfg,'reconfeed_beta_testers?select=id,email,platform,status,interests,contact_consent,created_at&order=created_at.desc&limit=50'),
   rows(cfg,'post_reports?select=id,post_id,reason,created_at&order=created_at.desc&limit=35'),
-  rows(cfg,'marketplace_listing_reports?select=id,listing_id,reason,created_at&order=created_at.desc&limit=35')
+  rows(cfg,'marketplace_listing_reports?select=id,listing_id,reason,created_at&order=created_at.desc&limit=35'),
+  rows(cfg,'reconfeed_research_responses?select=id,feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test,created_at&order=created_at.desc&limit=75')
  ];
  const results=await Promise.all(tasks);
- const [profiles,posts,stories,messages,issuesCount,testers,research,postReports,listingReports,issues,applications,moderationPosts,moderationListings]=results;
+ const [profiles,posts,stories,messages,issuesCount,testers,research,postReports,listingReports,issues,applications,moderationPosts,moderationListings,feedback]=results;
  return {
   generatedAt:new Date().toISOString(),
   counts:{profiles,posts,stories,messages,issues:issuesCount,testers,research,postReports,listingReports},
   issues:issues.map(({screenshot_path,...issue})=>({...issue,hasScreenshot:Boolean(screenshot_path)})),
   applications:applications.filter(item=>item.contact_consent===true).map(({contact_consent,...row})=>row),
   moderation:{posts:moderationPosts,listings:moderationListings},
+  feedback:feedback.map(({id,feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test,created_at})=>({id,feature_interests,monthly_price,identity_mode,biggest_need,willing_to_test,created_at})),
   notice:'Counts are real database records, not online users. Messages are counted only: message contents and private account information are never included.'
  };
 }
