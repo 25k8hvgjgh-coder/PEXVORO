@@ -190,11 +190,42 @@ footer{padding-bottom:max(42px,env(safe-area-inset-bottom,0px))}
  .trust{gap:7px 12px;letter-spacing:.25px}
 }
 
+
+/* ReconFeed homepage promotional video: portrait-first, never cropped. */
+.hero-art{min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;padding:15px 0;filter:none}
+.hero-art>.operator-art,.hero-art>.aircraft,.hero-art>.phone{display:none}
+.hero-ad{width:min(100%,365px);margin-inline:auto;padding:12px;background:linear-gradient(155deg,#171f18,#090d09 65%,#19251a);border:1px solid #a8b9858a;border-radius:18px;box-shadow:0 20px 65px #000b,0 0 0 1px #000 inset;overflow:hidden}
+.hero-ad-heading{display:flex;flex-direction:column;gap:4px;padding:5px 5px 13px;text-align:center}
+.hero-ad-kicker{font-size:10px;font-weight:900;letter-spacing:1.8px;color:#cdbb83}
+.hero-ad-heading strong{font-family:Impact,"Arial Narrow",system-ui,sans-serif;font-size:clamp(21px,2vw,28px);line-height:1.12;letter-spacing:.4px;color:#ecf2e2}
+.hero-ad-media{width:100%;aspect-ratio:9/16;position:relative;background:radial-gradient(ellipse at 50% 30%,#364b34 0%,#121d15 55%,#070c09 100%);border:1px solid #9aaa8073;border-radius:10px;overflow:hidden}
+.hero-ad-media video{width:100%;height:100%;display:block;object-fit:contain;background:#060906}
+.hero-ad-cover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:17px;padding:20px;text-align:center;background:radial-gradient(ellipse at 48% 35%,#546b486b,transparent 65%),linear-gradient(160deg,#111a12,#0c100de8);pointer-events:none;transition:opacity .24s ease}
+.hero-ad-cover:before{content:"";position:absolute;inset:11px;border:1px solid #aebd8f44;border-radius:7px;pointer-events:none}
+.hero-ad-cover img{width:clamp(85px,36%,145px);height:auto;filter:drop-shadow(0 10px 25px #0009)}
+.hero-ad-cover b{font:900 clamp(25px,3vw,34px)/1.1 Impact,"Arial Narrow",system-ui,sans-serif;color:#f0f4e8;letter-spacing:.5px}
+.hero-ad-cover small{font-weight:900;letter-spacing:1.7px;font-size:10px;color:#bbcda0}
+.hero-ad-media.is-ready .hero-ad-cover{opacity:0;visibility:hidden}
+.hero-ad-bottom{display:flex;align-items:center;gap:9px;justify-content:space-between;padding:13px 5px 2px}
+.hero-ad-bottom span{font-size:9px;line-height:1.5;letter-spacing:.5px;font-weight:850;color:#d8d6b8}
+.hero-ad-bottom a{flex:none;color:#10190b;background:linear-gradient(140deg,#bdd18e,#849c65);border:1px solid #c5d4a2;border-radius:5px;text-decoration:none;font-weight:950;font-size:10px;padding:9px 10px}
+@media(min-width:701px){.hero{grid-template-columns:minmax(0,1.3fr) minmax(275px,.7fr);gap:clamp(12px,2.5vw,34px)}}
+@media(max-width:700px){.hero-art{width:100%;padding:22px 0 0;min-height:0}.hero-ad{width:min(100%,340px)}.hero-ad-heading strong{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.hero-ad-cover{transition:none}}
+
 </style>
 </head><body>
 <div class="site-top"><div class="shell"><nav aria-label="Primary navigation"><a class="brand" href="/" aria-label="ReconFeed home"><span class="brand-symbol"><img src="/assets/reconfeed-emblem.svg" alt=""></span><span class="wordmark">Recon<span>Feed</span></span></a><div class="nav-links"><a href="#home">Home</a><a href="#features">Features</a><a href="#community">Community</a><a href="#get-the-app">Download</a><a href="/beta.html">Free Beta Testers</a></div><a class="btn btn-primary btn-small" href="/app/">GET THE APP ↗</a></nav>
 <main id="home"><section class="hero"><div><div class="eyebrow">MILITARY ROOTS  //  BLUE-COLLAR BROTHERHOOD  //  VETERAN OWNED  //  18+</div><h1>REAL PEOPLE.<br>REAL STORIES.<span>BUILT DIFFERENT.</span></h1><p class="lede">ReconFeed is built for veterans, blue-collar trades, builders, creators, trucks, outdoor adventures and real American stories. From the jobsite to the backroads, everyone 18+ who values respect and community is welcome.</p><p class="hero-motto">MORE THAN A SCROLL. <strong>IT’S A BROTHERHOOD.</strong></p><div class="hero-actions"><a class="btn btn-primary" href="/app/">✦ OPEN RECONFEED ↗</a><a class="btn btn-dark" href="#get-the-app">◈ GET THE APP ↓</a><a class="btn btn-dark" href="/beta.html?utm_source=homepage">✦ FREE BETA TESTERS WANTED ↗</a><button class="btn btn-dark" id="install-app" type="button" hidden>INSTALL WEB APP</button></div><div class="trust"><span>VETERAN OWNED</span><span>HARD WORK &amp; SERVICE</span><span>18+ · OPEN TO ALL</span></div></div>
-<div class="hero-art" aria-label="ReconFeed cinematic outdoors interface preview">
+<div class="hero-art" aria-label="ReconFeed video advertisement"><aside class="hero-ad" aria-label="ReconFeed promotional video and beta invitation">
+<div class="hero-ad-heading"><span class="hero-ad-kicker">RECONFEED / BETA PREMIERE</span><strong>SEE RECONFEED IN ACTION</strong></div>
+<div class="hero-ad-media" id="reconfeed-promo-frame">
+<video id="reconfeed-promo-video" aria-label="ReconFeed beta promotional ad" muted playsinline loop controls preload="none" controlslist="nodownload" disablepictureinpicture><source data-src="/assets/reconfeed-beta-ad.mp4" type="video/mp4">Your browser does not support HTML5 video.</video>
+<div class="hero-ad-cover" aria-hidden="true"><img src="/assets/reconfeed-emblem.svg" alt=""><b>REAL PEOPLE.<br>REAL STORIES.</b><small>VETERAN OWNED · 18+</small></div>
+</div>
+<div class="hero-ad-bottom"><span>FREE BETA TESTERS WANTED<br>OPEN TO ALL RESPECTFUL ADULTS 18+</span><a href="/beta.html?utm_source=homepage_video">JOIN BETA ↗</a></div>
+</aside>
+
 <svg class="operator-art" viewBox="0 0 390 550" aria-hidden="true"><defs><linearGradient id="ops" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#363d2d"/><stop offset=".58" stop-color="#161e16"/><stop offset="1" stop-color="#090e0a"/></linearGradient></defs><path d="M150 80 Q155 45 205 39Q251 47 257 80L270 93 264 129 246 137 240 164 284 183 311 228 302 323 335 390 312 419 296 371 277 312 270 437 297 532 217 542 199 404 173 537 104 538 140 424 131 320 112 369 107 427 79 414 78 346 97 231 126 183 155 162 147 129 133 110Z" fill="url(#ops)" stroke="#9daa7c60" stroke-width="3"/><path d="M136 92 139 67 160 47 201 31 251 48 272 80 258 94Z" fill="#212d1e" stroke="#798863" stroke-width="5"/><path d="M147 105 257 103 244 126 166 132Z" fill="#0b140d" stroke="#98a683" stroke-width="4"/><path d="M119 187 152 165 150 298 116 312 98 260Z" fill="#243326" stroke="#7f8b6444" stroke-width="6"/><path d="M280 188 306 212 305 311 272 326 259 195Z" fill="#152315" stroke="#79886366" stroke-width="6"/><path d="M116 248 304 227 329 238 320 253 119 274Z" fill="#111811" stroke="#87927666" stroke-width="3"/><path d="M155 189 255 188M166 214 252 213M166 237 255 237" stroke="#89947855" stroke-width="7"/><path d="M171 65h69M183 54h42" stroke="#d1c6a14d" stroke-width="5"/></svg>
 <svg class="aircraft" viewBox="0 0 190 80" fill="#080d0b" aria-hidden="true"><path d="M18 37h55l27-12 16 3 15 10h42v10h-40l-16 11H78L58 46H18z"/><path d="M93 17h38v4H93zM112 13h3v17h-3zM7 43h40v3H7zM72 33 58 4h7l31 31M122 41l23-31h6l-12 33"/></svg>
 <div class="phone"><div class="phone-inner"><div class="phone-scene"></div><div class="phone-notch"></div><div class="phone-header">Recon<span>Feed</span></div><div class="phone-tabs"><b>For You</b><span>Following</span><span>Discover</span></div><div class="phone-stamp">FIELD REPORT / 001</div><div class="phone-bottom"><strong>@yourcommunity</strong><p>Big skies, great stories and a place for your people.</p><span class="hashtags">#outdoors #veterans #reconfeed</span></div><div class="phone-actions" aria-hidden="true"><span>♥<small>LIKE</small></span><span>◉<small>CHAT</small></span><span>↗<small>SHARE</small></span></div><div class="phone-nav" aria-hidden="true"><span>⌂</span><span>⌕</span><b>＋</b><span>▤</span><span>◉</span></div></div></div>
@@ -228,5 +259,35 @@ const installButton=document.getElementById('install-app');
 if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(error=>console.warn('ReconFeed install support unavailable',error)));}
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;if(installButton)installButton.hidden=false;});
 if(installButton)installButton.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installButton.hidden=true;});
+
+/* Lazy-load the optional homepage ad so a four-minute clip never delays the main page. */
+(function(){
+  const video=document.getElementById('reconfeed-promo-video');
+  const frame=document.getElementById('reconfeed-promo-frame');
+  if(!video||!frame)return;
+  const source=video.querySelector('source[data-src]');
+  let started=false;
+  const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const start=()=>{
+    if(started||!source)return;
+    started=true;
+    source.src=source.dataset.src;
+    video.load();
+  };
+  video.addEventListener('loadeddata',()=>{
+    frame.classList.add('is-ready');
+    if(!reduceMotion)video.play().catch(()=>{});
+  },{once:true});
+  video.addEventListener('error',()=>{frame.classList.remove('is-ready');});
+  if('IntersectionObserver' in window){
+    const observer=new IntersectionObserver(entries=>{
+      if(entries.some(entry=>entry.isIntersecting)){start();observer.disconnect();}
+    },{rootMargin:'180px'});
+    observer.observe(frame);
+  }else{
+    window.addEventListener('load',start,{once:true});
+  }
+})();
+
 </script>
 </body></html>
