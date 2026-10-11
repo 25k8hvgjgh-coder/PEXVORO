@@ -59,3 +59,8 @@ This is an engineering and public-record risk register, **not an attorney opinio
 - Replaced all direct Unsplash/Pexels stock-image references on `index.html` and `beta.html` with authored CSS olive-and-gold gradient illustrations. This removes reliance on third-party photo/likeness releases for those pages without changing ReconFeed's brand name or the layout.
 - Automated legal disclosure tests now reject new external Unsplash/Pexels stock-image URLs on these marketing pages.
 - This does **not** certify rights in all existing logo assets, user-uploaded footage, music, imagery used elsewhere in the app, or patent/trademark clearance; those require separate records and review.
+
+## Basic browser security controls (October 10, 2026)
+- Production Vercel configuration now sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and HTTPS transport security for the origin.
+- Public legal policy pages are configured to revalidate so visitors are less likely to see an outdated notice after a policy change.
+- These are defense-in-depth measures, not a substitute for security testing, GDPR compliance, completed privacy notices, DMCA registration, or legal clearance.

@@ -5,7 +5,10 @@
   "buildCommand": "node scripts/build-web.mjs",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/app", "destination": "/app/index.html" }
+    {
+      "source": "/app",
+      "destination": "/app/index.html"
+    }
   ],
   "functions": {
     "api/generate.js": {
@@ -17,5 +20,37 @@
     "api/health.js": {
       "maxDuration": 10
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000"
+        }
+      ]
+    },
+    {
+      "source": "/(privacy|terms|copyright|community-guidelines|legal|delete-account).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ]
 }

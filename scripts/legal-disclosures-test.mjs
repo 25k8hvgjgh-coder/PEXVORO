@@ -52,4 +52,11 @@ assert.match(legalSettings,/id:'legal_center'/,'mobile Settings legal link');
 assert.match(app,/action==='legal_center'.*reconfeed\.com\/legal\.html/,'mobile legal link opens correct page');
 assert.match(app,/Followers \(in app\)/,'followers label must be honest about scope');
 assert.match(app,/publicly reachable link/,'restricted post storage warning');
+const serverConfig=JSON.parse(await read('vercel.json'));
+const defaultHeaders=serverConfig.headers?.find(x=>x.source==='/(.*)')?.headers||[];
+for(const key of ['X-Content-Type-Options','Referrer-Policy','X-Frame-Options','Strict-Transport-Security']){
+ assert.ok(defaultHeaders.some(h=>h.key===key),'production site must set '+key);
+}
+const policyHeaders=serverConfig.headers?.find(x=>x.source.includes('privacy')&&x.source.includes('delete-account'))?.headers||[];
+assert.ok(policyHeaders.some(h=>h.key==='Cache-Control'&&h.value.includes('must-revalidate')),'public policies must refresh when updated');
 console.log('IP hub, non-affiliation, and post visibility disclosures passed.');
