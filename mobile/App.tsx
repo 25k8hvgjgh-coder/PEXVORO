@@ -972,7 +972,39 @@ if(upload.error){const raw=String(upload.error.message||'Storage upload failed')
  });if(post.error){await supabase.storage.from('post-media').remove([upload.data.path]);if(/network|fetch|timeout|connection/i.test(String(post.error.message||'')))throw new Error('Your media uploaded, but the post could not be saved because the connection failed. Reconnect and try again.');throw post.error}setCaption('');setAsset(null);setIsPromotional(false);setTagDraft('');setAudioLabelDraft('');setOverlayTextDraft('');setTranscriptDraft('');setCreatorMature(false);setPostPrivacy('public');setTab('For You');await loadFeed();showAlert('Published','Your post is live.')}catch(e:any){showAlert('Publish failed',safeErrorMessage(e))}finally{setBusy(false)}}
  async function openComments(p:Post){setCommentTarget(p);setCommentText('');setReplyTo(null);setExpandedThreads([]);setCommentItems([]);if(!supabase){showAlert('Setup required','Connect Supabase to load and publish comments.');return}setCommentsBusy(true);try{const r=await supabase.from('comments').select('id,post_id,user_id,body,created_at,parent_id').eq('post_id',p.id).order('created_at',{ascending:true}).limit(100);if(r.error)throw r.error;const rows=r.data||[];const ids=[...new Set(rows.map((x:any)=>x.user_id))];const pr=ids.length?await supabase.from('profiles').select('id,username,display_name,avatar_url').in('id',ids):{data:[]};const byId:any={};(pr.data||[]).forEach((x:any)=>byId[x.id]=x);setCommentItems(rows.map((x:any)=>({...x,profiles:byId[x.user_id]})))}catch(e:any){showAlert('Comments unavailable',e.message)}finally{setCommentsBusy(false)}}
   async function submitComment(){if(!supabase||!session){showAlert('Sign in required','Sign in to comment.');setCommentTarget(null);setTab('Profile');return}if(!commentTarget||!commentText.trim())return;setCommentsBusy(true);try{const r=await supabase.from('comments').insert({post_id:commentTarget.id,user_id:session.user.id,body:commentText.trim(),parent_id:replyTo?.id||null}).select('id,post_id,user_id,body,created_at,parent_id').single();if(r.error)throw r.error;setCommentItems(items=>[...items,{...r.data,profiles:profile||{display_name:'You'}}]);setPosts(items=>items.map(p=>p.id===commentTarget.id?{...p,comments:[{count:Number(p.comments?.[0]?.count||0)+1}]}:p));setCommentText('');if(replyTo){setExpandedThreads(ids=>ids.includes(replyTo.id)?ids:[...ids,replyTo.id]);setReplyTo(null)}}catch(e:any){showAlert('Comment failed',e.message)}finally{setCommentsBusy(false)}}
-  async function like(p:Post,onlyAdd=false){if(!supabase||!session){showAlert('Sign in required','Sign in to like posts.');return}const userId=session.user.id;const operation='like:'+userId+':'+p.id;if(pendingInteractions.current.has(operation))return;pendingInteractions.current.add(operation);try{const ex=await supabase.from('likes').select('post_id').eq('post_id',p.id).eq('user_id',session.user.id).maybeSingle();if(ex.error)throw ex.error;if(ex.data&&onlyAdd){setLikedPostIds(ids=>ids.includes(p.id)?ids:[p.id,...ids]);return}const r=ex.data?await supabase.from('likes').delete().eq('post_id',p.id).eq('user_id',session.user.id):await supabase.from('likes').insert({post_id:p.id,user_id:session.user.id});if(r.error)throw r.error;if(accountRef.current!==userId)return;setLikedPostIds(ids=>ex.data?ids.filter(id=>id!==p.id):ids.includes(p.id)?ids:[p.id,...ids]);setPosts(items=>items.map(item=>item.id===p.id?{...item,likes:[{count:Math.max(0,Number(item.likes?.[0]?.count||0)+(ex.data?-1:1))}]}:item))}catch(e:any){showAlert('Like unavailable',safeErrorMessage(e))}finally{pendingInteractions.current.delete(operation)}}
+  async function like(p:Post,onlyAdd=false){
+  if(!supabase||!session){showAlert('Sign in required','Sign in to like posts.');return}
+  const userId=session.user.id,token='like:'+userId+':'+p.id;
+  if(pendingInteractions.current.has(token))return;
+  const previouslyLiked=likedPostIds.includes(p.id),desired=onlyAdd?true:!previouslyLiked;
+  if(desired===previouslyLiked)return;
+  pendingInteractions.current.add(token);
+  // Respond instantly to both the heart control and a video double tap.
+  // Persist to the database; roll back both count and heart if it fails.
+  const adjust=(delta:number)=>setPosts(items=>items.map(item=>item.id===p.id?{...item,likes:[{count:Math.max(0,Number(item.likes?.[0]?.count||0)+delta)}]}:item));
+  const delta=desired?1:-1;
+  setLikedPostIds(ids=>desired?ids.includes(p.id)?ids:[p.id,...ids]:ids.filter(id=>id!==p.id));
+  adjust(delta);
+  try{
+   const exists=await supabase.from('likes').select('post_id').eq('post_id',p.id).eq('user_id',userId).maybeSingle();
+   if(exists.error)throw exists.error;
+   const serverLiked=!!exists.data;
+   if(serverLiked!==desired){
+    const saved=desired?await supabase.from('likes').insert({post_id:p.id,user_id:userId}):await supabase.from('likes').delete().eq('post_id',p.id).eq('user_id',userId);
+    if(saved.error)throw saved.error;
+   }else if(serverLiked!==previouslyLiked&&accountRef.current===userId){
+    // The server was already in the requested state; its total already
+    // includes the like, so avoid an inflated local count.
+    adjust(-delta);
+   }
+  }catch(error:any){
+   if(accountRef.current===userId){
+    setLikedPostIds(ids=>previouslyLiked?ids.includes(p.id)?ids:[p.id,...ids]:ids.filter(id=>id!==p.id));
+    adjust(-delta);
+    showAlert('Like unavailable',safeErrorMessage(error));
+   }
+  }finally{pendingInteractions.current.delete(token)}
+ }
  function onFeedVideoTap(p:Post){
   const now=Date.now();const last=lastVideoTap.current;
   if(last.id===p.id&&now-last.at<=375){
