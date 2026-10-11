@@ -1,5 +1,5 @@
 import React from 'react';
-import {Image,Pressable,StyleSheet,Text,View} from 'react-native';
+import {Image,Pressable,StyleSheet,Text,View,useWindowDimensions} from 'react-native';
 import ProfileIcon from './ProfileIcon';
 import {olive} from './oliveTheme';
 
@@ -13,6 +13,8 @@ type Props={
  onConnections:(which:'following'|'followers')=>void;onWebsite:()=>void;
 };
 export default function CreatorProfileHeader({profile,email,stats,isBetaTester,pronouns,websiteUrl,onSettings,onEdit,onAnalytics,onDiscover,onChangePhoto,onCreate,onMarket,onConnections,onWebsite}:Props){
+ const {width,fontScale}=useWindowDimensions();
+ const smallPhone=width<380||width<430&&fontScale>1.18;
  const displayName=profile?.display_name||email?.split('@')[0]||'ReconFeed Creator';
  const handle=profile?.username||'creator';
  return <View style={s.page}>
@@ -27,30 +29,30 @@ export default function CreatorProfileHeader({profile,email,stats,isBetaTester,p
     <Pressable accessibilityRole="button" accessibilityLabel="Open three-line profile menu" onPress={onSettings} style={s.topIcon}><ProfileIcon name="menu" color={olive.text} size={28}/></Pressable>
    </View>
   </View>
-  <View style={s.header}>
+  <View style={[s.header,smallPhone&&{paddingHorizontal:11,paddingTop:14}]}>
    <View style={s.identityRow}>
     <View style={s.identityText}>
      <Pressable accessibilityRole="button" accessibilityLabel="Open account settings" onPress={onSettings}>
-      <Text style={s.displayName} numberOfLines={2}>{displayName} <Text style={s.downArrow}>⌄</Text></Text>
+      <Text style={[s.displayName,smallPhone&&{fontSize:20,lineHeight:26}]} numberOfLines={2}>{displayName} <Text style={s.downArrow}>⌄</Text></Text>
      </Pressable>
      <View style={s.handleRow}><Text numberOfLines={1} style={s.handle}>@{handle}</Text>{(isBetaTester||profile?.is_beta_tester===true)&&<Text accessibilityLabel="Verified beta tester">👨‍💻</Text>}</View>
-     <View style={s.stats}>
-      <Pressable style={s.stat} accessibilityRole="button" accessibilityLabel="Following accounts" onPress={()=>onConnections('following')}><Text style={s.statValue}>{stats.following.toLocaleString()}</Text><Text style={s.statLabel}>Following</Text></Pressable>
-      <Pressable style={s.stat} accessibilityRole="button" accessibilityLabel="Followers" onPress={()=>onConnections('followers')}><Text style={s.statValue}>{stats.followers.toLocaleString()}</Text><Text style={s.statLabel}>Followers</Text></Pressable>
-      <Pressable style={s.stat} accessibilityRole="button" accessibilityLabel="Likes and analytics" onPress={onAnalytics}><Text style={s.statValue}>{stats.likes.toLocaleString()}</Text><Text style={s.statLabel}>Likes</Text></Pressable>
+     <View style={[s.stats,smallPhone&&{gap:7,marginTop:12,paddingTop:11,flexWrap:'wrap'}]}>
+      <Pressable style={s.stat} accessibilityRole="button" accessibilityLabel="Following accounts" onPress={()=>onConnections('following')}><Text style={[s.statValue,smallPhone&&{fontSize:17}]}>{stats.following.toLocaleString()}</Text><Text style={s.statLabel}>Following</Text></Pressable>
+      <Pressable style={s.stat} accessibilityRole="button" accessibilityLabel="Followers" onPress={()=>onConnections('followers')}><Text style={[s.statValue,smallPhone&&{fontSize:17}]}>{stats.followers.toLocaleString()}</Text><Text style={s.statLabel}>Followers</Text></Pressable>
+      <Pressable style={s.stat} accessibilityRole="button" accessibilityLabel="Likes and analytics" onPress={onAnalytics}><Text style={[s.statValue,smallPhone&&{fontSize:17}]}>{stats.likes.toLocaleString()}</Text><Text style={s.statLabel}>Likes</Text></Pressable>
      </View>
     </View>
     <View style={s.avatarWrap}>
-     <Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={onChangePhoto} style={s.avatar}>
+     <Pressable accessibilityRole="button" accessibilityLabel="Change profile picture" onPress={onChangePhoto} style={[s.avatar,smallPhone&&{width:73,height:73,borderRadius:38}]}>
       {profile?.avatar_url?<Image source={{uri:profile.avatar_url}} style={s.avatarImage}/>:<Text style={s.avatarInitial}>{displayName.charAt(0).toUpperCase()}</Text>}
      </Pressable>
-     <Pressable accessibilityRole="button" accessibilityLabel="Add a photo or video story" onPress={onCreate} style={s.avatarAdd}><Text style={s.plus}>+</Text></Pressable>
+     <Pressable accessibilityRole="button" accessibilityLabel="Add a photo or video story" onPress={onCreate} style={[s.avatarAdd,smallPhone&&{width:32,height:32,right:-1,bottom:-3}]}><Text style={s.plus}>+</Text></Pressable>
     </View>
    </View>
    <Text style={s.bio}>{profile?.bio||'Tell people what you love, build, or get up to.'}</Text>
    {!!pronouns&&<Text style={s.meta}>{pronouns}</Text>}
    {!!websiteUrl&&<Pressable accessibilityRole="link" onPress={onWebsite}><Text style={s.website}>⌁ {websiteUrl} ↗</Text></Pressable>}
-   <View style={s.actions}>
+   <View style={[s.actions,smallPhone&&{gap:6,marginTop:12}]}>
     <Pressable accessibilityRole="button" onPress={onAnalytics} style={({pressed})=>[s.pill,pressed&&s.pillPressed]}><Text style={s.pillText}>✦ ReconFeed Studio</Text></Pressable>
     <Pressable accessibilityRole="button" onPress={onMarket} style={({pressed})=>[s.pill,pressed&&s.pillPressed]}><Text style={s.pillText}>▣ Marketplace</Text></Pressable>
    </View>
@@ -70,11 +72,11 @@ const s=StyleSheet.create({
  downArrow:{fontSize:22,color:olive.text},
  handleRow:{flexDirection:'row',alignItems:'center',gap:5,marginTop:3},
  handle:{fontSize:14,color:olive.muted,fontWeight:'600',flexShrink:1},
- stats:{flexDirection:'row',justifyContent:'flex-start',gap:20,marginTop:19,paddingTop:16,borderTopWidth:1,borderTopColor:olive.border},
- stat:{alignItems:'flex-start',minWidth:0},
+ stats:{flexDirection:'row',justifyContent:'flex-start',gap:15,marginTop:19,paddingTop:16,borderTopWidth:1,borderTopColor:olive.border,flexWrap:'wrap'},
+ stat:{alignItems:'flex-start',minWidth:0,flexShrink:1},
  statValue:{fontSize:21,color:olive.text,fontWeight:'800',lineHeight:26},
  statLabel:{fontSize:12,color:olive.muted},
- avatarWrap:{position:'relative',marginTop:5,marginBottom:5},
+ avatarWrap:{position:'relative',marginTop:5,marginBottom:5,flexShrink:0},
  avatar:{height:96,width:96,borderRadius:48,backgroundColor:olive.raised,alignItems:'center',justifyContent:'center',overflow:'hidden',borderWidth:3,borderColor:olive.accent,shadowColor:olive.accent,shadowOpacity:.21,shadowRadius:8,elevation:3},
  avatarImage:{height:'100%',width:'100%',borderRadius:48},
  avatarInitial:{fontSize:41,color:olive.text,fontWeight:'900'},
