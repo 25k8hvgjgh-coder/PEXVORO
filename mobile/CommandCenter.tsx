@@ -7,6 +7,8 @@ type Summary={
  issues_total:number;issues_open:number;issues_in_progress:number;issues_fixed:number;
  issues_with_screenshot:number;latest_issue_at?:string|null;tester_signups:number;
  latest_signup_at?:string|null;surveys_total:number;registered_accounts:number;
+ registered_profiles:number;beta_profiles:number;pending_tester_applications:number;
+ new_profiles_7d:number;issues_needing_attention:number;
  public_posts:number;active_stories:number;
  recent_signups?:{email:string;platform:string;status:string;created_at:string}[];
  recent_feedback?:{biggest_need:string;feature_interests?:string[];willing_to_test:boolean;created_at:string}[];
@@ -89,16 +91,21 @@ export default function CommandCenter({client,visible,onClose,onReport}:Props){
    {!authorized||!overview?<Text style={{color:olive.muted,marginTop:16}}>{busy?'Verifying administrator access and loading live data…':'Sign in with the account authorized to review ReconFeed reports.'}</Text>:<>
     {heading('Overview')}
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:10}}>
+     {metric('Registered profiles',overview.registered_profiles)}
+     {metric('New profiles · 7 days',overview.new_profiles_7d)}
+     {metric('In-app beta accounts',overview.beta_profiles)}
+     {metric('Beta applications',overview.tester_signups)}
+     {metric('Pending beta applications',overview.pending_tester_applications)}
      {metric('Tester reports',overview.issues_total)}
-     {metric('Reports needing attention',overview.issues_open+overview.issues_in_progress+issues.filter(x=>x.status==='triaged').length)}
-     {metric('Beta applicants',overview.tester_signups)}
+     {metric('Unresolved reports',overview.issues_needing_attention)}
      {metric('Feedback surveys',overview.surveys_total)}
-     {metric('Registered accounts',overview.registered_accounts)}
+     {metric('Registered logins',overview.registered_accounts)}
      {metric('Public posts',overview.public_posts)}
      {metric('Active stories',overview.active_stories)}
      {metric('Reports with screenshots',overview.issues_with_screenshot)}
     </View>
-    <Text style={{color:olive.muted,fontSize:12,marginTop:10}}>Newest report: {formatTime(overview.latest_issue_at)} · Newest tester application: {formatTime(overview.latest_signup_at)}</Text>
+    <Text style={{color:olive.muted,fontSize:12,marginTop:10}}>Beta applications and app accounts are separate totals. The owner's account may be counted as an in-app beta profile.</Text>
+     <Text style={{color:olive.muted,fontSize:12,marginTop:7}}>Newest report: {formatTime(overview.latest_issue_at)} · Newest tester application: {formatTime(overview.latest_signup_at)}</Text>
     {heading('Tester reports & fixes')}
     <Text style={{color:olive.muted,lineHeight:19,marginBottom:10}}>Real issues from testers. Review screenshots, reproduction steps and update statuses here. Status changes save to the same database used by testers.</Text>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:8,paddingBottom:12}}>
