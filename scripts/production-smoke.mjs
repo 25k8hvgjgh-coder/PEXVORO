@@ -15,6 +15,35 @@ async function verify() {
   if (!html.includes('ReconFeed') || !html.includes('android-eas-beta/ReconFeed-beta.apk'))
     throw Error('ReconFeed branding or the Android beta link is absent from the public page');
   console.log('[PASS] Landing page and Android APK link');
+  // Ensure privacy and legal notices are publicly reachable, not just
+  // committed to source; this matters for sign-up and rights-holder reports.
+  for(const legalPage of [
+    ['/privacy.html','Privacy Policy'],
+    ['/terms.html','Terms of Service'],
+    ['/copyright.html','Copyright and Trademark Complaints'],
+    ['/community-guidelines.html','Community Guidelines']
+  ]){
+    const page=await get(legalPage[0],false);
+    if(!page.includes(legalPage[1])||!page.includes('reconfeed@reconfeed.com'))
+      throw Error('Published legal notice missing content: '+legalPage[0]);
+    if(!html.includes('href="'+legalPage[0]+'"'))
+      throw Error('Homepage missing published legal link: '+legalPage[0]);
+  }
+  console.log('[PASS] Published legal notices and landing page links');
+  const beta=await get('/beta.html',false);
+  if(!beta.includes('id="legal_acknowledgment"'))
+    throw Error('Beta signup lacks mandatory legal acknowledgment');
+  const noAgreement=await fetch(origin+'/api/beta-signup',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      email:'test-invalid-no-consent@example.invalid',platform:'web',
+      political_party:'republican',interests:[],source:'smoke',
+      confirm_adult:true,consent:true,accept_guidelines:true,
+      legal_acknowledgment:false,legal_version:'2026-10-10'
+    }),signal:AbortSignal.timeout(15000)
+  });
+  if(noAgreement.status!==400)throw Error('Beta endpoint did not reject signup without terms acknowledgment');
+  console.log('[PASS] Consent check rejects nonconsenting beta submission without writing data');
   if (!html.includes('href="/app/"')) throw Error('Browser app link is missing');
   const app = await get('/app/', false);
   const bundle = app.match(/src="([^"]+\.js)"/);

@@ -6,6 +6,11 @@ on:
     branches: [main]
     paths:
       - "index.html"
+      - "beta.html"
+      - "*terms.html"
+      - "privacy.html"
+      - "copyright.html"
+      - "community-guidelines.html"
       - "api/**"
       - "manifest.webmanifest"
       - "vercel.json"
