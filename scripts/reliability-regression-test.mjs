@@ -17,4 +17,8 @@ assert.match(pwa,/reconfeed-shell-reference-v4/);
 assert.match(smoke,/worker\.includes\('reconfeed-shell-reference-v4'\)/);
 assert.match(migration,/GRANT UPDATE\(read_at\)/);
 assert.match(migration,/FOR UPDATE TO authenticated/);
+assert.match(app,/supabase\.auth\.startAutoRefresh\(\)/,'native sessions must auto-refresh when foregrounded');
+assert.match(app,/supabase\.auth\.stopAutoRefresh\(\)/,'background should stop session refresh');
+assert.match(app,/else if\(restored\.session\)setSession/,'late startup null must not sign out the current user');
+assert.match(app,/onCreate=\{startStory\}/,'profile plus opens Story composer rather than regular video upload');
 console.log('Unread-message, recipient-only acknowledgement, report auth, and PWA freshness contracts passed');
