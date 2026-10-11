@@ -47,12 +47,12 @@ export default function CreatorProfileHeader({profile,email,stats,isBetaTester,p
      <Pressable accessibilityRole="button" accessibilityLabel="Add a photo or video story" onPress={onCreate} style={s.avatarAdd}><Text style={s.plus}>+</Text></Pressable>
     </View>
    </View>
-   <Text style={s.bio}>{profile?.bio||'Add a bio to tell your story.'}</Text>
+   <Text style={s.bio}>{profile?.bio||'Tell people what you love, build, or get up to.'}</Text>
    {!!pronouns&&<Text style={s.meta}>{pronouns}</Text>}
    {!!websiteUrl&&<Pressable accessibilityRole="link" onPress={onWebsite}><Text style={s.website}>⌁ {websiteUrl} ↗</Text></Pressable>}
    <View style={s.actions}>
-    <Pressable accessibilityRole="button" onPress={onAnalytics} style={s.pill}><Text style={s.pillText}>✦ ReconFeed Studio</Text></Pressable>
-    <Pressable accessibilityRole="button" onPress={onMarket} style={s.pill}><Text style={s.pillText}>▣ Marketplace</Text></Pressable>
+    <Pressable accessibilityRole="button" onPress={onAnalytics} style={({pressed})=>[s.pill,pressed&&s.pillPressed]}><Text style={s.pillText}>✦ ReconFeed Studio</Text></Pressable>
+    <Pressable accessibilityRole="button" onPress={onMarket} style={({pressed})=>[s.pill,pressed&&s.pillPressed]}><Text style={s.pillText}>▣ Marketplace</Text></Pressable>
    </View>
   </View>
  </View>;
@@ -63,7 +63,7 @@ const s=StyleSheet.create({
  topActions:{flexDirection:'row',alignItems:'center',gap:2},
  topIcon:{width:42,minHeight:44,alignItems:'center',justifyContent:'center',borderRadius:12},
  studioGlyph:{fontSize:20,color:olive.gold,fontWeight:'900'},
- header:{backgroundColor:olive.bg,paddingHorizontal:18,paddingTop:19,paddingBottom:22},
+ header:{backgroundColor:olive.bg,paddingHorizontal:18,paddingTop:19,paddingBottom:22,borderBottomWidth:1,borderBottomColor:olive.border},
  identityRow:{flexDirection:'row',alignItems:'flex-start',gap:8},
  identityText:{flex:1,minWidth:0,paddingTop:1},
  displayName:{fontSize:24,color:olive.text,fontWeight:'800',lineHeight:30,letterSpacing:-.6},
@@ -75,7 +75,7 @@ const s=StyleSheet.create({
  statValue:{fontSize:21,color:olive.text,fontWeight:'800',lineHeight:26},
  statLabel:{fontSize:12,color:olive.muted},
  avatarWrap:{position:'relative',marginTop:5,marginBottom:5},
- avatar:{height:96,width:96,borderRadius:48,backgroundColor:olive.raised,alignItems:'center',justifyContent:'center',overflow:'hidden',borderWidth:2,borderColor:olive.border},
+ avatar:{height:96,width:96,borderRadius:48,backgroundColor:olive.raised,alignItems:'center',justifyContent:'center',overflow:'hidden',borderWidth:3,borderColor:olive.accent,shadowColor:olive.accent,shadowOpacity:.21,shadowRadius:8,elevation:3},
  avatarImage:{height:'100%',width:'100%',borderRadius:48},
  avatarInitial:{fontSize:41,color:olive.text,fontWeight:'900'},
  avatarAdd:{position:'absolute',right:-3,bottom:-4,width:33,height:33,borderRadius:17,alignItems:'center',justifyContent:'center',backgroundColor:olive.accent,borderWidth:3,borderColor:olive.bg},
@@ -84,6 +84,7 @@ const s=StyleSheet.create({
  meta:{fontSize:12,color:olive.muted,marginTop:5,fontWeight:'600'},
  website:{fontSize:12,color:olive.gold,fontWeight:'800',marginTop:7},
  actions:{flexDirection:'row',gap:9,marginTop:20,flexWrap:'wrap'},
- pill:{paddingHorizontal:15,paddingVertical:11,borderWidth:1,borderColor:olive.border,backgroundColor:olive.surface,borderRadius:11,alignItems:'center',justifyContent:'center',minHeight:44},
+ pill:{paddingHorizontal:15,paddingVertical:11,borderWidth:1,borderColor:olive.border,backgroundColor:olive.raised,borderRadius:15,alignItems:'center',justifyContent:'center',minHeight:45},
+ pillPressed:{transform:[{scale:.97}],opacity:.78},
  pillText:{fontSize:13,color:olive.text,fontWeight:'700'}
 });
