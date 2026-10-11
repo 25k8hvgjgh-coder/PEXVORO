@@ -9,7 +9,7 @@ export default function TesterReports({client,userId,visible,onClose,onReport}:{
   const ticket=++request.current;setLoading(true);setError('');setIssues([]);
   try{
    const user=await client.auth.getUser();if(user.error)throw user.error;
-   const canReview=user.data.user?.app_metadata?.tester_report_reviewer===true;
+   const canReview=user.data.user?.id==='8287fc6f-dd23-48d8-988e-388a8c93fe7b'&&user.data.user?.app_metadata?.tester_report_reviewer===true;
    // Reviewers may have recently received a new role; normal testers should
    // not be forced through a token refresh on every reports-page visit.
    if(canReview){
