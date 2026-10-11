@@ -226,10 +226,10 @@ footer{padding-bottom:max(42px,env(safe-area-inset-bottom,0px))}
 <div class="hero-art" aria-label="ReconFeed video advertisement"><aside class="hero-ad" aria-label="ReconFeed promotional video and beta invitation">
 <div class="hero-ad-heading"><span class="hero-ad-kicker">RECONFEED / BETA PREMIERE</span><strong>SEE RECONFEED IN ACTION</strong></div>
 <div class="hero-ad-media" id="reconfeed-promo-frame">
-<video id="reconfeed-promo-video" aria-label="ReconFeed beta promotional ad with music" autoplay playsinline loop controls preload="none" controlslist="nodownload" disablepictureinpicture><source data-src="/assets/reconfeed-beta-ad.mp4" type="video/mp4">Your browser does not support HTML5 video.</video>
+<video id="reconfeed-promo-video" aria-label="ReconFeed beta advertisement: play video with music" autoplay muted playsinline webkit-playsinline loop controls preload="auto" controlslist="nodownload" disablepictureinpicture poster="/assets/reconfeed-emblem.svg"><source src="/assets/reconfeed-beta-ad.mp4" type="video/mp4">Your browser does not support HTML5 video.</video>
 <div class="hero-ad-cover" aria-hidden="true"><img src="/assets/reconfeed-emblem.svg" alt=""><b>REAL PEOPLE.<br>REAL STORIES.</b><small>VETERAN OWNED · 18+</small></div>
 </div>
-<button class="hero-ad-sound" id="reconfeed-promo-sound" type="button" hidden aria-label="Turn on music for the ReconFeed promotional video">🔊 TAP TO ENABLE MUSIC</button>
+<button class="hero-ad-sound" id="reconfeed-promo-sound" type="button" aria-label="Turn on music for the ReconFeed promotional video">🔊 TAP TO PLAY WITH MUSIC</button>
 <p class="hero-ad-status" id="reconfeed-promo-status" role="status" aria-live="polite" hidden></p>
 <div class="hero-ad-bottom"><span>FREE BETA TESTERS WANTED<br>OPEN TO ALL RESPECTFUL ADULTS 18+</span><a href="/beta.html?utm_source=homepage_video">JOIN BETA ↗</a></div>
 </aside>
@@ -268,103 +268,63 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventLi
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredInstallPrompt=event;if(installButton)installButton.hidden=false;});
 if(installButton)installButton.addEventListener('click',async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installButton.hidden=true;});
 
-/* Play the homepage beta ad with music where permitted; offer one-tap sound on Safari/mobile. */
+/* ReconFeed homepage ad: immediate muted autoplay, audible playback by explicit tap. */
 (function(){
   const video=document.getElementById('reconfeed-promo-video');
   const frame=document.getElementById('reconfeed-promo-frame');
   const soundButton=document.getElementById('reconfeed-promo-sound');
   const status=document.getElementById('reconfeed-promo-status');
   if(!video||!frame||!soundButton||!status)return;
-  const source=video.querySelector('source[data-src]');
-  let started=false,ready=false,failed=false;
-  const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const setStatus=(message)=>{status.textContent=message;status.hidden=!message;};
-  const showSoundPrompt=()=>{
-    if(failed)return;
+  let playable=false;
+  const showSoundButton=()=>{
     soundButton.hidden=false;
-    soundButton.textContent='🔊 TAP TO ENABLE MUSIC';
+    soundButton.textContent='🔊 TAP TO PLAY WITH MUSIC';
   };
-  const markFailed=()=>{
-    if(failed)return;
-    failed=true;
-    soundButton.hidden=true;
-    frame.classList.remove('is-ready');
-    setStatus('The promotional video is temporarily unavailable. You can still join the beta below.');
-  };
-  const start=()=>{
-    if(started||!source)return;
-    started=true;
-    source.src=source.dataset.src;
-    video.load();
-  };
-  const tryAutoplay=async()=>{
-    if(failed)return;
-    if(reduceMotion){
-      showSoundPrompt();
-      setStatus('Tap to play with music.');
-      return;
-    }
-    // Audible autoplay works where allowed (usually after a prior user interaction).
-    video.muted=false;
-    video.volume=1;
-    try{
-      await video.play();
-      soundButton.hidden=true;
-      setStatus('');
-    }catch(error){
-      if(failed)return;
-      // iPhone Safari and most mobile browsers permit muted autoplay only.
+  const markReady=()=>{
+    playable=true;
+    frame.classList.add('is-ready');
+    setStatus('');
+    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       video.muted=true;
-      try{
-        await video.play();
-        showSoundPrompt();
-        setStatus('Video is playing. Tap above to enable its music.');
-      }catch(mutedError){
-        showSoundPrompt();
-        setStatus('Tap above to start the video with music.');
-      }
+      const attempt=video.play();
+      if(attempt&&typeof attempt.catch==='function')attempt.catch(()=>{showSoundButton();});
     }
   };
-  // Only a real click can unlock sound reliably on mobile browsers.
+  const markUnavailable=()=>{
+    playable=false;
+    frame.classList.remove('is-ready');
+    soundButton.hidden=true;
+    setStatus('Preview is temporarily unavailable. Join our free beta below.');
+  };
+  video.addEventListener('loadeddata',markReady);
+  video.addEventListener('error',markUnavailable);
+  const source=video.querySelector('source');
+  if(source)source.addEventListener('error',markUnavailable);
   soundButton.addEventListener('click',()=>{
-    if(failed)return;
-    start();
+    // The call to play() must happen directly inside the click gesture for iOS Safari.
     video.muted=false;
     video.volume=1;
     const attempt=video.play();
     if(attempt&&typeof attempt.then==='function'){
       attempt.then(()=>{
-        soundButton.hidden=true;
-        setStatus('');
+        playable=true;frame.classList.add('is-ready');
+        soundButton.hidden=true;setStatus('');
       }).catch(()=>{
-        showSoundPrompt();
-        setStatus('Audio needs permission. Use the video playback controls to enable sound.');
+        showSoundButton();
+        setStatus('Use the video controls to turn on audio.');
       });
     }else{
       soundButton.hidden=true;
       setStatus('');
     }
   });
-  video.addEventListener('loadeddata',()=>{
-    ready=true;
-    frame.classList.add('is-ready');
-    tryAutoplay();
-  },{once:true});
   video.addEventListener('volumechange',()=>{
-    if(!ready||failed)return;
-    if(video.muted||video.volume===0)showSoundPrompt();
+    if(!playable)return;
+    if(video.muted||video.volume===0)showSoundButton();
     else if(!video.paused){soundButton.hidden=true;setStatus('');}
   });
-  video.addEventListener('error',markFailed);
-  if(source)source.addEventListener('error',markFailed);
-  if('IntersectionObserver' in window){
-    const observer=new IntersectionObserver(entries=>{
-      if(entries.some(entry=>entry.isIntersecting)){start();observer.disconnect();}
-    },{rootMargin:'250px'});
-    observer.observe(frame);
-  }else{
-    window.addEventListener('load',start,{once:true});
-  }
+  if(video.readyState>=2)markReady();
 })();
 
 </script>
