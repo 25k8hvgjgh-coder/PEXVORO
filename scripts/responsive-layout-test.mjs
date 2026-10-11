@@ -52,5 +52,6 @@ assert.match(app,/videoActions:\{[^\n]*zIndex:5/,'buttons must remain above the 
 assert.match(app,/videoInfo:\{[^\n]*zIndex:5/,'creator profile links must remain tappable above the video');
 const header=await read('mobile/CreatorProfileHeader.tsx');
 assert.match(header,/smallPhone=width<380/,'creator header must shrink on narrower phones');
-assert.match(header,/onCreate=\{startStory\}/,'profile story entry stays wired');
+assert.match(header,/onPress=\{onCreate\}/,'profile Story plus must invoke its supplied callback');
+assert.match(app,/onCreate=\{startStory\}/,'profile Story callback must open the story composer');
 console.log('Responsive layout contracts verified (static checks; real-device testing still required).');
