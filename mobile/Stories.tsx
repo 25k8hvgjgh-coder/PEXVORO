@@ -115,14 +115,15 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
  const [mode,setMode]=useState<'image'|'video'>('image');
  const [asset,setAsset]=useState<ImagePicker.ImagePickerAsset|null>(null);
  const [caption,setCaption]=useState('');
+ const [rightsConfirmed,setRightsConfirmed]=useState(false);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
- const close=()=>{if(busy)return;setAsset(null);setCaption('');setError('');onClose()};
+ const close=()=>{if(busy)return;setAsset(null);setCaption('');setError('');setRightsConfirmed(false);onClose()};
  async function gallery(){
   try{
    const result=await ImagePicker.launchImageLibraryAsync({mediaTypes:['images','videos'],quality:.85,exif:false,base64:false});
    if(!result.canceled&&result.assets?.[0]){
-    setAsset(result.assets[0]);setMode(result.assets[0].type==='video'?'video':'image');setError('');
+    setAsset(result.assets[0]);setRightsConfirmed(false);setMode(result.assets[0].type==='video'?'video':'image');setError('');
    }
   }catch(e:any){setError(e.message||'Could not open your gallery.')}
  }
@@ -135,11 +136,12 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
     if(mic.status!=='granted')throw new Error('Microphone permission is required for recorded videos.');
    }
    const result=await ImagePicker.launchCameraAsync({mediaTypes:mode==='video'?['videos']:['images'],videoMaxDuration:60,quality:.85,exif:false,base64:false});
-   if(!result.canceled&&result.assets?.[0]){setAsset(result.assets[0]);setError('')}
+   if(!result.canceled&&result.assets?.[0]){setAsset(result.assets[0]);setRightsConfirmed(false);setError('')}
   }catch(e:any){setError(e.message||'Could not open the camera.')}
  }
  async function publish(){
   if(busy||!asset)return;
+  if(!rightsConfirmed){setError('Confirm you have permission to share this Story and its audio.');return}
   setBusy(true);setError('');
   let uploadedPath='';
   try{
@@ -169,7 +171,7 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
    uploadedPath=upload.data.path;
    const record=await client.from('stories').insert({user_id:session.user.id,media_path:uploadedPath,media_type:kind,caption:caption.trim().slice(0,300)});
    if(record.error)throw record.error;
-   uploadedPath='';setAsset(null);setCaption('');onPublished();onClose();
+   uploadedPath='';setAsset(null);setCaption('');setRightsConfirmed(false);onPublished();onClose();
   }catch(e:any){
    if(uploadedPath)void client.storage.from('story-media').remove([uploadedPath]);
    setError(e.message||'Story could not be posted. Try again.');
@@ -190,8 +192,9 @@ export function StoryComposer({client,session,visible,onClose,onPublished}:Compo
     </View>
     {asset?.type==='video'?<Video source={{uri:asset.uri}} resizeMode={ResizeMode.CONTAIN} useNativeControls style={s.preview}/>:asset?<Image source={{uri:asset.uri}} resizeMode="contain" style={s.preview}/>:<View style={[s.preview,{justifyContent:'center',alignItems:'center'}]}><Text style={s.note}>Choose a photo or video above</Text></View>}
     <TextInput placeholder="Add a caption (optional)" placeholderTextColor={muted} value={caption} onChangeText={setCaption} maxLength={300} multiline style={s.input}/>
+    <Pressable accessibilityRole="checkbox" accessibilityState={{checked:rightsConfirmed}} onPress={()=>setRightsConfirmed(v=>!v)} style={[s.button,{backgroundColor:'#223126',justifyContent:'flex-start'}]}><Text style={s.buttonLabel}>{rightsConfirmed?'☑':'☐'} I own this Story and its audio or have permission from the rights holders and depicted people.</Text></Pressable>
     {!!error&&<Text accessibilityRole="alert" style={s.warning}>{error}</Text>}
-    <Pressable accessibilityRole="button" disabled={!asset||busy} onPress={()=>void publish()} style={[s.button,s.selected,(!asset||busy)&&{opacity:.5}]}><Text style={s.buttonLabel}>{busy?'Publishing…':'Publish Story'}</Text></Pressable>
+    <Pressable accessibilityRole="button" disabled={!asset||busy||!rightsConfirmed} onPress={()=>void publish()} style={[s.button,s.selected,(!asset||busy||!rightsConfirmed)&&{opacity:.5}]}><Text style={s.buttonLabel}>{busy?'Publishing…':'Publish Story'}</Text></Pressable>
     <Text style={s.note}>Story media is stored privately. Followers can view active stories; old stories leave their feeds after 24 hours. Only you can delete your own stories.</Text>
    </ScrollView>
   </SafeAreaView>
