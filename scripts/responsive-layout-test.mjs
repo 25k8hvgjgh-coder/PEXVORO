@@ -15,7 +15,8 @@ assert.match(builder,/#root\{height:100dvh\}/,'browser app must use dynamic view
 assert.match(builder,/font-size:16px!important/,'form inputs should not trigger automatic iPhone zoom');
 assert.match(app,/feedPageHeight=Math\.max\(1,feedViewportHeight/,'feed should measure usable viewport');
 assert.match(app,/onLayout=\{event=>\{const h=Math\.round\(event\.nativeEvent\.layout\.height\)/,'feed should measure real layout');
-assert.match(app,/feedViewportHeight>0\?<FlatList/,'feed should wait for a measured viewport');
+assert.match(app,/<FlatList key=\{tab\} ref=\{feedListRef\}/,'feed mounts immediately');
+assert.doesNotMatch(app,/feedViewportHeight>0\?<FlatList/,'never gate video on layout measurement');
 assert.match(app,/onCreate=\{startStory\}/,'profile plus must open stories rather than regular post');
 assert.match(app,/pagingEnabled snapToInterval=\{feedPageHeight\}/,'native swipe must advance one full-height video');
 assert.match(app,/disableIntervalMomentum/,'swipe momentum should not skip multiple posts');
@@ -29,7 +30,8 @@ assert.match(app,/pageHeight>=400\?<Pressable/,'short screens should collapse Sa
 assert.match(app,/pageHeight>=460\?<Pressable/,'short screens should collapse Share into More');
 assert.match(app,/accessibilityLabel="More post actions"/,'extra feed actions remain accessible');
 assert.doesNotMatch(app,/<ScrollView style=\{\[s.videoActions/,'action rail must not be clipped within a scroller');
-assert.match(app,/feedViewportHeight>0\?<FlatList/,'feed should wait for a measured viewport');
+assert.match(app,/<FlatList key=\{tab\} ref=\{feedListRef\}/,'feed mounts immediately');
+assert.doesNotMatch(app,/feedViewportHeight>0\?<FlatList/,'never gate video on layout measurement');
 assert.match(inbox,/maxWidth:780,width:'100%'/,'message view should fit both tablets and phones');
 
 assert.match(app,/const feed=\(\)=> <View style=\{\{flex:1,backgroundColor:olive\.bg\}\}/,'feed background must use ReconFeed olive');

@@ -6,7 +6,7 @@ const load=app.slice(app.indexOf('async function loadFeed(){'),app.indexOf('asyn
 assert.ok(load.length>1000,'feed loader must exist');
 assert.match(app,/const startupFallback=setTimeout\(\(\)=>\{if\(active\)setAuthReady\(true\)\},1800\)/,'startup must not block forever on a slow Auth request');
 assert.match(app,/\[tab,session\?\.user\.id,prefsLoaded\]/,'preference completion must reload feeds');
-assert.match(load,/const initialFeedPageSize=32/,'fetch a smaller first page');
+assert.match(load,/const initialFeedPageSize=12/,'fetch a smaller first page');
 assert.match(load,/const preview=await publicFeedPromise/,'fetch immediate preview');
 assert.match(load,/setPosts\(starterPosts\);\s*setActivePostId\(starterPosts\[0\]\?\.id\|\|null\);\s*setLoading\(false\)/,'show preview without waiting for personalization');
 assert.ok(load.indexOf('setPosts(starterPosts)')<load.indexOf('const [followRes,historyRes,likesRes,saveRes]'),'post preview must render before recommendation-history awaits');
@@ -16,4 +16,11 @@ assert.match(app,/syncReconFeedUpdate\(\)\},10000\)/,'update checks must not com
 assert.match(app,/tab==='For You'\|\|tab==='Following'\)\?require\('\.\/assets\/icon\.png'\)/,'feed must avoid extra remote background image download');
 assert.match(app,/pagingEnabled snapToInterval=\{feedPageHeight\}/,'TikTok-style one-video swipe preserved');
 assert.match(app,/const feed=\(\)=> <View style=\{\{flex:1,backgroundColor:olive\.bg\}\}/,'olive theme preserved');
+assert.match(app,/useState\(Platform\.OS==='web'\)/,'Safari needs muted autoplay');
+assert.match(app,/feedCacheKey\(session\?\.user\.id\)/,'restore short-lived feed metadata');
+assert.match(app,/savedAt:Date\.now\(\),items:starterPosts\.slice\(0,8\)/,'write first-feed metadata');
+assert.match(app,/const nearby=position===focus/,'video plays before adjacent videos buffer');
+assert.match(app,/setReadyVideoIds/,'buffer next only after current loads');
+assert.doesNotMatch(app,/feedViewportHeight>0\?<FlatList/,'video must never wait for measurement');
+assert.doesNotMatch(app,/<ActivityIndicator color=\{theme\.purple\} style=\{\{flex:1\}\}/,'remove blank spinner');
 console.log('Startup speed regression checks passed.');
