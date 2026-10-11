@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17281d">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>ReconFeed | Owner Command Center</title>
+<link rel="icon" href="/assets/reconfeed-emblem.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/command-center.css">
+<script src="/assets/command-center.js" defer></script>
+</head>
+<body>
+<div class="app-shell">
+ <aside class="sidebar" id="sidebar">
+  <a class="brand" href="/"><img src="/assets/reconfeed-emblem.svg" alt="" width="43" height="43"><span><strong>Recon<span class="accent">Feed</span></strong><small>OWNER COMMAND CENTER</small></span></a>
+  <div class="eyebrow">PRIVATE WORKSPACE</div>
+  <nav id="navigation" aria-label="Command center pages">
+   <button class="nav-link is-active" type="button" data-screen="overview"><span class="nav-icon">◈</span> Overview</button>
+   <button class="nav-link" type="button" data-screen="reports"><span class="nav-icon">▤</span> Tester reports <span class="counter" id="report-counter">–</span></button>
+   <button class="nav-link" type="button" data-screen="testers"><span class="nav-icon">◎</span> Beta testers</button>
+   <button class="nav-link" type="button" data-screen="moderation"><span class="nav-icon">⚑</span> Moderation</button>
+   <button class="nav-link" type="button" data-screen="systems"><span class="nav-icon">⚙</span> Systems & security</button>
+  </nav>
+  <div class="sidebar-bottom">
+   <div class="privacy-badge"><span class="status-dot"></span> VERIFIED OWNER ACCESS</div>
+   <p>Customer records stay on the server. Private messages aren't accessible here.</p>
+   <a href="/app/" class="sidebar-link">↗ Open ReconFeed</a>
+   <a href="/beta.html" class="sidebar-link">↗ Beta signup page</a>
+   <button type="button" class="logout" id="sign-out" hidden>Sign out</button>
+  </div>
+ </aside>
+ <div class="main-area">
+  <header class="topbar">
+   <div class="topbar-left"><button class="menu-toggle" id="menu-toggle" type="button" aria-label="Toggle navigation">☰</button><span id="current-location">Overview</span><span class="beta-tag">BETA OPERATIONS</span></div>
+   <div class="topbar-right"><span class="last-sync" id="last-sync">Not connected</span><button id="refresh" type="button" class="soft-button" disabled>↻ Refresh</button></div>
+  </header>
+  <main class="workspace">
+   <section id="login-panel" class="login-panel">
+    <div class="login-mark">RF <span>·</span> COMMAND</div>
+    <h1>Welcome to the<br><em>command center.</em></h1>
+    <p>This is ReconFeed's private control room for verified administrators. Sign in with the same email and password as your owner account. Nothing is made public.</p>
+    <form id="login-form" class="login-form">
+     <label for="owner-email">Account email</label><input id="owner-email" type="email" autocomplete="username" placeholder="you@example.com" required>
+     <label for="owner-password">Password</label><input id="owner-password" type="password" autocomplete="current-password" placeholder="Your ReconFeed password" required minlength="1">
+     <button class="primary-button" id="login-button" type="submit">Sign in securely ↗</button>
+     <p class="login-note">This browser tab holds your session only in memory; closing it signs you out of the command center.</p>
+    </form>
+    <div id="login-error" role="alert" class="error" hidden></div>
+   </section>
+   <div id="owner-dashboard" hidden>
+    <div class="title-row"><div><p class="eyebrow">RECONFEED / LIVE OPERATIONS</p><h1 id="screen-title">Your operation.<br><em>One clear view.</em></h1><p id="screen-description" class="lead">Real reports, real testers, and the information you need to improve the community.</p></div><div class="refresh-status"><span class="status-dot"></span><span id="data-status">Connected securely</span></div></div>
+    <div id="dashboard-error" role="alert" class="error" hidden></div>
+    <section id="screen-overview" class="screen">
+     <div class="metrics" id="metrics" aria-live="polite"></div>
+     <div class="two-column">
+      <section class="panel"><div class="section-head"><div><h2>Tester feedback</h2><p>What's waiting for your attention</p></div><button class="text-action" type="button" data-screen="reports">View all ↗</button></div><div id="issue-summary" class="issue-summary"></div><div id="recent-issues" class="recent-issues"></div></section>
+      <section class="panel"><div class="section-head"><div><h2>Business at a glance</h2><p>Counts from ReconFeed's live database</p></div></div><div id="live-activity" class="activity-list"></div><div class="callout"><strong>Bring in real beta feedback</strong><p>Testers can submit issues and screenshots from their profile inside ReconFeed. The report will appear here automatically.</p><div class="quick-actions"><a href="/app/" target="_blank" rel="noopener noreferrer">Open app ↗</a><a href="/beta.html" target="_blank" rel="noopener noreferrer">Invite testers ↗</a></div></div></section>
+     </div>
+    </section>
+    <section id="screen-reports" class="screen" hidden>
+     <div class="panel"><div class="section-head"><div><h2>Tester reports</h2><p>Investigate reports, open attached screenshots and update progress.</p></div><label class="filter-label">Status <select id="issue-filter"><option value="all">All statuses</option><option value="open">Open</option><option value="triaged">Triaged</option><option value="in_progress">In progress</option><option value="fixed">Fixed</option><option value="closed">Closed</option></select></label></div><label class="search-label">Search reports<input id="issue-search" type="search" placeholder="Title, issue, platform, or category"></label><div id="report-list" class="report-list"></div></div>
+    </section>
+    <section id="screen-testers" class="screen" hidden>
+     <div class="panel"><div class="section-head"><div><h2>Beta tester applications</h2><p>Real signups from your website. Contact details are visible only to the owner account.</p></div></div><div id="tester-list" class="data-list"></div></div>
+     <div class="callout"><strong>How feedback gets here</strong><p>Send testers to ReconFeed's 18+ beta signup page. After joining and signing into the app, they can submit bug reports with screenshots from their profile. Feedback is not fabricated or copied from outside sources.</p><a href="/beta.html" target="_blank" rel="noopener noreferrer">Open beta signup ↗</a></div>
+    </section>
+    <section id="screen-moderation" class="screen" hidden>
+     <div class="two-column">
+      <div class="panel"><h2>Reported posts</h2><p class="panel-intro">Content flags submitted by real people. Private direct messages are not shown.</p><div id="post-flags" class="data-list"></div></div>
+      <div class="panel"><h2>Marketplace reports</h2><p class="panel-intro">Complaints about listings and marketplace activity.</p><div id="listing-flags" class="data-list"></div></div>
+     </div>
+    </section>
+    <section id="screen-systems" class="screen" hidden>
+     <div class="two-column">
+      <div class="panel"><h2>Live service checks</h2><p class="panel-intro">Status checks, not a penetration test or a promise of perfect security.</p><div id="service-health" class="activity-list"><p class="muted">Checking…</p></div><button type="button" class="soft-button" id="health-refresh">Recheck services</button></div>
+      <div class="panel"><h2>Security controls</h2><div class="security-row"><span class="good-mark">✓</span><div><strong>Server-verified owner permission</strong><p>Private APIs verify the Supabase account and its trusted administrator role on every request.</p></div></div>
+       <div class="security-row"><span class="good-mark">✓</span><div><strong>Private screenshots</strong><p>Issue attachments remain in a private storage bucket and are revealed using short-lived links only when requested.</p></div></div>
+       <div class="security-row"><span class="good-mark">✓</span><div><strong>Message-content separation</strong><p>You can see total message activity, but not people's private conversations or session tokens.</p></div></div>
+       <div class="security-row"><span class="warn-mark">!</span><div><strong>Action needed: password protection</strong><p>Supabase's security advisor reports that compromised-password checking is disabled. Enable leaked-password protection in your Supabase Auth settings.</p><a href="https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection" target="_blank" rel="noopener noreferrer">Setup instructions ↗</a></div></div>
+       <div class="security-row"><span class="warn-mark">!</span><div><strong>Security review is ongoing</strong><p>Database security advisors also flagged SECURITY DEFINER permissions. These need a compatibility review before changing app authorization behavior.</p><a href="https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable" target="_blank" rel="noopener noreferrer">Review guidance ↗</a></div></div>
+      </div>
+     </div>
+     <div class="callout"><strong>Account and device safety</strong><p>Use a unique password and multifactor authentication wherever supported, keep phone operating systems updated, and avoid sharing access tokens, build credentials or report screenshot links. ReconFeed can improve its security controls, but no service can guarantee protection from every attack.</p></div>
+    </section>
+    <footer class="footer">RECONFEED COMMAND CENTER · VETERAN OWNED · ADMIN ONLY · LIVE DATA</footer>
+   </div>
+  </main>
+ </div>
+</div>
+<div class="modal-wrap" id="report-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+ <div class="modal-backdrop" id="modal-backdrop"></div>
+ <section class="modal-card"><div class="modal-header"><h2 id="modal-title">Report details</h2><button type="button" id="modal-close" class="close-button" aria-label="Close report">×</button></div><div class="modal-body" id="modal-body"></div></section>
+</div>
+</body>
+</html>
