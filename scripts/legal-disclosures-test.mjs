@@ -60,3 +60,11 @@ for(const key of ['X-Content-Type-Options','Referrer-Policy','X-Frame-Options','
 const policyHeaders=serverConfig.headers?.find(x=>x.source.includes('privacy')&&x.source.includes('delete-account'))?.headers||[];
 assert.ok(policyHeaders.some(h=>h.key==='Cache-Control'&&h.value.includes('must-revalidate')),'public policies must refresh when updated');
 console.log('IP hub, non-affiliation, and post visibility disclosures passed.');
+
+
+// Prevent reintroduction of unlicensed placeholder imagery or sensitive
+// political-affiliation persistence into new account Auth metadata.
+assert.doesNotMatch(app,/https:\/\/images\.(unsplash|pexels)\.com/,'app stock-photo placeholders must be replaced with first-party designs');
+assert.doesNotMatch(app,/political_party:politicalParty/,'do not write political opinions into new Auth account metadata');
+assert.match(privacy,/New account registrations no longer save that choice in account metadata/,'sensitive-data notice must describe current behavior');
+console.log('App media provenance and minimal political-affiliation retention checks passed.');
