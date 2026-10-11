@@ -32,7 +32,7 @@ export default function CommandCenter({client,visible,onClose,onReport}:Props){
   try{
    const auth=await client.auth.getUser();
    if(auth.error)throw auth.error;
-   if(auth.data.user?.app_metadata?.tester_report_reviewer!==true){
+   if(auth.data.user?.id!=='8287fc6f-dd23-48d8-988e-388a8c93fe7b'||auth.data.user?.app_metadata?.tester_report_reviewer!==true){
     throw new Error('This dashboard is reserved for approved ReconFeed administrators.');
    }
    const refresh=await client.auth.refreshSession();
