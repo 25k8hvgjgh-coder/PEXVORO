@@ -33,6 +33,8 @@ jobs:
         run: node ../scripts/media-loading-regression-test.mjs
       - name: Check inbox, report and PWA reliability contracts
         run: node ../scripts/reliability-regression-test.mjs
+      - name: Verify sole-owner command center and security controls
+        run: node ../scripts/command-center-security-test.mjs
       - name: Check Story and screenshot reliability
         run: node ../scripts/story-and-report-test.mjs
       - name: Verify profile photo preparation and upload
