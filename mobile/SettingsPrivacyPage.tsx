@@ -88,13 +88,13 @@ export default function SettingsPrivacyPage({onBack,onSelect,isPrivate,commentVi
    <View style={s.back}/>
   </View>
   <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.scroll}>
-   <Text style={s.pageTitle}>Settings and privacy</Text>
+   <Text style={s.pageTitle}>Settings and privacy</Text><Text style={s.pageIntro}>Make your space feel like yours. You're in control of what you share and see.</Text>
    {groups.map(group=><View key={group.heading} style={s.section}>
     <Text style={s.sectionTitle}>{group.heading}</Text>
     <View style={s.groupCard}>
      {group.items.map((item,i)=>{
       const value=item.id==='private'?(isPrivate?'On':'Off'):item.id==='comments'?(commentVisibility==='none'?'Nobody':commentVisibility==='followers'?'Followers':'Everyone'):undefined;
-      return <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={item.name} style={[s.item,i===0&&s.firstItem,i===group.items.length-1&&s.lastItem]} onPress={()=>onSelect(item.id)}>
+      return <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={item.name} style={({pressed})=>[s.item,i===0&&s.firstItem,i===group.items.length-1&&s.lastItem,pressed&&s.itemPressed]} onPress={()=>onSelect(item.id)}>
        <View style={s.symbolBox}>{item.icon?<ProfileIcon name={item.icon} size={20} color={olive.muted}/>:<Text style={s.symbol}>{item.symbol}</Text>}</View>
        <Text style={s.itemLabel} numberOfLines={2}>{item.name}</Text>
        {!!value&&<Text style={s.valueText}>{value}</Text>}
@@ -114,15 +114,17 @@ const s=StyleSheet.create({
  backText:{fontSize:42,fontWeight:'300',lineHeight:47,color:olive.text},
  navTitle:{fontSize:16,color:olive.text,fontWeight:'700',letterSpacing:-.2},
  scroll:{paddingBottom:70,paddingTop:10},
- pageTitle:{fontSize:28,fontWeight:'800',letterSpacing:-.65,color:olive.text,paddingHorizontal:21,paddingTop:14,paddingBottom:17},
+ pageTitle:{fontSize:28,fontWeight:'800',letterSpacing:-.65,color:olive.text,paddingHorizontal:21,paddingTop:14,paddingBottom:5},
+ pageIntro:{fontSize:14,lineHeight:21,color:olive.muted,paddingHorizontal:21,paddingBottom:22,maxWidth:450},
  section:{marginBottom:22},
  sectionTitle:{fontSize:12,color:olive.muted,fontWeight:'700',letterSpacing:1,textTransform:'uppercase',paddingHorizontal:22,paddingVertical:11},
- groupCard:{marginHorizontal:12,borderRadius:16,overflow:'hidden',backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border},
+ groupCard:{marginHorizontal:12,borderRadius:17,overflow:'hidden',backgroundColor:olive.surface,borderWidth:1,borderColor:olive.border},
  item:{flexDirection:'row',alignItems:'center',backgroundColor:olive.surface,minHeight:60,paddingLeft:16,paddingRight:16,borderBottomWidth:1,borderBottomColor:olive.border},
  firstItem:{paddingTop:3},lastItem:{paddingBottom:3},
  symbolBox:{width:25,marginRight:11,justifyContent:'center',alignItems:'center'},
  symbol:{fontSize:22,fontWeight:'700',color:olive.muted,textAlign:'center'},
  itemLabel:{color:olive.text,fontSize:15,fontWeight:'600',flex:1,letterSpacing:-.12},
+ itemPressed:{backgroundColor:olive.raised,opacity:.88},
  valueText:{fontSize:14,color:olive.muted,marginLeft:5,marginRight:7},
  chevron:{fontSize:25,color:olive.muted,fontWeight:'300',lineHeight:32,marginLeft:5},
  footer:{textAlign:'center',fontSize:12,color:olive.muted,lineHeight:20,marginHorizontal:21,marginTop:13}
