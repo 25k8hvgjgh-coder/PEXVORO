@@ -30,14 +30,14 @@ export default function PublicCreatorHeader({creator,following,followsYou,onFoll
   {!!creator.pronouns&&<Text style={s.meta}>{creator.pronouns}</Text>}
   {!!creator.website_url&&<Pressable accessibilityRole="link" onPress={()=>void Linking.openURL(creator.website_url!)}><Text style={s.website}>⌁ {creator.website_url} ↗</Text></Pressable>}
   <View style={s.actions}>
-   <Pressable accessibilityRole="button" accessibilityLabel={following?'Unfollow':'Follow creator'} onPress={onFollow} style={s.pill}><Text style={s.pillText}>{following?'✓ Following':followsYou?'+ Follow back':'+ Follow'}</Text></Pressable>
-   <Pressable accessibilityRole="button" accessibilityLabel="Message creator" onPress={onMessage} style={s.pill}><Text style={s.pillText}>✉ Message</Text></Pressable>
-   <Pressable accessibilityRole="button" onPress={onShare} style={s.pill}><Text style={s.pillText}>Share ↗</Text></Pressable>
+   <Pressable accessibilityRole="button" accessibilityLabel={following?'Unfollow':'Follow creator'} onPress={onFollow} style={({pressed})=>[s.pill,s.followButton,pressed&&s.pillPressed]}><Text style={s.followButtonText}>{following?'✓ Following':followsYou?'+ Follow back':'+ Follow'}</Text></Pressable>
+   <Pressable accessibilityRole="button" accessibilityLabel="Message creator" onPress={onMessage} style={({pressed})=>[s.pill,pressed&&s.pillPressed]}><Text style={s.pillText}>✉ Message</Text></Pressable>
+   <Pressable accessibilityRole="button" onPress={onShare} style={({pressed})=>[s.pill,pressed&&s.pillPressed]}><Text style={s.pillText}>Share ↗</Text></Pressable>
   </View>
  </View>;
 }
 const s=StyleSheet.create({
- header:{paddingHorizontal:14,paddingTop:18,paddingBottom:20,backgroundColor:olive.bg},
+ header:{paddingHorizontal:18,paddingTop:20,paddingBottom:22,backgroundColor:olive.bg,borderBottomWidth:1,borderBottomColor:olive.border},
  identityRow:{flexDirection:'row',alignItems:'flex-start',gap:8},
  identityText:{flex:1,minWidth:0},
  name:{fontSize:22,fontWeight:'900',color:olive.text,lineHeight:28},
@@ -47,14 +47,17 @@ const s=StyleSheet.create({
  stat:{alignItems:'flex-start'},
  count:{fontSize:21,fontWeight:'900',color:olive.text},statLabel:{fontSize:12,color:olive.muted,marginTop:1},
  avatarWrap:{position:'relative',marginTop:4,marginBottom:5},
- avatar:{height:96,width:96,borderRadius:48,backgroundColor:olive.raised,alignItems:'center',justifyContent:'center',overflow:'hidden'},
+ avatar:{height:96,width:96,borderRadius:48,backgroundColor:olive.raised,alignItems:'center',justifyContent:'center',overflow:'hidden',borderWidth:3,borderColor:olive.accent,shadowColor:olive.accent,shadowOpacity:.19,shadowRadius:7,elevation:3},
  avatarImage:{height:'100%',width:'100%',borderRadius:48},avatarInitial:{fontSize:42,color:olive.text,fontWeight:'900'},
  followPlus:{position:'absolute',right:-3,bottom:-4,width:33,height:33,borderRadius:17,backgroundColor:olive.accent,borderWidth:3,borderColor:olive.bg},
  plusText:{fontSize:26,color:olive.deep,fontWeight:'900',lineHeight:27},
- bio:{fontSize:14,lineHeight:21,fontWeight:'600',color:olive.text,marginTop:11},
+ bio:{fontSize:14,lineHeight:22,fontWeight:'500',color:olive.text,marginTop:15},
  meta:{fontSize:12,color:olive.muted,fontWeight:'700',marginTop:5},
  website:{color:olive.gold,fontWeight:'800',fontSize:12,marginTop:7},
  actions:{flexDirection:'row',gap:8,marginTop:17,flexWrap:'wrap'},
- pill:{minHeight:42,paddingHorizontal:12,paddingVertical:9,borderWidth:1,borderColor:olive.border,borderRadius:23,backgroundColor:olive.surface,alignItems:'center',justifyContent:'center'},
+ pill:{minHeight:44,paddingHorizontal:15,paddingVertical:10,borderWidth:1,borderColor:olive.border,borderRadius:14,backgroundColor:olive.surface,alignItems:'center',justifyContent:'center'},
+ followButton:{backgroundColor:olive.accent,borderColor:olive.accent},
+ followButtonText:{fontSize:13,fontWeight:'800',color:olive.deep,textAlign:'center'},
+ pillPressed:{transform:[{scale:.97}],opacity:.78},
  pillText:{fontSize:13,fontWeight:'700',color:olive.text,textAlign:'center'}
 });
