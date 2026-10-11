@@ -35,6 +35,15 @@ jobs:
           npm install --no-save sharp
           node -e "require('sharp')('assets/reconfeed-emblem.svg').resize(1024,1024).png().toFile('assets/icon.png')"
 
+      - name: Gate beta updates on app typecheck and critical regressions
+        run: |
+          npm run typecheck
+          node ../scripts/feed-slide-test.mjs
+          node ../scripts/fast-startup-test.mjs
+          node ../scripts/media-loading-regression-test.mjs
+          node ../scripts/reliability-regression-test.mjs
+          node ../scripts/legal-disclosures-test.mjs
+
       - name: Set up Expo and EAS
         uses: expo/expo-github-action@v8
         with:
